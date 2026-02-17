@@ -1,5 +1,4 @@
-
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 export type UserRole = 'admin' | 'security';
 
@@ -104,41 +103,65 @@ export const DEFAULT_USERS: User[] = [
 ];
 
 interface AuthContextType {
+  loginAs: (role: 'security' | 'admin') => void;
+  userRole: 'admin' | 'security_desk';
+  logout: () => void;
   user: User | null;
   login: (username: string, password: string) => boolean;
-  logout: () => void;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<'admin' | 'security_desk'>('security_desk');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const login = (username: string, password: string): boolean => {
     const foundUser = DEFAULT_USERS.find(
-      u => u.username === username && u.password === password
+      (u) => u.username === username && u.password === password
     );
-    
     if (foundUser) {
       setUser(foundUser);
+      setUserRole(foundUser.role === 'admin' ? 'admin' : 'security_desk');
+      setIsAuthenticated(true);
       return true;
     }
     return false;
   };
 
-  const logout = () => {
-    setUser(null);
+  const loginAs = (role: 'security' | 'admin') => {
+    const selectedUser = DEFAULT_USERS.find((u) => u.role === role);
+    if (selectedUser) {
+      setUser(selectedUser);
+      setUserRole(role === 'admin' ? 'admin' : 'security_desk');
+      setIsAuthenticated(true);
+    }
   };
 
-  const isAuthenticated = user !== null;
+  const logout = () => {
+    setUser(null);
+    setUserRole('security_desk');
+    setIsAuthenticated(false);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+
+    <AuthContext.Provider
+      value={{
+        loginAs,
+        userRole,
+        logout,
+        user,
+        login,
+        isAuthenticated,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
 export function useAuth() {
   const context = useContext(AuthContext);
