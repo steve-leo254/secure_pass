@@ -12,6 +12,8 @@ const CATEGORIES = [
   "Customer / Visitor",
 ];
 
+const CATEGORY_COLORS = ["#60a5fa", "#7c3aed", "#f59e0b", "#34d399", "#ef4444"];
+
 // Simple SVG Line Chart component
 function LineChartSVG({ labels, values, height = 80 }: { labels: string[]; values: number[]; height?: number; }) {
   const max = Math.max(...values, 1);
@@ -39,10 +41,10 @@ function LineChartSVG({ labels, values, height = 80 }: { labels: string[]; value
 }
 
 // Simple SVG Bar Chart component
-function BarChartSVG({ labels, values, height = 100 }: { labels: string[]; values: number[]; height?: number }) {
+function BarChartSVG({ labels, values, height = 100, colors = [] }: { labels: string[]; values: number[]; height?: number; colors?: string[] }) {
   const max = Math.max(...values, 1);
   const w = 320;
-  const colW = w / labels.length;
+  const colW = w / Math.max(labels.length, 1);
   return (
     <svg width="100%" viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none">
       {values.map((v, i) => {
@@ -50,9 +52,10 @@ function BarChartSVG({ labels, values, height = 100 }: { labels: string[]; value
         const x = i * colW + colW * 0.15;
         const bw = colW * 0.7;
         const y = height - barH;
+        const fill = colors[i] || "#7c3aed";
         return (
           <g key={i}>
-            <rect x={x} y={y} width={bw} height={barH} rx={4} fill="#7c3aed" />
+            <rect x={x} y={y} width={bw} height={barH} rx={4} fill={fill} />
             <text x={x + bw / 2} y={height - 4} fontSize={10} textAnchor="middle" fill="#475569">
               {labels[i]}
             </text>
@@ -171,7 +174,7 @@ export default function Dashboard() {
           background:#fff;
           border-radius:16px;
           padding:20px;
-          box-shadow:0 6px 20px rgba(0,0,0,0.05);
+          box-shadow:0 6px 20px rgba(15, 15, 15, 0.05);
         }
         .stat-value {
           font-size:28px;
@@ -183,7 +186,7 @@ export default function Dashboard() {
           align-items:center;
           justify-content:space-between;
           padding:10px 0;
-          border-bottom:1px solid #f1f5f9;
+          border-bottom:1px solid #0a0e11;
         }
         .visitor-row:last-child { border-bottom:none; }
         button.tab {
@@ -234,8 +237,8 @@ export default function Dashboard() {
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
               <h3 style={{margin:0}}>Visitor Traffic (hourly)</h3>
               <div>
-                <button className="tab" onClick={()=>setTab("line")} style={{background:tab==="line"?"#e2e8f0":"transparent"}}>Line</button>
-                <button className="tab" onClick={()=>setTab("bar")} style={{background:tab==="bar"?"#e2e8f0":"transparent"}}>Bar</button>
+                <button className="tab" onClick={()=>setTab("line")} style={{background:tab==="line"?"#121314":"transparent"}}>Line</button>
+                <button className="tab" onClick={()=>setTab("bar")} style={{background:tab==="bar"?"#151618":"transparent"}}>Bar</button>
               </div>
             </div>
             <div style={{marginTop:12}}>
@@ -261,7 +264,7 @@ export default function Dashboard() {
           <div className="card">
             <h3 style={{margin:0}}>Visitors by Category</h3>
             <div style={{marginTop:12}}>
-              <BarChartSVG labels={CATEGORIES.map(c=>c.split(" ")[0])} values={CATEGORIES.map(c=>visitors.filter(v=>v.category===c).length)} height={140} />
+              <BarChartSVG labels={CATEGORIES.map(c=>c.split(" ")[0])} values={CATEGORIES.map(c=>visitors.filter(v=>v.category===c).length)} height={140} colors={CATEGORY_COLORS} />
             </div>
           </div>
 
@@ -277,6 +280,7 @@ export default function Dashboard() {
                 labels={CATEGORIES.map(c => c.split(" ")[0])}
                 values={CATEGORIES.map(c => visitors.filter(v => v.category === c).length)}
                 height={160}
+                colors={CATEGORY_COLORS}
               />
             </div>
           </div>
