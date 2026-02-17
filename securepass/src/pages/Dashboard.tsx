@@ -182,12 +182,10 @@ export default function Dashboard() {
                   <div className="text-right flex-shrink-0">
                     <span
                       className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                        v.status === "checked-in"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-slate-100 text-slate-500"
+                        CAT_BADGE[v.category] || "bg-slate-100 text-slate-500"
                       }`}
                     >
-                      {v.status === "checked-in" ? "● Inside" : "Exited"}
+                      {v.category}
                     </span>
                     <p className="text-[11px] text-slate-400 mt-1 flex items-center justify-end gap-1">
                       <Clock className="w-3 h-3" />
