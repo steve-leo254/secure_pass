@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { VisitorProvider } from "./context/VistorContext";
+import { BillingProvider } from "./context/BillingContext";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import PublicRegister from './pages/PublicRegister';
@@ -42,8 +43,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <VisitorProvider>
-          <Routes>
+        <BillingProvider>
+          <VisitorProvider>
+            <Routes>
             <Route path="/" element={<LoginGuard />} />
             <Route path="/visitor-register" element={<PublicRegister />} />
             <Route path="/visitor-checkout" element={<PublicCheckout />} />
@@ -139,7 +141,8 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </VisitorProvider>
-      </AuthProvider>
+      </BillingProvider>
+    </AuthProvider>
     </BrowserRouter>
   );
 }

@@ -4,6 +4,7 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  useEffect,
   type ReactNode,
 } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,6 +19,7 @@ import type {
   Category,
 } from '../types';
 import { CATEGORY_CHART_COLORS, CATEGORIES } from '../types';
+import { useBilling } from './BillingContext';
 
 interface VisitorContextType {
   visitors: Visitor[];
@@ -129,6 +131,12 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(loadAudit);
   const [tools, setTools] = useState<string[]>(loadTools);
   const [categories, setCategories] = useState<Category[]>(loadCategories);
+  const { updateSystemUsage } = useBilling();
+
+  // Update billing usage whenever visitors change
+  useEffect(() => {
+    updateSystemUsage(visitors.length);
+  }, [visitors.length, updateSystemUsage]);
 
   const saveVisitors = (v: Visitor[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(v));

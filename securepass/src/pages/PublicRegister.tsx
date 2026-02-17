@@ -120,6 +120,7 @@ const PublicRegister: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!agreedToTerms) return;
+    
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1500));
 

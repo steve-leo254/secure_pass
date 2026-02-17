@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useVisitors } from '../context/VistorContext';
+import UsageCounter from './UsageCounter';
 import {
   LayoutDashboard,
   UserPlus,
@@ -343,6 +344,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 )}
               </div>
             </div>
+
+            {/* Usage Counter - Admin Only */}
+            {isAdmin && !sidebarCollapsed && (
+              <div className="px-3">
+                <UsageCounter />
+              </div>
+            )}
           </nav>
 
           {/* Collapse toggle (desktop only) */}

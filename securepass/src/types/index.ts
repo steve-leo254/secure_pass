@@ -11,6 +11,29 @@ export type VisitorStatus = 'checked-in' | 'checked-out';
 
 export type Gender = 'male' | 'female' | 'other';
 
+export type BillingStatus = 'trial' | 'active' | 'suspended';
+
+export interface BillingAccount {
+  id: string;
+  totalRecordsAllowed: number;
+  recordsUsed: number;
+  balance: number; // in KSH
+  status: BillingStatus;
+  trialRecordsUsed: number;
+  createdAt: string;
+  lastPaymentAt?: string;
+  payments: Payment[];
+}
+
+export interface Payment {
+  id: string;
+  amount: number; // in KSH
+  recordsAdded: number;
+  paymentMethod: string;
+  createdAt: string;
+  status: 'completed' | 'pending' | 'failed';
+}
+
 export interface User {
   id: string;
   username: string;
