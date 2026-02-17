@@ -100,7 +100,7 @@ export default function Settings() {
                   onChange={(e) => setNewTool(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddTool()}
                   placeholder="Enter tool name..."
-                  className="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition"
+                  className="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800 placeholder-gray-400"
                 />
                 <button
                   onClick={handleAddTool}

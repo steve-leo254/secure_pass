@@ -9,6 +9,8 @@ import ActiveVisitors from "./pages/ActiveVisitors";
 import AllRecords from "./pages/AllRecords";
 import Settings from "./pages/Settings";
 import QRPage from "./pages/QRPage";
+import MemberRegister from "./pages/MemberRegister";
+import Members from "./pages/Members";
 import type { ReactNode } from "react";
 
 const Protected = ({
@@ -83,6 +85,22 @@ export default function App() {
               element={
                 <Protected>
                   <QRPage />
+                </Protected>
+              }
+            />
+            <Route
+              path="/member-register"
+              element={
+                <Protected>
+                  <MemberRegister />
+                </Protected>
+              }
+            />
+            <Route
+              path="/members"
+              element={
+                <Protected roles={["admin", "security"]}>
+                  <Members />
                 </Protected>
               }
             />

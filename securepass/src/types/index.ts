@@ -47,6 +47,22 @@ export interface AuditLog {
   details: string;
 }
 
+export interface Member {
+  id: string;
+  mId: string; // Unique Member ID (e.g., MEM-001-2024)
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  department: string;
+  position: string;
+  company: string;
+  idNumber: string;
+  gender: Gender;
+  dateRegistered: string;
+  status: 'active' | 'inactive';
+  lastAccess?: string;
+}
+
 export interface SystemSettings {
   propertyName: string;
   propertyAddress: string;

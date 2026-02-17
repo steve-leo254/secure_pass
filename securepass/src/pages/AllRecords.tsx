@@ -400,7 +400,7 @@ export default function AllRecords() {
                 },
               ].map((field) => (
                 <div key={field.key}>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-bold text-gray-900 mb-2">
                     {field.label}
                   </label>
                   {field.type === "textarea" ? (
@@ -415,7 +415,7 @@ export default function AllRecords() {
                         }))
                       }
                       rows={3}
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition resize-none"
+                      className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none font-medium text-gray-800"
                     />
                   ) : (
                     <input
@@ -428,14 +428,14 @@ export default function AllRecords() {
                           [field.key]: e.target.value,
                         }))
                       }
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition"
+                      className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
                     />
                   )}
                 </div>
               ))}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-bold text-gray-900 mb-2">
                     Category
                   </label>
                   <div className="relative">
@@ -447,7 +447,7 @@ export default function AllRecords() {
                           category: e.target.value as VisitorCategory,
                         }))
                       }
-                      className="w-full appearance-none border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
+                      className="w-full appearance-none border-2 border-gray-300 rounded-lg px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
                     >
                       {categories.map((c) => (
                         <option key={c} value={c}>
@@ -459,7 +459,7 @@ export default function AllRecords() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-bold text-gray-900 mb-2">
                     Gender
                   </label>
                   <div className="relative">
@@ -471,7 +471,7 @@ export default function AllRecords() {
                           gender: e.target.value as Gender,
                         }))
                       }
-                      className="w-full appearance-none border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
+                      className="w-full appearance-none border-2 border-gray-300 rounded-lg px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>

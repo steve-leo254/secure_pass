@@ -9,6 +9,8 @@ import type {
   Visitor,
   AuditLog,
   VisitorCategory,
+  Member,
+  Gender,
 } from "../types";
 
 const DEFAULT_TOOLS = [
@@ -153,6 +155,12 @@ interface DataContextType {
   categories: VisitorCategory[];
   auditLogs: AuditLog[];
   activeVisitors: Visitor[];
+  members: Member[];
+  addMember: (
+    data: Omit<Member, "id" | "mId" | "dateRegistered" | "lastAccess">
+  ) => Member;
+  deleteMember: (id: string) => void;
+  updateMember: (id: string, updates: Partial<Member>) => void;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -173,6 +181,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     return stored ? JSON.parse(stored) : [];
   });
 
+  const [members, setMembers] = useState<Member[]>(() => {
+    const stored = localStorage.getItem("sp_members");
+    return stored ? JSON.parse(stored) : [];
+  });
+
   useEffect(() => {
     localStorage.setItem("sp_visitors", JSON.stringify(visitors));
   }, [visitors]);
@@ -182,6 +195,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem("sp_audit", JSON.stringify(auditLogs));
   }, [auditLogs]);
+  useEffect(() => {
+    localStorage.setItem("sp_members", JSON.stringify(members));
+  }, [members]);
 
   const log = (action: string, by: string, details: string) => {
     setAuditLogs((prev) => [
@@ -241,6 +257,40 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setTools((prev) => prev.filter((x) => x !== t));
   };
 
+  const generateMemberId = (): string => {
+    const count = members.length + 1;
+    const year = new Date().getFullYear();
+    return `MEM-${String(count).padStart(3, "0")}-${year}`;
+  };
+
+  const addMember = (
+    data: Omit<Member, "id" | "mId" | "dateRegistered" | "lastAccess">
+  ): Member => {
+    const member: Member = {
+      ...data,
+      id: crypto.randomUUID(),
+      mId: generateMemberId(),
+      dateRegistered: new Date().toISOString(),
+      status: "active",
+    };
+    setMembers((prev) => [member, ...prev]);
+    log("REGISTER_MEMBER", "System", `Member registered: ${data.fullName} (${member.mId})`);
+    return member;
+  };
+
+  const deleteMember = (id: string) => {
+    const member = members.find((m) => m.id === id);
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+    if (member) log("DELETE_MEMBER", "Admin", `Deleted member: ${member.fullName}`);
+  };
+
+  const updateMember = (id: string, updates: Partial<Member>) => {
+    setMembers((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
+    );
+    log("UPDATE_MEMBER", "Admin", `Updated member record (${id.slice(0, 8)})`);
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -255,6 +305,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         categories: CATEGORIES,
         auditLogs,
         activeVisitors: visitors.filter((v) => v.status === "checked-in"),
+        members,
+        addMember,
+        deleteMember,
+        updateMember,
       }}
     >
       {children}
