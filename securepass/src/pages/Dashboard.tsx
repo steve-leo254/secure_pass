@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useData } from "../context/DataContext";
+import { UserPlus, IdCard, Users as UsersIcon, FileText, Settings as SettingsIcon } from "lucide-react";
 
 /* ─────────────────────────────────────────────
    MOCK DATA
@@ -123,6 +127,8 @@ const initials = (name: string): string =>
 ───────────────────────────────────────────── */
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const { members = [] } = useData();
   const visitors = MOCK_VISITORS;
   const activeVisitors = visitors.filter(v=>v.status==="active");
 
@@ -175,7 +181,15 @@ export default function Dashboard() {
           border-radius:16px;
           padding:20px;
           box-shadow:0 6px 20px rgba(15, 15, 15, 0.05);
+          transition: transform 0.14s ease, box-shadow 0.14s ease;
+          display:block;
         }
+        .card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 12px 34px rgba(2,6,23,0.08);
+        }
+        .nav-icon { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; background:#f1f5f9; margin-right:10px }
+        .nav-count { margin-left:auto; background:#eef2ff; color:#1e3a8a; padding:6px 8px; border-radius:999px; font-weight:700; font-size:12px }
         .stat-value {
           font-size:28px;
           font-weight:800;
@@ -211,6 +225,66 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* NAV LINKS */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:16}}>
+          <Link to="/register" className="card" style={{display:'flex',alignItems:'center',gap:12,padding:14}}>
+            <span className="nav-icon"><UserPlus size={16} /></span>
+            <div style={{display:'flex',flexDirection:'column'}}>
+              <strong>Register Visitor</strong>
+              <span style={{fontSize:12,color:'#64748b'}}>Quickly add a new visitor</span>
+            </div>
+            <span className="nav-count">{todayAll.length}</span>
+          </Link>
+
+          <Link to="/member-register" className="card" style={{display:'flex',alignItems:'center',gap:12,padding:14}}>
+            <span className="nav-icon"><IdCard size={16} /></span>
+            <div style={{display:'flex',flexDirection:'column'}}>
+              <strong>Register Member</strong>
+              <span style={{fontSize:12,color:'#64748b'}}>Self-service member registration</span>
+            </div>
+            <span className="nav-count">{members?.length ?? 0}</span>
+          </Link>
+
+          <Link to="/active" className="card" style={{display:'flex',alignItems:'center',gap:12,padding:14}}>
+            <span className="nav-icon"><UsersIcon size={16} /></span>
+            <div style={{display:'flex',flexDirection:'column'}}>
+              <strong>Active Visitors</strong>
+              <span style={{fontSize:12,color:'#64748b'}}>View currently inside</span>
+            </div>
+            <span className="nav-count">{activeVisitors.length}</span>
+          </Link>
+
+          {user?.role === 'admin' && (
+            <Link to="/records" className="card" style={{display:'flex',alignItems:'center',gap:12,padding:14}}>
+              <span className="nav-icon"><FileText size={16} /></span>
+              <div style={{display:'flex',flexDirection:'column'}}>
+                <strong>All Records</strong>
+                <span style={{fontSize:12,color:'#64748b'}}>Audit and reporting</span>
+              </div>
+              <span className="nav-count">{visitors.length}</span>
+            </Link>
+          )}
+
+          {user?.role === 'admin' && (
+            <Link to="/members" className="card" style={{display:'flex',alignItems:'center',gap:12,padding:14}}>
+              <span className="nav-icon"><UsersIcon size={16} /></span>
+              <div style={{display:'flex',flexDirection:'column'}}>
+                <strong>Members</strong>
+                <span style={{fontSize:12,color:'#64748b'}}>Manage registered members</span>
+              </div>
+              <span className="nav-count">{members?.length ?? 0}</span>
+            </Link>
+          )}
+
+          <Link to="/settings" className="card" style={{display:'flex',alignItems:'center',gap:12,padding:14}}>
+            <span className="nav-icon"><SettingsIcon size={16} /></span>
+            <div style={{display:'flex',flexDirection:'column'}}>
+              <strong>Settings</strong>
+              <span style={{fontSize:12,color:'#64748b'}}>Configure app options</span>
+            </div>
+          </Link>
+        </div>
+
         {/* STATS */}
         <div className="stats">
           <div className="card">
@@ -237,8 +311,8 @@ export default function Dashboard() {
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
               <h3 style={{margin:0}}>Visitor Traffic (hourly)</h3>
               <div>
-                <button className="tab" onClick={()=>setTab("line")} style={{background:tab==="line"?"#121314":"transparent"}}>Line</button>
-                <button className="tab" onClick={()=>setTab("bar")} style={{background:tab==="bar"?"#151618":"transparent"}}>Bar</button>
+                <button className="tab" onClick={()=>setTab("line")} style={{background:tab==="line"?"#f1f6fa":"transparent"}}>Line</button>
+                <button className="tab" onClick={()=>setTab("bar")} style={{background:tab==="bar"?"#f2f4f7":"transparent"}}>Bar</button>
               </div>
             </div>
             <div style={{marginTop:12}}>

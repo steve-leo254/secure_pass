@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthProvider";
+import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
 import type { Visitor, VisitorCategory, Gender } from "../types";
 import {
