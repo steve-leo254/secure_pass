@@ -53,12 +53,12 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Register New Visitor</h2>
+      <h2 className="text-2xl font-extrabold text-gray-900 mb-6">Register New Visitor</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               Full Name *
             </label>
             <input
@@ -66,12 +66,12 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
               required
               value={formData.fullName}
               onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800 placeholder-gray-400"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               Phone Number *
             </label>
             <input
@@ -79,12 +79,12 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
               required
               value={formData.phoneNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800 placeholder-gray-400"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               ID Number *
             </label>
             <input
@@ -92,19 +92,19 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
               required
               value={formData.idNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, idNumber: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800 placeholder-gray-400"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               Category *
             </label>
             <select
               required
               value={formData.category}
               onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as VisitorCategory }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800 bg-white"
             >
               {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
@@ -113,14 +113,14 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               Gender *
             </label>
             <select
               required
               value={formData.gender}
               onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value as Gender }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800 bg-white"
             >
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -129,7 +129,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               Unit/Location Visited *
             </label>
             <input
@@ -137,13 +137,13 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
               required
               value={formData.unitVisited}
               onChange={(e) => setFormData(prev => ({ ...prev, unitVisited: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800 placeholder-gray-400"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-bold text-gray-900 mb-2">
             Purpose of Visit *
           </label>
           <textarea
@@ -151,12 +151,12 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
             rows={3}
             value={formData.purpose}
             onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800 placeholder-gray-400"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-bold text-gray-900 mb-2">
             Tools (if applicable)
           </label>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
@@ -179,7 +179,7 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
               placeholder="Add custom tool"
               value={otherTool}
               onChange={(e) => setOtherTool(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800 placeholder-gray-400"
             />
             <button
               type="button"
@@ -200,14 +200,14 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ onSubmit, onCancel }) => {
         <div className="flex gap-3 pt-4">
           <button
             type="submit"
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
           >
             Register Visitor
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+            className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
