@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useData } from "../context/DataContext";
+import { useVisitors } from "../context/VistorContext";
 import type { Visitor } from "../types";
 import {
   Search,
@@ -35,7 +35,8 @@ const CAT_BADGE: Record<string, string> = {
 
 export default function ActiveVisitors() {
   const { user } = useAuth();
-  const { activeVisitors, checkoutVisitor } = useData();
+  const { getActiveVisitors, checkoutVisitor } = useVisitors();
+  const activeVisitors = getActiveVisitors();
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("all");
   const [modal, setModal] = useState<Visitor | null>(null);
@@ -53,7 +54,7 @@ export default function ActiveVisitors() {
 
   const handleCheckout = () => {
     if (!modal) return;
-    checkoutVisitor(modal.id, user?.name || "Unknown");
+    checkoutVisitor(modal.id);
     setModal(null);
     setToolsVerified(false);
   };
@@ -154,7 +155,7 @@ export default function ActiveVisitors() {
                     >
                       {v.fullName
                         .split(" ")
-                        .map((n) => n[0])
+                        .map((n: string) => n[0])
                         .join("")
                         .slice(0, 2)}
                     </div>
@@ -213,7 +214,7 @@ export default function ActiveVisitors() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                      {v.tools.map((t) => (
+                      {v.tools.map((t: string) => (
                         <span
                           key={t}
                           className="bg-amber-50 text-amber-700 text-[11px] font-medium px-2 py-1 rounded-lg border border-amber-200/50"
@@ -283,7 +284,7 @@ export default function ActiveVisitors() {
                 >
                   {modal.fullName
                     .split(" ")
-                    .map((n) => n[0])
+                    .map((n: string) => n[0])
                     .join("")
                     .slice(0, 2)}
                 </div>
@@ -319,7 +320,7 @@ export default function ActiveVisitors() {
                   </p>
                   <div className="bg-amber-50 rounded-xl p-4 border border-amber-200/50">
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {modal.tools.map((t) => (
+                      {modal.tools.map((t: string) => (
                         <span
                           key={t}
                           className="bg-white text-amber-700 text-sm font-medium px-3 py-1.5 rounded-lg border border-amber-200"

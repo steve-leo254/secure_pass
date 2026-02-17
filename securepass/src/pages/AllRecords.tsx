@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useData } from "../context/DataContext";
+import { useVisitors } from "../context/VistorContext";
 import type { Visitor, VisitorCategory, Gender } from "../types";
 import {
   Search,
@@ -26,7 +26,7 @@ const CAT_BADGE: Record<string, string> = {
 
 export default function AllRecords() {
   const { user } = useAuth();
-  const { visitors, editVisitor, deleteVisitor, categories } = useData();
+  const { visitors, editVisitor, deleteVisitor, categories } = useVisitors();
   const [search, setSearch] = useState("");
   const [statusF, setStatusF] = useState("all");
   const [catF, setCatF] = useState("all");

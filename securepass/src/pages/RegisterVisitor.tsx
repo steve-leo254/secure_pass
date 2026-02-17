@@ -1,7 +1,8 @@
 import { useState, useCallback, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useData } from "../context/DataContext";
+import { useVisitors } from "../context/VistorContext";
 import type { VisitorCategory, Gender } from "../types";
+import { CATEGORIES } from "../types";
 import {
   UserPlus,
   User,
@@ -68,7 +69,7 @@ const InputWrapper = ({
 
 export default function RegisterVisitor() {
   const { user } = useAuth();
-  const { addVisitor, tools: toolsList, categories } = useData();
+  const { addVisitor, tools: toolsList } = useVisitors();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
@@ -267,9 +268,9 @@ export default function RegisterVisitor() {
                   } ${!form.category ? "text-slate-400" : "text-slate-800"}`}
                 >
                   <option value="">Select category</option>
-                  {categories.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
                     </option>
                   ))}
                 </select>

@@ -9,13 +9,10 @@ import ActiveVisitors from "./pages/ActiveVisitors";
 import AllRecords from "./pages/AllRecords";
 import Settings from "./pages/Settings";
 import QRPage from "./pages/QRPage";
-<<<<<<< HEAD
 import AdminAnalytics from "./pages/AdminAnalytics";
 import ToolsManagement from "./pages/ToolsManagement";
-=======
 import MemberRegister from "./pages/MemberRegister";
 import Members from "./pages/Members";
->>>>>>> 07f94bbfdb4e5fa2d368c2686c5a7d6d993d8bdc
 import type { ReactNode } from "react";
 
 const Protected = ({

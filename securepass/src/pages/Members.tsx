@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useData } from "../context/DataContext";
+import { useVisitors } from "../context/VistorContext";
 import {
   Search,
   Users,
@@ -12,7 +12,7 @@ import {
 import type { Member } from "../types";
 
 export default function Members() {
-  const { members, deleteMember, updateMember } = useData();
+  const { members, deleteMember, updateMember } = useVisitors();
   const [search, setSearch] = useState("");
   const [statusF, setStatusF] = useState<"all" | "active" | "inactive">("all");
   const [editModal, setEditModal] = useState<Member | null>(null);

@@ -22,12 +22,14 @@ interface VisitorContextType {
   visitors: Visitor[];
   auditLogs: AuditLog[];
   tools: string[];
+  categories: string[];
   addVisitor: (
     visitor: Omit<Visitor, 'id' | 'timeIn' | 'timeOut' | 'status'>
   ) => Visitor;
   checkoutVisitor: (id: string) => void;
   updateVisitor: (id: string, data: Partial<Visitor>) => void;
-  deleteVisitor: (id: string) => void;
+  editVisitor: (id: string, data: Partial<Visitor>, performedBy: string) => void;
+  deleteVisitor: (id: string, performedBy?: string) => void;
   getActiveVisitors: () => Visitor[];
   getTodayVisitors: () => Visitor[];
   getStats: () => DashboardStats;
@@ -175,16 +177,30 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const deleteVisitor = useCallback(
-    (id: string) => {
+    (id: string, performedBy: string = 'Admin') => {
       setVisitors((prev) => {
         const visitor = prev.find((v) => v.id === id);
         const updated = prev.filter((v) => v.id !== id);
         saveVisitors(updated);
         addAuditLog(
           'DELETE',
-          'Admin',
+          performedBy,
           `Record for ${visitor?.fullName || id} deleted`
         );
+        return updated;
+      });
+    },
+    [addAuditLog]
+  );
+
+  const editVisitor = useCallback(
+    (id: string, data: Partial<Visitor>, performedBy: string = 'Admin') => {
+      setVisitors((prev) => {
+        const updated = prev.map((v) =>
+          v.id === id ? { ...v, ...data } : v
+        );
+        saveVisitors(updated);
+        addAuditLog('UPDATE', performedBy, `Record ${id} updated`);
         return updated;
       });
     },
@@ -397,9 +413,11 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
       visitors,
       auditLogs,
       tools,
+      categories: CATEGORIES.map(c => c.label),
       addVisitor,
       checkoutVisitor,
       updateVisitor,
+      editVisitor,
       deleteVisitor,
       getActiveVisitors,
       getTodayVisitors,
@@ -424,6 +442,7 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
       addVisitor,
       checkoutVisitor,
       updateVisitor,
+      editVisitor,
       deleteVisitor,
       getActiveVisitors,
       getTodayVisitors,

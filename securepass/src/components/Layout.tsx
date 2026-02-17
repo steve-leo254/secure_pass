@@ -115,7 +115,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     : [];
 
   const utilityNav = [
-    { path: '/qrcode', label: 'QR Code', icon: QrCode, badge: null },
+    { path: '/qr', label: 'QR Code', icon: QrCode, badge: null },
+
     ...(isAdmin
       ? [
           {
