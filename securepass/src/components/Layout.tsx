@@ -99,6 +99,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const adminNav = isAdmin
     ? [
         { path: '/records', label: 'All Records', icon: Users, badge: null },
+        { path: '/management', label: 'Management', icon: Settings, badge: null },
         {
           path: '/analytics',
           label: 'Analytics',

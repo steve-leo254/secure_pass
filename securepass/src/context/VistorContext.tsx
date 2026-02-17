@@ -15,6 +15,7 @@ import type {
   HourlyData,
   DailyData,
   CategoryData,
+  Category,
 } from '../types';
 import { CATEGORY_CHART_COLORS, CATEGORIES } from '../types';
 
@@ -22,7 +23,7 @@ interface VisitorContextType {
   visitors: Visitor[];
   auditLogs: AuditLog[];
   tools: string[];
-  categories: string[];
+  categories: Category[];
   addVisitor: (
     visitor: Omit<Visitor, 'id' | 'timeIn' | 'timeOut' | 'status'>
   ) => Visitor;
@@ -45,6 +46,9 @@ interface VisitorContextType {
   getRecentActivity: (limit?: number) => AuditLog[];
   addTool: (tool: string) => void;
   removeTool: (tool: string) => void;
+  addCategory: (category: Category) => void;
+  updateCategory: (id: string, data: Partial<Category>) => void;
+  deleteCategory: (id: string) => void;
 }
 
 const VisitorContext = createContext<VisitorContextType | undefined>(undefined);
@@ -52,6 +56,7 @@ const VisitorContext = createContext<VisitorContextType | undefined>(undefined);
 const STORAGE_KEY = 'securepass_visitors';
 const AUDIT_KEY = 'securepass_audit';
 const TOOLS_KEY = 'securepass_tools';
+const CATEGORIES_KEY = 'securepass_categories';
 
 const loadVisitors = (): Visitor[] => {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -68,12 +73,62 @@ const loadTools = (): string[] => {
   return saved ? JSON.parse(saved) : [];
 };
 
+const loadCategories = (): Category[] => {
+  const saved = localStorage.getItem(CATEGORIES_KEY);
+  if (saved) return JSON.parse(saved);
+  
+  // Default categories
+  return [
+    {
+      id: '1',
+      name: 'Visitor / Customer',
+      value: 'visitor',
+      color: '#3b82f6',
+      icon: '👤',
+      isActive: true,
+    },
+    {
+      id: '2',
+      name: 'Contractor',
+      value: 'contractor',
+      color: '#f97316',
+      icon: '🔧',
+      isActive: true,
+    },
+    {
+      id: '3',
+      name: 'Technician',
+      value: 'technician',
+      color: '#8b5cf6',
+      icon: '⚙️',
+      isActive: true,
+    },
+    {
+      id: '4',
+      name: 'Delivery Personnel',
+      value: 'delivery',
+      color: '#22c55e',
+      icon: '📦',
+      isActive: true,
+    },
+    {
+      id: '5',
+      name: 'Staff',
+      value: 'staff',
+      color: '#6366f1',
+      icon: '🏢',
+      isActive: true,
+    },
+  ];
+};
+
 export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [visitors, setVisitors] = useState<Visitor[]>(loadVisitors);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(loadAudit);
   const [tools, setTools] = useState<string[]>(loadTools);
+  const [categories, setCategories] = useState<Category[]>(loadCategories);
 
   const saveVisitors = (v: Visitor[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
@@ -81,6 +136,10 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
 
   const saveTools = (t: string[]) => {
     localStorage.setItem(TOOLS_KEY, JSON.stringify(t));
+  };
+
+  const saveCategories = (c: Category[]) => {
+    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(c));
   };
 
   const addAuditLog = useCallback(
@@ -408,12 +467,63 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
     []
   );
 
+  const addCategory = useCallback(
+    (category: Category) => {
+      setCategories((prev) => {
+        const updated = [...prev, category];
+        saveCategories(updated);
+        addAuditLog(
+          'CATEGORY_ADD',
+          'Admin',
+          `Category ${category.name} added`
+        );
+        return updated;
+      });
+    },
+    [addAuditLog]
+  );
+
+  const updateCategory = useCallback(
+    (id: string, data: Partial<Category>) => {
+      setCategories((prev) => {
+        const updated = prev.map((c) =>
+          c.id === id ? { ...c, ...data } : c
+        );
+        saveCategories(updated);
+        addAuditLog(
+          'CATEGORY_UPDATE',
+          'Admin',
+          `Category ${id} updated`
+        );
+        return updated;
+      });
+    },
+    [addAuditLog]
+  );
+
+  const deleteCategory = useCallback(
+    (id: string) => {
+      setCategories((prev) => {
+        const category = prev.find((c) => c.id === id);
+        const updated = prev.filter((c) => c.id !== id);
+        saveCategories(updated);
+        addAuditLog(
+          'CATEGORY_DELETE',
+          'Admin',
+          `Category ${category?.name || id} deleted`
+        );
+        return updated;
+      });
+    },
+    [addAuditLog]
+  );
+
   const value = useMemo(
     () => ({
       visitors,
       auditLogs,
       tools,
-      categories: CATEGORIES.map(c => c.label),
+      categories: categories.filter(c => c.isActive),
       addVisitor,
       checkoutVisitor,
       updateVisitor,
@@ -434,11 +544,15 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
       getRecentActivity,
       addTool,
       removeTool,
+      addCategory,
+      updateCategory,
+      deleteCategory,
     }),
     [
       visitors,
       auditLogs,
       tools,
+      categories,
       addVisitor,
       checkoutVisitor,
       updateVisitor,

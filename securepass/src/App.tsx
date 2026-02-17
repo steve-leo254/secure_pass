@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { VisitorProvider } from "./context/VistorContext";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
+import PublicRegister from './pages/PublicRegister';
 import Dashboard from "./pages/Dashboard";
 import RegisterVisitor from "./pages/RegisterVisitor";
 import ActiveVisitors from "./pages/ActiveVisitors";
@@ -13,6 +14,8 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import ToolsManagement from "./pages/ToolsManagement";
 import MemberRegister from "./pages/MemberRegister";
 import Members from "./pages/Members";
+import Management from "./pages/Management";
+import PublicCheckout from './pages/PublicCheckout';
 import type { ReactNode } from "react";
 
 const Protected = ({
@@ -42,6 +45,9 @@ export default function App() {
         <VisitorProvider>
           <Routes>
             <Route path="/" element={<LoginGuard />} />
+            <Route path="/visitor-register" element={<PublicRegister />} />
+            <Route path="/visitor-checkout" element={<PublicCheckout />} />
+
             <Route
               path="/dashboard"
               element={
@@ -87,6 +93,14 @@ export default function App() {
               element={
                 <Protected roles={["admin"]}>
                   <ToolsManagement />
+                </Protected>
+              }
+            />
+            <Route
+              path="/management"
+              element={
+                <Protected roles={["admin"]}>
+                  <Management />
                 </Protected>
               }
             />

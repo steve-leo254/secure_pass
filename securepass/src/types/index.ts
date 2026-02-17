@@ -20,6 +20,15 @@ export interface User {
   avatar?: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  value: string;
+  color: string;
+  icon: string;
+  isActive: boolean;
+}
+
 export interface Visitor {
   id: string;
   fullName: string;

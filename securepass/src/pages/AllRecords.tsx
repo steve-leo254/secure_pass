@@ -176,8 +176,8 @@ export default function AllRecords() {
               >
                 <option value="all">All Categories</option>
                 {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                  <option key={c.value} value={c.value}>
+                    {c.name}
                   </option>
                 ))}
               </select>
@@ -450,8 +450,8 @@ export default function AllRecords() {
                       className="w-full appearance-none border-2 border-gray-300 rounded-lg px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
                     >
                       {categories.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
+                        <option key={c.value} value={c.value}>
+                          {c.name}
                         </option>
                       ))}
                     </select>
