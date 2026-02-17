@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
 import { UserPlus, IdCard, Users as UsersIcon, FileText, Settings as SettingsIcon } from "lucide-react";
 
+<<<<<<< HEAD
 /* ─────────────────────────────────────────────
    MOCK DATA
 ───────────────────────────────────────────── */
@@ -125,6 +126,21 @@ const initials = (name: string): string =>
 /* ─────────────────────────────────────────────
    MAIN COMPONENT
 ───────────────────────────────────────────── */
+=======
+const CAT_COLORS: Record<string, string> = {
+  Contractor: "bg-orange-500",
+  Technician: "bg-blue-500",
+  "Delivery Personnel": "bg-purple-500",
+  Staff: "bg-emerald-500",
+  };
+
+const CAT_BADGE: Record<string, string> = {
+  Contractor: "bg-orange-100 text-orange-700",
+  Technician: "bg-blue-100 text-blue-700",
+  "Delivery Personnel": "bg-purple-100 text-purple-700",
+  Staff: "bg-emerald-100 text-emerald-700",
+  };
+>>>>>>> refs/remotes/origin/main
 
 export default function Dashboard() {
   const { user } = useAuth();

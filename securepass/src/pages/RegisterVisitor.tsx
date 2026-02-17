@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useCallback, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
 import type { VisitorCategory, Gender } from "../types";
@@ -47,21 +47,21 @@ export default function RegisterVisitor() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
 
-  const set = (field: keyof FormData, value: string | string[]) => {
+  const set = useCallback((field: keyof FormData, value: string | string[]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((p) => ({ ...p, [field]: "" }));
-  };
+  }, []);
 
-  const toggleTool = (tool: string) => {
+  const toggleTool = useCallback((tool: string) => {
     setForm((prev) => ({
       ...prev,
       tools: prev.tools.includes(tool)
         ? prev.tools.filter((t) => t !== tool)
         : [...prev.tools, tool],
     }));
-  };
+  }, []);
 
-  const validate = () => {
+  const validate = useCallback(() => {
     const e: Record<string, string> = {};
     if (!form.fullName.trim()) e.fullName = "Required";
     if (!form.phoneNumber.trim()) e.phoneNumber = "Required";
@@ -72,14 +72,14 @@ export default function RegisterVisitor() {
     if (!form.unitVisited.trim()) e.unitVisited = "Required";
     setErrors(e);
     return Object.keys(e).length === 0;
-  };
+  }, [form]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = useCallback((e: FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     const allTools = [...form.tools];
-    if (form.customTool.trim()) allTools.push(form.customTool.trim());
+    const customToolsList = form.customTool.trim() ? [form.customTool.trim()] : [];
 
     addVisitor({
       fullName: form.fullName.trim(),
@@ -90,7 +90,7 @@ export default function RegisterVisitor() {
       gender: form.gender as Gender,
       unitVisited: form.unitVisited.trim(),
       tools: allTools,
-      customTools: [],
+      customTools: customToolsList,
       registeredBy: user?.name || "Unknown",
       checkedOutBy: null,
     });
@@ -98,7 +98,7 @@ export default function RegisterVisitor() {
     setSuccess(true);
     setForm(INITIAL);
     setTimeout(() => setSuccess(false), 3000);
-  };
+  }, [form, validate, addVisitor, user?.name]);
 
   const InputWrapper = ({
     label,
