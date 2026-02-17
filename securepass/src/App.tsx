@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { DataProvider } from "./context/DataContext";
-import Layout from "./components/LayoutComponent";
+import { VisitorProvider } from "./context/VistorContext";
+import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import RegisterVisitor from "./pages/RegisterVisitor";
@@ -9,6 +9,8 @@ import ActiveVisitors from "./pages/ActiveVisitors";
 import AllRecords from "./pages/AllRecords";
 import Settings from "./pages/Settings";
 import QRPage from "./pages/QRPage";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import ToolsManagement from "./pages/ToolsManagement";
 import type { ReactNode } from "react";
 
 const Protected = ({
@@ -35,7 +37,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <DataProvider>
+        <VisitorProvider>
           <Routes>
             <Route path="/" element={<LoginGuard />} />
             <Route
@@ -71,6 +73,22 @@ export default function App() {
               }
             />
             <Route
+              path="/analytics"
+              element={
+                <Protected roles={["admin"]}>
+                  <AdminAnalytics />
+                </Protected>
+              }
+            />
+            <Route
+              path="/tools"
+              element={
+                <Protected roles={["admin"]}>
+                  <ToolsManagement />
+                </Protected>
+              }
+            />
+            <Route
               path="/settings"
               element={
                 <Protected roles={["admin"]}>
@@ -88,7 +106,7 @@ export default function App() {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </DataProvider>
+        </VisitorProvider>
       </AuthProvider>
     </BrowserRouter>
   );

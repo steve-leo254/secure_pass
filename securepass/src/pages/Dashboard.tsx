@@ -1,326 +1,407 @@
-import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useData } from "../context/DataContext";
+import React from 'react';
+import { useVisitors } from '../context/VistorContext';
+import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import {
   Users,
   UserCheck,
   UserX,
-  Wrench,
+  HardHat,
   UserPlus,
-  ClipboardCheck,
-  QrCode,
   TrendingUp,
   Clock,
-  ArrowRight,
-} from "lucide-react";
+  ArrowUpRight,
+  Activity,
+  Wrench as WrenchIcon,
+  BarChart3,
+} from 'lucide-react';
+import { CATEGORIES } from '../types';
+import { format } from 'date-fns';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
-const CAT_COLORS: Record<string, string> = {
-  Contractor: "bg-orange-500",
-  Technician: "bg-blue-500",
-  "Delivery Personnel": "bg-purple-500",
-  Staff: "bg-emerald-500",
-  };
+const Dashboard: React.FC = () => {
+  const { getStats, getActiveVisitors, getTodayVisitors, getDailyData } =
+    useVisitors();
+  const { user, userRole } = useAuth();
+  const stats = getStats();
+  const activeVisitors = getActiveVisitors();
+  const todayVisitors = getTodayVisitors();
+  const dailyData = getDailyData(7);
 
-const CAT_BADGE: Record<string, string> = {
-  Contractor: "bg-orange-100 text-orange-700",
-  Technician: "bg-blue-100 text-blue-700",
-  "Delivery Personnel": "bg-purple-100 text-purple-700",
-  Staff: "bg-emerald-100 text-emerald-700",
-  };
-
-export default function Dashboard() {
-  const { user } = useAuth();
-  const { visitors, activeVisitors, auditLogs } = useData();
-
-  const today = new Date().toDateString();
-  const todayAll = visitors.filter(
-    (v) => new Date(v.timeIn).toDateString() === today
-  );
-  const todayOut = todayAll.filter((v) => v.status === "checked-out");
-  const totalTools = activeVisitors.reduce(
-    (sum, v) => sum + v.tools.length,
-    0
-  );
-
-  const stats = [
+  const statCards = [
     {
-      label: "Visitors Today",
-      value: todayAll.length,
+      label: 'Total Today',
+      value: stats.totalToday,
       icon: Users,
-      grad: "from-blue-500 to-blue-600",
-      bg: "bg-blue-50",
-      iconBg: "bg-blue-500",
+      gradient: 'from-blue-500 to-cyan-500',
+      shadow: 'shadow-blue-500/20',
     },
     {
-      label: "Currently Inside",
-      value: activeVisitors.length,
+      label: 'Currently In',
+      value: stats.currentlyIn,
       icon: UserCheck,
-      grad: "from-emerald-500 to-emerald-600",
-      bg: "bg-emerald-50",
-      iconBg: "bg-emerald-500",
+      gradient: 'from-emerald-500 to-teal-500',
+      shadow: 'shadow-emerald-500/20',
     },
     {
-      label: "Checked Out",
-      value: todayOut.length,
+      label: 'Checked Out',
+      value: stats.checkedOut,
       icon: UserX,
-      grad: "from-amber-500 to-amber-600",
-      bg: "bg-amber-50",
-      iconBg: "bg-amber-500",
+      gradient: 'from-amber-500 to-orange-500',
+      shadow: 'shadow-amber-500/20',
     },
     {
-      label: "Tools On Site",
-      value: totalTools,
-      icon: Wrench,
-      grad: "from-purple-500 to-purple-600",
-      bg: "bg-purple-50",
-      iconBg: "bg-purple-500",
+      label: 'Contractors',
+      value: stats.contractors,
+      icon: HardHat,
+      gradient: 'from-violet-500 to-purple-500',
+      shadow: 'shadow-violet-500/20',
     },
   ];
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Real-time overview of visitor activity
+  const categoryStats = [
+    { label: 'Visitors', value: stats.visitors, color: 'bg-blue-500', icon: '👤' },
+    { label: 'Contractors', value: stats.contractors, color: 'bg-orange-500', icon: '🔧' },
+    { label: 'Technicians', value: stats.technicians, color: 'bg-purple-500', icon: '⚙️' },
+    { label: 'Deliveries', value: stats.deliveries, color: 'bg-green-500', icon: '📦' },
+    { label: 'Staff', value: stats.staff, color: 'bg-indigo-500', icon: '🏢' },
+  ];
+
+  const getCategoryBadge = (category: string) => {
+    return (
+      CATEGORIES.find((c) => c.value === category) || {
+        label: category,
+        color: 'bg-gray-500',
+        icon: '👤',
+      }
+    );
+  };
+
+  const ChartTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white rounded-xl shadow-xl border border-slate-100 p-3">
+          <p className="text-xs font-semibold text-slate-800 mb-1">{label}</p>
+          <p className="text-xs text-indigo-600 font-bold">
+            {payload[0].value} visitors
           </p>
         </div>
-        <Link
-          to="/register"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all"
-        >
-          <UserPlus className="w-4 h-4" />
-          New Visitor
-        </Link>
-      </div>
+      );
+    }
+    return null;
+  };
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s, i) => (
-          <div
-            key={i}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 group"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">{s.label}</p>
-                <p className="text-3xl font-extrabold text-slate-800 mt-2 tracking-tight">
-                  {s.value}
-                </p>
-              </div>
-              <div
-                className={`w-12 h-12 ${s.iconBg} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}
-              >
-                <s.icon className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center gap-1.5 text-xs text-slate-400">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>Today's data</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Visitors */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+  return (
+    <div className="space-y-6">
+      {/* Welcome */}
+      <div className="animate-fade-in">
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50"></div>
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h3 className="text-lg font-bold text-slate-800">
-                Recent Visitors
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Latest check-ins and check-outs
+              <p className="text-indigo-200 text-sm mb-1">Welcome back,</p>
+              <h1 className="text-2xl lg:text-3xl font-bold">
+                {user?.name} 👋
+              </h1>
+              <p className="text-indigo-200 text-sm mt-2">
+                Here's what's happening at your premises today.
               </p>
             </div>
-            <Link
-              to="/active"
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-            >
-              View all <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="divide-y divide-slate-50">
-            {todayAll.length === 0 ? (
-              <div className="text-center py-12 text-slate-400">
-                <Users className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                <p className="font-medium">No visitors today</p>
-                <p className="text-sm mt-1">
-                  Visitors will appear here once registered
-                </p>
-              </div>
-            ) : (
-              todayAll.slice(0, 6).map((v) => (
-                <div
-                  key={v.id}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50/80 transition"
+            <div className="flex gap-3 self-start">
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 px-5 py-3 bg-white text-indigo-700 font-semibold rounded-xl hover:bg-indigo-50 transition-all duration-200 shadow-lg text-sm"
+              >
+                <UserPlus className="w-4 h-4" />
+                Register Visitor
+              </Link>
+              {userRole === 'admin' && (
+                <Link
+                  to="/analytics"
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-200 text-sm"
                 >
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                      CAT_COLORS[v.category] || "bg-slate-500"
-                    }`}
-                  >
-                    {v.fullName
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 text-sm">
-                      {v.fullName}
-                    </p>
-                    <p className="text-xs text-slate-500 truncate">
-                      {v.category} · {v.unitVisited}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <span
-                      className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                        CAT_BADGE[v.category] || "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      {v.category}
-                    </span>
-                    <p className="text-[11px] text-slate-400 mt-1 flex items-center justify-end gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(v.timeIn).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
+                  <BarChart3 className="w-4 h-4" />
+                  Analytics
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.label}
+              className={`animate-fade-in bg-white rounded-2xl p-5 border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md transition-all duration-300`}
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div
+                  className={`w-11 h-11 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg ${stat.shadow}`}
+                >
+                  <Icon className="w-5 h-5 text-white" />
                 </div>
-              ))
+                <div className="flex items-center gap-1 text-emerald-500 text-xs font-medium">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>Live</span>
+                </div>
+              </div>
+              <h3 className="text-3xl font-black text-slate-800">
+                {stat.value}
+              </h3>
+              <p className="text-sm text-slate-400 mt-1">{stat.label}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Mini Trend Chart */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-6 animate-fade-in shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-slate-800">7-Day Trend</h3>
+            {userRole === 'admin' && (
+              <Link
+                to="/analytics"
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+              >
+                Details <ArrowUpRight className="w-3 h-3" />
+              </Link>
             )}
+          </div>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={dailyData}>
+                <defs>
+                  <linearGradient id="miniGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 9, fill: '#94a3b8' }}
+                />
+                <YAxis hide allowDecimals={false} />
+                <Tooltip content={<ChartTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#miniGrad)"
+                  dot={{ r: 2.5, fill: '#6366f1', strokeWidth: 0 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Right column */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">
-              Quick Actions
-            </h3>
-            <div className="space-y-2.5">
-              <Link
-                to="/register"
-                className="flex items-center gap-3 p-3.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-all group"
-              >
-                <div className="w-9 h-9 bg-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <UserPlus className="w-4 h-4 text-white" />
-                </div>
-                <span className="font-semibold text-sm text-slate-700">
-                  Register Visitor
-                </span>
-              </Link>
-              <Link
-                to="/active"
-                className="flex items-center gap-3 p-3.5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 transition-all group"
-              >
-                <div className="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <ClipboardCheck className="w-4 h-4 text-white" />
-                </div>
-                <span className="font-semibold text-sm text-slate-700">
-                  Security Desk
-                </span>
-              </Link>
-              <Link
-                to="/qr"
-                className="flex items-center gap-3 p-3.5 rounded-xl bg-gradient-to-r from-purple-50 to-violet-50 hover:from-purple-100 hover:to-violet-100 transition-all group"
-              >
-                <div className="w-9 h-9 bg-purple-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <QrCode className="w-4 h-4 text-white" />
-                </div>
-                <span className="font-semibold text-sm text-slate-700">
-                  QR Code Access
-                </span>
-              </Link>
-            </div>
+        {/* Category Breakdown */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-6 animate-fade-in shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-slate-800">Active by Category</h3>
+            <Activity className="w-4 h-4 text-slate-400" />
           </div>
-
-          {/* Category Distribution */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">
-              Active by Category
-            </h3>
-            <div className="space-y-3">
-              {Object.keys(CAT_COLORS).map((cat) => {
-                const count = activeVisitors.filter(
-                  (v) => v.category === cat
-                ).length;
-                const total = activeVisitors.length || 1;
-                const pct = Math.round((count / total) * 100);
-                return (
-                  <div key={cat}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-medium text-slate-600">
-                        {cat}
+          <div className="space-y-4">
+            {categoryStats.map((cat) => {
+              const total = stats.currentlyIn || 1;
+              const pct = Math.round((cat.value / total) * 100) || 0;
+              return (
+                <div key={cat.label} className="flex items-center gap-3">
+                  <span className="text-lg">{cat.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-slate-600">
+                        {cat.label}
                       </span>
-                      <span className="text-xs font-bold text-slate-800">
-                        {count}
+                      <span className="text-sm font-bold text-slate-800">
+                        {cat.value}
                       </span>
                     </div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${CAT_COLORS[cat]} transition-all duration-700`}
-                        style={{ width: `${count > 0 ? Math.max(pct, 8) : 0}%` }}
+                        className={`h-full ${cat.color} rounded-full transition-all duration-700`}
+                        style={{ width: `${pct}%` }}
                       />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Active Visitors List */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-6 animate-fade-in shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-slate-800">Currently In</h3>
+            <Link
+              to="/active"
+              className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+            >
+              View All <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {activeVisitors.length === 0 ? (
+            <div className="text-center py-10">
+              <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
+                <Users className="w-7 h-7 text-slate-300" />
+              </div>
+              <p className="text-slate-400 font-medium text-sm">
+                No active visitors
+              </p>
+              <p className="text-xs text-slate-300 mt-1">All clear</p>
+            </div>
+          ) : (
+            <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+              {activeVisitors.slice(0, 6).map((visitor) => {
+                const badge = getCategoryBadge(visitor.category);
+                return (
+                  <div
+                    key={visitor.id}
+                    className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 hover:bg-slate-50 transition-colors"
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-lg ${badge.color} flex items-center justify-center text-white text-sm`}
+                    >
+                      {badge.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-700 text-sm truncate">
+                        {visitor.fullName}
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        {visitor.unitVisited}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                        <Clock className="w-3 h-3" />
+                        {format(new Date(visitor.timeIn), 'HH:mm')}
+                      </div>
+                      {[...visitor.tools, ...visitor.customTools].length >
+                        0 && (
+                        <div className="flex items-center gap-1 text-[11px] text-amber-500 mt-0.5">
+                          <WrenchIcon className="w-3 h-3" />
+                          {[...visitor.tools, ...visitor.customTools].length}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Audit Logs (Admin) */}
-      {user?.role === "admin" && auditLogs.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-100">
-            <h3 className="text-lg font-bold text-slate-800">
-              Recent Activity
-            </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              System audit log
-            </p>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {auditLogs.slice(0, 6).map((log) => (
-                <div key={log.id} className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-700">{log.details}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      {new Date(log.timestamp).toLocaleString()} ·{" "}
-                      {log.performedBy}
-                    </p>
-                  </div>
-                  <span
-                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                      log.action === "REGISTER"
-                        ? "bg-blue-50 text-blue-600"
-                        : log.action === "CHECKOUT"
-                        ? "bg-emerald-50 text-emerald-600"
-                        : log.action === "DELETE"
-                        ? "bg-red-50 text-red-600"
-                        : "bg-amber-50 text-amber-600"
-                    }`}
-                  >
-                    {log.action}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Today's Table */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-6 animate-fade-in shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-bold text-slate-800">Today's Activity</h3>
+          <span className="text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg font-medium">
+            {todayVisitors.length} entries
+          </span>
         </div>
-      )}
+        {todayVisitors.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-400">No activity recorded today</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  {['Visitor', 'Category', 'Unit', 'Time In', 'Status'].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider pb-3 pr-4"
+                      >
+                        {h}
+                      </th>
+                    )
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {todayVisitors.slice(0, 10).map((visitor) => {
+                  const badge = getCategoryBadge(visitor.category);
+                  return (
+                    <tr
+                      key={visitor.id}
+                      className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50"
+                    >
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={`w-8 h-8 rounded-lg ${badge.color} flex items-center justify-center text-white text-xs font-bold`}
+                          >
+                            {visitor.fullName.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-700 text-sm">
+                              {visitor.fullName}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {visitor.phoneNumber}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <span className="text-xs font-medium text-slate-600">
+                          {badge.icon} {badge.label}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4 text-sm text-slate-600">
+                        {visitor.unitVisited}
+                      </td>
+                      <td className="py-3 pr-4 text-sm text-slate-600">
+                        {format(new Date(visitor.timeIn), 'HH:mm')}
+                      </td>
+                      <td className="py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                            visitor.status === 'checked-in'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                              : 'bg-slate-50 text-slate-500 border border-slate-100'
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${visitor.status === 'checked-in' ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                          ></span>
+                          {visitor.status === 'checked-in' ? 'In' : 'Out'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

@@ -40,6 +40,32 @@ const INITIAL: FormData = {
   customTool: "",
 };
 
+const InputWrapper = ({
+  label,
+  icon: Icon,
+  error,
+  children,
+}: {
+  label: string;
+  icon: typeof User;
+  error?: string;
+  children: React.ReactNode;
+}) => (
+  <div>
+    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
+      <Icon className="w-4 h-4 text-slate-400" />
+      {label}
+    </label>
+    {children}
+    {error && (
+      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+        <span className="w-3 h-3 text-red-400">⚠</span>
+        {error}
+      </p>
+    )}
+  </div>
+);
+
 export default function RegisterVisitor() {
   const { user } = useAuth();
   const { addVisitor, tools: toolsList, categories } = useData();
@@ -49,7 +75,14 @@ export default function RegisterVisitor() {
 
   const set = useCallback((field: keyof FormData, value: string | string[]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((p) => ({ ...p, [field]: "" }));
+    setErrors((prev) => {
+      if (prev[field]) {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      }
+      return prev;
+    });
   }, []);
 
   const toggleTool = useCallback((tool: string) => {
@@ -99,29 +132,6 @@ export default function RegisterVisitor() {
     setForm(INITIAL);
     setTimeout(() => setSuccess(false), 3000);
   }, [form, validate, addVisitor, user?.name]);
-
-  const InputWrapper = ({
-    label,
-    icon: Icon,
-    error,
-    children,
-  }: {
-    label: string;
-    icon: typeof User;
-    error?: string;
-    children: React.ReactNode;
-  }) => (
-    <div>
-      <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
-        <Icon className="w-4 h-4 text-slate-400" />
-        {label}
-      </label>
-      {children}
-      {error && (
-        <p className="text-red-500 text-xs mt-1.5 font-medium">{error}</p>
-      )}
-    </div>
-  );
 
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">

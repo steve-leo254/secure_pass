@@ -45,6 +45,7 @@ export interface AuditLog {
   performedBy: string;
   timestamp: string;
   details: string;
+  category?: VisitorCategory;
 }
 
 export interface SystemSettings {
@@ -65,6 +66,26 @@ export interface DashboardStats {
   technicians: number;
 }
 
+export interface HourlyData {
+  hour: string;
+  checkIns: number;
+  checkOuts: number;
+}
+
+export interface DailyData {
+  date: string;
+  total: number;
+  checkIns: number;
+  checkOuts: number;
+}
+
+export interface CategoryData {
+  name: string;
+  value: number;
+  color: string;
+  icon: string;
+}
+
 export const CATEGORIES: { value: VisitorCategory; label: string; color: string; icon: string }[] = [
   { value: 'visitor', label: 'Visitor / Customer', color: 'bg-blue-500', icon: '👤' },
   { value: 'contractor', label: 'Contractor', color: 'bg-orange-500', icon: '🔧' },
@@ -79,6 +100,14 @@ export const CATEGORY_LABELS: Record<VisitorCategory, string> = {
   'technician': 'Technician',
   'delivery': 'Delivery Personnel',
   'staff': 'Staff',
+};
+
+export const CATEGORY_CHART_COLORS: Record<VisitorCategory, string> = {
+  'visitor': '#3b82f6',
+  'contractor': '#f97316',
+  'technician': '#8b5cf6',
+  'delivery': '#22c55e',
+  'staff': '#6366f1',
 };
 
 export const TOOLS_LIST: string[] = [
