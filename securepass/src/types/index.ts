@@ -90,13 +90,12 @@ export const TOOLS_LIST: string[] = [
   'Ladder',
   'Pliers',
   'Tape Measure',
-  'Level Tool',
-  'Saw',
-  'Wire Cutters',
-  'Pipe Wrench',
-  'Paint Roller',
+  'Level',
+  'Wire Cutter',
   'Angle Grinder',
-  'Multimeter',
+  'Pipe Wrench',
+  'Soldering Iron',
+  'Circular Saw',
 ];
 
 export const DEFAULT_USERS: User[] = [
