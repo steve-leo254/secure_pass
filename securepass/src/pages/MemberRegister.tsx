@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useVisitors } from "../context/VistorContext";
+import { useData } from "../context/DataContext";
 import {
   UserPlus,
   CheckCircle2,
@@ -39,7 +39,7 @@ const INITIAL: FormData = {
 
 export default function MemberRegister() {
   const navigate = useNavigate();
-  const { addMember } = useVisitors();
+  const { addMember } = useData();
   const [form, setForm] = useState<FormData>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);

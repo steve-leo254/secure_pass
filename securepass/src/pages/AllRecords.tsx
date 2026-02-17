@@ -338,6 +338,8 @@ export default function AllRecords() {
                               purpose: v.purpose,
                               gender: v.gender,
                               unitVisited: v.unitVisited,
+                              tools: v.tools,
+                              status: v.status,
                             });
                           }}
                           className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition"
@@ -433,7 +435,7 @@ export default function AllRecords() {
                   )}
                 </div>
               ))}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="mt-6 grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-900 mb-2">
                     Category
@@ -480,6 +482,27 @@ export default function AllRecords() {
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 mb-2">
+                    Status
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={editData.status || ""}
+                      onChange={(e) =>
+                        setEditData((p) => ({
+                          ...p,
+                          status: e.target.value as "checked-in" | "checked-out",
+                        }))
+                      }
+                      className="w-full appearance-none border-2 border-gray-300 rounded-lg px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
+                    >
+                      <option value="checked-in">Checked In</option>
+                      <option value="checked-out">Checked Out</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
               </div>
             </div>
             <div className="p-6 border-t border-slate-100 flex gap-3">
@@ -502,7 +525,7 @@ export default function AllRecords() {
 
       {/* Delete Modal */}
       {deleteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">

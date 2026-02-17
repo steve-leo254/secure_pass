@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useVisitors } from "../context/VistorContext";
+import { useData } from "../context/DataContext";
 import {
   Search,
   Users,
@@ -12,7 +12,7 @@ import {
 import type { Member } from "../types";
 
 export default function Members() {
-  const { members, deleteMember, updateMember } = useVisitors();
+  const { members, deleteMember, updateMember } = useData();
   const [search, setSearch] = useState("");
   const [statusF, setStatusF] = useState<"all" | "active" | "inactive">("all");
   const [editModal, setEditModal] = useState<Member | null>(null);
@@ -77,7 +77,7 @@ export default function Members() {
     ]);
     const csv = [
       headers.join(","),
-      ...rows.map((r) => r.map((c) => `"${c}"`).join(",")),
+      ...rows.map((r) => r.map((c: string | number) => `"${c}"`).join(",")),
     ].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);

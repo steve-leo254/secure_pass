@@ -163,7 +163,7 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     saveBillingAccount(updatedAccount);
-  }, [billingAccount, saveBillingAccount]);
+  }, [saveBillingAccount]);
 
   const getBillingStatus = useCallback((): BillingStatus => {
     return billingAccount?.status || 'trial';

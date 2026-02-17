@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { VisitorProvider } from "./context/VistorContext";
+import { DataProvider } from "./context/DataContext";
 import { BillingProvider } from "./context/BillingContext";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
@@ -45,7 +46,8 @@ export default function App() {
       <AuthProvider>
         <BillingProvider>
           <VisitorProvider>
-            <Routes>
+            <DataProvider>
+              <Routes>
             <Route path="/" element={<LoginGuard />} />
             <Route path="/visitor-register" element={<PublicRegister />} />
             <Route path="/visitor-checkout" element={<PublicCheckout />} />
@@ -140,6 +142,7 @@ export default function App() {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+            </DataProvider>
         </VisitorProvider>
       </BillingProvider>
     </AuthProvider>
