@@ -19,6 +19,12 @@ export interface User {
   password: string;
   role: UserRole;
   name: string;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  department?: string;
+  employeeId?: string;
+  joinedDate?: string;
   avatar?: string;
 }
 
@@ -110,6 +116,9 @@ interface AuthContextType {
   login: (username: string, password: string) => boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  updateProfile: (updates: Partial<User>) => void;
+  updateAvatar: (avatar: string) => void;
+  removeAvatar: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -147,6 +156,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
   };
 
+  const updateProfile = (updates: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...updates });
+    }
+  };
+
+  const updateAvatar = (avatar: string) => {
+    if (user) {
+      setUser({ ...user, avatar });
+    }
+  };
+
+  const removeAvatar = () => {
+    if (user) {
+      setUser({ ...user, avatar: undefined });
+    }
+  };
+
   return (
 
     <AuthContext.Provider
@@ -158,6 +185,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         isAuthenticated,
         isAdmin: userRole === 'admin',
+        updateProfile,
+        updateAvatar,
+        removeAvatar,
       }}
     >
       {children}

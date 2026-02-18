@@ -117,6 +117,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     : [];
 
   const utilityNav = [
+    { path: '/profile', label: 'My Profile', icon: User, badge: null },
     { path: '/qr', label: 'QR Code', icon: QrCode, badge: null },
 
     ...(isAdmin
@@ -565,8 +566,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   }}
                   className="flex items-center gap-2 py-1.5 pl-1.5 pr-3 rounded-xl hover:bg-slate-50 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                    {user?.name?.charAt(0) || 'U'}
+                  <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm flex-shrink-0">
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-xs">
+                        {user?.name?.charAt(0) || 'U'}
+                      </div>
+                    )}
                   </div>
                   <div className="hidden sm:block text-left">
                     <p className="text-xs font-semibold text-slate-700 leading-none">

@@ -40,6 +40,12 @@ export interface User {
   password: string;
   role: UserRole;
   name: string;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  department?: string;
+  employeeId?: string;
+  joinedDate?: string;
   avatar?: string;
 }
 

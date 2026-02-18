@@ -16,6 +16,8 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import ToolsManagement from "./pages/ToolsManagement";
 import MemberRegister from "./pages/MemberRegister";
 import Members from "./pages/Members";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import ProfilePage from "./pages/ProfilePage";
 import Management from "./pages/Management";
 import PublicCheckout from './pages/PublicCheckout';
 import type { ReactNode } from "react";
@@ -49,6 +51,8 @@ export default function App() {
             <DataProvider>
               <Routes>
             <Route path="/" element={<LoginGuard />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/termsandcondition" element={<TermsAndConditions />} />
             <Route path="/visitor-register" element={<PublicRegister />} />
             <Route path="/visitor-checkout" element={<PublicCheckout />} />
 
