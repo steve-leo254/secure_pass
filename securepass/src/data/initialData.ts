@@ -22,8 +22,8 @@ export const DEFAULT_USERS: User[] = [
     id: 'usr-001',
     username: 'admin',
     password: 'admin123',
-    role: 'admin',
-    name: 'System Administrator',
+    role: 'property_manager',
+    name: 'Property Manager',
   },
   {
     id: 'usr-002',

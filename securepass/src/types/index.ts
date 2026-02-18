@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'security';
+export type UserRole = 'property_manager' | 'security';
 
 export type VisitorCategory =
   | 'contractor'
@@ -186,8 +186,8 @@ export const DEFAULT_USERS: User[] = [
     id: '1',
     username: 'admin',
     password: 'admin123',
-    role: 'admin',
-    name: 'System Administrator',
+    role: 'property_manager',
+    name: 'Property Manager',
   },
   {
     id: '2',
@@ -197,3 +197,91 @@ export const DEFAULT_USERS: User[] = [
     name: 'John Security',
   },
 ];
+
+// Subscription & Package Management Types
+export type SubscriptionStatus = 'active' | 'expiring' | 'expired' | 'trial' | 'suspended';
+export type PackageBilling = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
+export type SystemUserRole = 'superadmin' | 'admin' | 'security';
+export type SystemUserStatus = 'active' | 'inactive' | 'suspended';
+
+export interface Package {
+  id: string;
+  name: string;
+  billing: PackageBilling;
+  price: number;
+  currency: string;
+  maxUsers: number;
+  maxVisitorsPerDay: number;
+  features: string[];
+  isPopular?: boolean;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  packageId: string;
+  startDate: string;
+  endDate: string;
+  status: SubscriptionStatus;
+  autoRenew: boolean;
+  paymentMethod?: string;
+  lastPaymentDate?: string;
+  nextPaymentDate?: string;
+  amount: number;
+}
+
+export interface SystemUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: SystemUserRole;
+  status: SystemUserStatus;
+  avatar?: string;
+  company?: string;
+  property?: string;
+  subscriptionId?: string;
+  createdAt: string;
+  lastActive?: string;
+  totalVisitors?: number;
+}
+
+export interface SubscriptionReminder {
+  id: string;
+  userId: string;
+  type: 'expiring_soon' | 'expired' | 'payment_due' | 'trial_ending';
+  message: string;
+  sentAt?: string;
+  read: boolean;
+  dueDate: string;
+  createdAt: string;
+}
+
+export const BILLING_LABELS: Record<PackageBilling, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  quarterly: 'Quarterly',
+  annually: 'Annually',
+};
+
+export const BILLING_COLORS: Record<PackageBilling, string> = {
+  daily: 'bg-slate-500',
+  weekly: 'bg-blue-500',
+  monthly: 'bg-indigo-500',
+  quarterly: 'bg-purple-500',
+  annually: 'bg-emerald-500',
+};
+
+export const SUB_STATUS_CONFIG: Record<
+  SubscriptionStatus,
+  { label: string; color: string; bg: string; dot: string }
+> = {
+  active: { label: 'Active', color: 'text-emerald-700', bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
+  expiring: { label: 'Expiring Soon', color: 'text-amber-700', bg: 'bg-amber-50', dot: 'bg-amber-500' },
+  expired: { label: 'Expired', color: 'text-red-700', bg: 'bg-red-50', dot: 'bg-red-500' },
+  trial: { label: 'Trial', color: 'text-blue-700', bg: 'bg-blue-50', dot: 'bg-blue-500' },
+  suspended: { label: 'Suspended', color: 'text-slate-700', bg: 'bg-slate-100', dot: 'bg-slate-500' },
+};

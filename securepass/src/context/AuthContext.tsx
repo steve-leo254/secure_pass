@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 
-export type UserRole = 'admin' | 'security';
+export type UserRole = 'property_manager' | 'security';
 
 export type VisitorCategory =
   | 'contractor'
@@ -96,8 +96,8 @@ export const DEFAULT_USERS: User[] = [
     id: '1',
     username: 'admin',
     password: 'admin123',
-    role: 'admin',
-    name: 'System Administrator',
+    role: 'property_manager',
+    name: 'Property Manager',
   },
   {
     id: '2',
@@ -109,7 +109,7 @@ export const DEFAULT_USERS: User[] = [
 ];
 
 interface AuthContextType {
-  loginAs: (role: 'security' | 'admin') => void;
+  loginAs: (role: 'security' | 'property_manager') => void;
   userRole: 'admin' | 'security_desk';
   logout: () => void;
   user: User | null;
@@ -134,18 +134,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
     if (foundUser) {
       setUser(foundUser);
-      setUserRole(foundUser.role === 'admin' ? 'admin' : 'security_desk');
+      setUserRole(foundUser.role === 'property_manager' ? 'admin' : 'security_desk');
       setIsAuthenticated(true);
       return true;
     }
     return false;
   };
 
-  const loginAs = (role: 'security' | 'admin') => {
+  const loginAs = (role: 'security' | 'property_manager') => {
     const selectedUser = DEFAULT_USERS.find((u) => u.role === role);
     if (selectedUser) {
       setUser(selectedUser);
-      setUserRole(role === 'admin' ? 'admin' : 'security_desk');
+      setUserRole(role === 'property_manager' ? 'admin' : 'security_desk');
       setIsAuthenticated(true);
     }
   };

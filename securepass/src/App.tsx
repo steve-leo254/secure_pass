@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { VisitorProvider } from "./context/VistorContext";
 import { DataProvider } from "./context/DataContext";
 import { BillingProvider } from "./context/BillingContext";
+import { SystemAdminProvider } from "./context/SystemAdminContext";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import PublicRegister from './pages/PublicRegister';
@@ -20,6 +21,7 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import ProfilePage from "./pages/ProfilePage";
 import Management from "./pages/Management";
 import PublicCheckout from './pages/PublicCheckout';
+import SystemAdmin from './pages/SystemAdmin';
 import type { ReactNode } from "react";
 
 const Protected = ({
@@ -45,14 +47,16 @@ const LoginGuard = () => {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <BillingProvider>
-          <VisitorProvider>
-            <DataProvider>
+      <SystemAdminProvider>
+        <AuthProvider>
+          <BillingProvider>
+            <VisitorProvider>
+              <DataProvider>
               <Routes>
             <Route path="/" element={<LoginGuard />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/termsandcondition" element={<TermsAndConditions />} />
+            <Route path="/system-admin" element={<Protected roles={["property_manager"]}><SystemAdmin /></Protected>} />
             <Route path="/visitor-register" element={<PublicRegister />} />
             <Route path="/visitor-checkout" element={<PublicCheckout />} />
 
@@ -83,7 +87,7 @@ export default function App() {
             <Route
               path="/records"
               element={
-                <Protected roles={["admin"]}>
+                <Protected roles={["property_manager"]}>
                   <AllRecords />
                 </Protected>
               }
@@ -91,7 +95,7 @@ export default function App() {
             <Route
               path="/analytics"
               element={
-                <Protected roles={["admin"]}>
+                <Protected roles={["property_manager"]}>
                   <AdminAnalytics />
                 </Protected>
               }
@@ -99,7 +103,7 @@ export default function App() {
             <Route
               path="/tools"
               element={
-                <Protected roles={["admin"]}>
+                <Protected roles={["property_manager"]}>
                   <ToolsManagement />
                 </Protected>
               }
@@ -107,7 +111,7 @@ export default function App() {
             <Route
               path="/management"
               element={
-                <Protected roles={["admin"]}>
+                <Protected roles={["property_manager"]}>
                   <Management />
                 </Protected>
               }
@@ -115,7 +119,7 @@ export default function App() {
             <Route
               path="/settings"
               element={
-                <Protected roles={["admin"]}>
+                <Protected roles={["property_manager"]}>
                   <Settings />
                 </Protected>
               }
@@ -139,7 +143,7 @@ export default function App() {
             <Route
               path="/members"
               element={
-                <Protected roles={["admin", "security"]}>
+                <Protected roles={["property_manager", "security"]}>
                   <Members />
                 </Protected>
               }
@@ -150,6 +154,7 @@ export default function App() {
         </VisitorProvider>
       </BillingProvider>
     </AuthProvider>
+    </SystemAdminProvider>
     </BrowserRouter>
   );
 }

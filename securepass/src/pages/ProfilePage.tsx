@@ -488,8 +488,8 @@ const ProfilePage: React.FC = () => {
                   System Role
                 </p>
                 <p className="text-sm font-semibold text-slate-700 capitalize">
-                  {user?.role === 'admin'
-                    ? '🔑 System Administrator'
+                  {user?.role === 'property_manager'
+                    ? '🏢 Property Manager'
                     : '🛡️ Security Personnel'}
                 </p>
               </div>
