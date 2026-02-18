@@ -128,7 +128,7 @@ const TermsAndConditions: React.FC = () => {
               'Optional: additional notes',
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 mt-0.5 shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
@@ -179,7 +179,7 @@ const TermsAndConditions: React.FC = () => {
                 key={i}
                 className="flex gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100"
               >
-                <div className="w-6 h-6 rounded-md bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600 flex-shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-md bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0 mt-0.5">
                   {i + 1}
                 </div>
                 <div>
@@ -215,7 +215,7 @@ const TermsAndConditions: React.FC = () => {
               'Regular security reviews and updates are performed',
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
@@ -294,7 +294,7 @@ const TermsAndConditions: React.FC = () => {
               'Unauthorized tools or prohibited items may be confiscated by security',
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
-                <Wrench className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                <Wrench className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
@@ -322,7 +322,7 @@ const TermsAndConditions: React.FC = () => {
               'Not tamper with, damage, or attempt to bypass any security systems',
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 mt-0.5 shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
@@ -361,7 +361,7 @@ const TermsAndConditions: React.FC = () => {
               'False or incomplete self-registrations may be rejected or flagged for review',
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
-                <Fingerprint className="w-3.5 h-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
+                <Fingerprint className="w-3.5 h-3.5 text-purple-500 mt-0.5 shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
@@ -387,7 +387,7 @@ const TermsAndConditions: React.FC = () => {
               'Acknowledgment of any materials, passes, or items that need to be returned',
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
-                <DoorOpen className="w-3.5 h-3.5 text-rose-500 mt-0.5 flex-shrink-0" />
+                <DoorOpen className="w-3.5 h-3.5 text-rose-500 mt-0.5 shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
@@ -418,7 +418,7 @@ const TermsAndConditions: React.FC = () => {
               'Visitors enter the premises at their own risk and are advised to take reasonable precautions',
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
-                <Scale className="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                <Scale className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
@@ -504,7 +504,7 @@ const TermsAndConditions: React.FC = () => {
                 <p className="text-xs text-slate-400">Data Controller</p>
               </div>
             </div>
-            <div className="space-y-2 pl-[52px]">
+            <div className="space-y-2 pl-52px">
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-slate-400" />
                 <span className="text-sm">privacy@securepass.com</span>
@@ -531,11 +531,11 @@ const TermsAndConditions: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/20">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50/20">
       {/* Reading progress bar */}
       <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-slate-200">
         <div
-          className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-150"
+          className="h-full bg-linear-to-r from-indigo-500 to-purple-500 transition-all duration-150"
           style={{ width: `${readProgress}%` }}
         />
       </div>
@@ -551,7 +551,7 @@ const TermsAndConditions: React.FC = () => {
               <ArrowLeft className="w-4 h-4 text-slate-600" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
                 <Shield className="w-3.5 h-3.5 text-white" />
               </div>
               <span className="text-sm font-extrabold text-slate-800">
@@ -572,7 +572,7 @@ const TermsAndConditions: React.FC = () => {
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Title Section */}
         <div className="text-center mb-10 animate-fade-in">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-indigo-500/20">
+          <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-indigo-500/20">
             <Gavel className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-black text-slate-800 mb-2">
@@ -633,9 +633,9 @@ const TermsAndConditions: React.FC = () => {
                   className="w-full flex items-center gap-3 p-4 text-left hover:bg-slate-50/50 transition-colors"
                 >
                   <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                       isExpanded
-                        ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20'
+                        ? 'bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20'
                         : 'bg-slate-100 text-slate-400'
                     }`}
                   >
@@ -664,7 +664,7 @@ const TermsAndConditions: React.FC = () => {
                   </div>
                 </button>
                 {isExpanded && (
-                  <div className="px-4 pb-5 pt-1 pl-[60px] animate-fade-in">
+                  <div className="px-4 pb-5 pt-1 pl-60 animate-fade-in">
                     {section.content}
                   </div>
                 )}
@@ -674,7 +674,7 @@ const TermsAndConditions: React.FC = () => {
         </div>
 
         {/* Acceptance Banner */}
-        <div className="mt-8 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl p-6 text-white relative overflow-hidden">
+        <div className="mt-8 bg-linear-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl p-6 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.04%22%3E%3Cpath%20d%3D%22M20%2020v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')]" />
           <div className="relative z-10 text-center">
             <ShieldCheck className="w-10 h-10 text-white/80 mx-auto mb-3" />

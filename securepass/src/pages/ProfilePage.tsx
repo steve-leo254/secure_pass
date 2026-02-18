@@ -197,9 +197,9 @@ const ProfilePage: React.FC = () => {
       {/* Profile Header Card */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-fade-in">
         {/* Cover */}
-        <div className="h-36 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 relative">
+        <div className="h-36 bg-linear-to-r from-indigo-600 via-purple-600 to-indigo-700 relative">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-linear-to-t from-white/20 to-transparent" />
         </div>
 
         {/* Profile Info */}
@@ -207,7 +207,7 @@ const ProfilePage: React.FC = () => {
           {/* Avatar */}
           <div className="absolute -top-14 left-6">
             <div className="relative group">
-              <div className="w-28 h-28 rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-emerald-400 to-cyan-500">
+              <div className="w-28 h-28 rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-linear-to-br from-emerald-400 to-cyan-500">
                 {user?.avatar ? (
                   <img
                     src={user.avatar}
@@ -244,7 +244,7 @@ const ProfilePage: React.FC = () => {
                 </button>
                 <button
                   onClick={saveProfile}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-1.5"
                 >
                   <Save className="w-3.5 h-3.5" />
                   Save Changes
@@ -261,7 +261,7 @@ const ProfilePage: React.FC = () => {
                 </button>
                 <button
                   onClick={startEditing}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-1.5"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                   Edit Profile
@@ -365,7 +365,7 @@ const ProfilePage: React.FC = () => {
               className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-all"
             >
               <div
-                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg ${stat.shadow} mb-3`}
+                className={`w-10 h-10 rounded-xl bg-linear-to-br ${stat.gradient} flex items-center justify-center shadow-lg ${stat.shadow} mb-3`}
               >
                 <Icon className="w-5 h-5 text-white" />
               </div>
@@ -393,7 +393,7 @@ const ProfilePage: React.FC = () => {
           <div className="space-y-4">
             {/* Email */}
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
                 <Mail className="w-4 h-4 text-slate-400" />
               </div>
               <div className="flex-1 min-w-0">
@@ -417,7 +417,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Phone */}
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
                 <Phone className="w-4 h-4 text-slate-400" />
               </div>
               <div className="flex-1 min-w-0">
@@ -441,7 +441,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Department */}
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
                 <Building2 className="w-4 h-4 text-slate-400" />
               </div>
               <div className="flex-1 min-w-0">
@@ -465,7 +465,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Employee ID */}
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
                 <Hash className="w-4 h-4 text-slate-400" />
               </div>
               <div className="flex-1 min-w-0">
@@ -480,7 +480,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Role */}
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
                 <Shield className="w-4 h-4 text-slate-400" />
               </div>
               <div className="flex-1 min-w-0">
@@ -497,7 +497,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Joined */}
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
                 <Calendar className="w-4 h-4 text-slate-400" />
               </div>
               <div className="flex-1 min-w-0">
@@ -599,7 +599,7 @@ const ProfilePage: React.FC = () => {
                         {v.unitVisited}
                       </p>
                     </div>
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                       <p className="text-[11px] text-slate-400">
                         {format(new Date(v.timeIn), 'MMM d')}
                       </p>
@@ -666,7 +666,7 @@ const ProfilePage: React.FC = () => {
               {/* Current / Preview */}
               <div className="flex justify-center mb-6">
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-2xl border-4 border-slate-100 shadow-lg overflow-hidden bg-gradient-to-br from-emerald-400 to-cyan-500">
+                  <div className="w-32 h-32 rounded-2xl border-4 border-slate-100 shadow-lg overflow-hidden bg-linear-to-br from-emerald-400 to-cyan-500">
                     {imagePreview || user?.avatar ? (
                       <img
                         src={imagePreview || user?.avatar}
@@ -749,7 +749,7 @@ const ProfilePage: React.FC = () => {
                     </button>
                     <button
                       onClick={confirmAvatar}
-                      className="flex-[2] py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-1.5"
+                      className="flex-2 py-2.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-1.5"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       Save Photo
@@ -794,7 +794,7 @@ const ProfilePage: React.FC = () => {
             <div className="p-6 space-y-4">
               {passwordError && (
                 <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-center gap-2 animate-scale-in">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <AlertCircle className="w-4 h-4 shrink-0" />
                   {passwordError}
                 </div>
               )}
@@ -879,7 +879,7 @@ const ProfilePage: React.FC = () => {
                 </button>
                 <button
                   onClick={handlePasswordChange}
-                  className="flex-[2] py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-1.5"
+                  className="flex-2 py-2.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-1.5"
                 >
                   <Save className="w-4 h-4" />
                   Update Password

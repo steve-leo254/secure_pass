@@ -154,7 +154,7 @@ export default function RegisterVisitor() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
             <UserPlus className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -171,7 +171,7 @@ export default function RegisterVisitor() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Personal Information */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+          <div className="px-6 py-4 bg-linear-to-r from-slate-50 to-white border-b border-slate-100">
             <h2 className="font-bold text-slate-800">Personal Information</h2>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -248,7 +248,7 @@ export default function RegisterVisitor() {
 
         {/* Visit Details */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+          <div className="px-6 py-4 bg-linear-to-r from-slate-50 to-white border-b border-slate-100">
             <h2 className="font-bold text-slate-800">Visit Details</h2>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -319,7 +319,7 @@ export default function RegisterVisitor() {
 
         {/* Tools */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+          <div className="px-6 py-4 bg-linear-to-r from-slate-50 to-white border-b border-slate-100">
             <h2 className="font-bold text-slate-800 flex items-center gap-2">
               <Wrench className="w-4 h-4 text-slate-400" />
               Tools & Equipment
@@ -392,7 +392,7 @@ export default function RegisterVisitor() {
           </button>
           <button
             type="submit"
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center gap-2"
+            className="px-8 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center gap-2"
           >
             <UserPlus className="w-4 h-4" />
             Register & Check In

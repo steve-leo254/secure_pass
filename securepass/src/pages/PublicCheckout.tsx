@@ -23,14 +23,8 @@ import {
   ScanLine,
   Timer,
   BadgeCheck,
-  CircleDot,
   Loader2,
   ArrowLeft,
-  MapPin,
-  CalendarCheck,
-  ShieldCheck,
-  Hash,
-  ChevronDown,
   UserCheck,
   DoorOpen,
   FileText,
@@ -187,7 +181,7 @@ const PublicCheckout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-rose-50/30 relative">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-rose-50/30 relative">
       <div ref={topRef} />
 
       {/* Background decorations */}
@@ -201,7 +195,7 @@ const PublicCheckout: React.FC = () => {
       <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-2xl border-b border-slate-200/50">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
+            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-rose-500 to-orange-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
               <DoorOpen className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -242,7 +236,7 @@ const PublicCheckout: React.FC = () => {
           <div className="animate-fade-in">
             {/* Hero */}
             <div className="text-center mb-8">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-rose-500 via-orange-500 to-amber-500 flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-rose-500/25 relative">
+              <div className="w-20 h-20 rounded-3xl bg-linear-to-br from-rose-500 via-orange-500 to-amber-500 flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-rose-500/25 relative">
                 <LogOut className="w-10 h-10 text-white" />
                 <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 border-4 border-white flex items-center justify-center">
                   <CheckCircle2 className="w-3.5 h-3.5 text-white" />
@@ -287,7 +281,7 @@ const PublicCheckout: React.FC = () => {
                     style={{ animationDelay: `${i * 0.1}s` }}
                   >
                     <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg flex-shrink-0`}
+                      className={`w-12 h-12 rounded-xl bg-linear-to-br ${item.color} flex items-center justify-center shadow-lg flex-shrink-0`}
                     >
                       <Icon className="w-6 h-6 text-white" />
                     </div>
@@ -319,7 +313,7 @@ const PublicCheckout: React.FC = () => {
             <button
               onClick={() => setScreen('search')}
               disabled={activeVisitors.length === 0}
-              className="w-full py-4 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white font-bold rounded-2xl shadow-xl shadow-rose-500/20 hover:shadow-2xl hover:shadow-rose-500/25 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-xl"
+              className="w-full py-4 bg-linear-to-r from-rose-500 via-orange-500 to-amber-500 text-white font-bold rounded-2xl shadow-xl shadow-rose-500/20 hover:shadow-2xl hover:shadow-rose-500/25 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-xl"
             >
               Start Checkout
               <ArrowRight className="w-5 h-5" />
@@ -337,7 +331,7 @@ const PublicCheckout: React.FC = () => {
         {screen === 'search' && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
                 <Search className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -447,7 +441,7 @@ const PublicCheckout: React.FC = () => {
                           <div className="p-4">
                             <div className="flex items-center gap-3">
                               <div
-                                className={`w-12 h-12 rounded-xl ${cat.color} flex items-center justify-center text-white text-xl shadow-sm flex-shrink-0`}
+                                className={`w-12 h-12 rounded-xl ${cat.color} flex items-center justify-center text-white text-xl shadow-sm shrink-0`}
                               >
                                 {cat.icon}
                               </div>
@@ -466,7 +460,7 @@ const PublicCheckout: React.FC = () => {
                                   </span>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                              <div className="flex flex-col items-end gap-1 shrink-0">
                                 <div className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md font-medium">
                                   <Timer className="w-3 h-3" />
                                   {getVisitDuration(visitor.timeIn)}
@@ -522,7 +516,7 @@ const PublicCheckout: React.FC = () => {
                   Or browse all {activeVisitors.length} active visitor
                   {activeVisitors.length !== 1 ? 's' : ''}
                 </p>
-                <div className="max-h-[400px] overflow-y-auto space-y-2 pr-1">
+                <div className="max-h-100 overflow-y-auto space-y-2 pr-1">
                   {activeVisitors.map((visitor, i) => {
                     const cat = getCatInfo(visitor.category);
                     return (
@@ -532,7 +526,7 @@ const PublicCheckout: React.FC = () => {
                         className="w-full flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-sm transition-all text-left group"
                       >
                         <div
-                          className={`w-9 h-9 rounded-lg ${cat.color} flex items-center justify-center text-white text-sm flex-shrink-0`}
+                          className={`w-9 h-9 rounded-lg ${cat.color} flex items-center justify-center text-white text-sm shrink-0`}
                         >
                           {cat.icon}
                         </div>
@@ -559,7 +553,7 @@ const PublicCheckout: React.FC = () => {
         {screen === 'tools' && selectedVisitor && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md">
                 <Wrench className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -593,7 +587,7 @@ const PublicCheckout: React.FC = () => {
             {/* Warning */}
             <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 mb-4">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
                 </div>
                 <div>
@@ -707,8 +701,8 @@ const PublicCheckout: React.FC = () => {
                 <div
                   className={`h-full rounded-full transition-all duration-500 ease-out ${
                     allToolsChecked
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
-                      : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                      ? 'bg-linear-to-r from-emerald-500 to-teal-500'
+                      : 'bg-linear-to-r from-amber-500 to-orange-500'
                   }`}
                   style={{
                     width: `${
@@ -733,7 +727,7 @@ const PublicCheckout: React.FC = () => {
               <button
                 onClick={() => setScreen('confirm')}
                 disabled={!allToolsChecked}
-                className="flex-[2] py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-2 py-3.5 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Continue to Checkout
                 <ChevronRight className="w-4 h-4" />
@@ -746,7 +740,7 @@ const PublicCheckout: React.FC = () => {
         {screen === 'confirm' && selectedVisitor && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-rose-500 to-orange-500 flex items-center justify-center shadow-md">
                 <LogOut className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -761,7 +755,7 @@ const PublicCheckout: React.FC = () => {
 
             {/* Visit Summary Card */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-4">
-              <div className="bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 p-5 text-white">
+              <div className="bg-linear-to-r from-rose-500 via-orange-500 to-amber-500 p-5 text-white">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold border border-white/30">
                     {selectedVisitor.fullName.charAt(0).toUpperCase()}
@@ -825,14 +819,14 @@ const PublicCheckout: React.FC = () => {
                       key={item.label}
                       className="flex items-start gap-3 py-2 border-b border-slate-50 last:border-0"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 mt-0.5">
                         <Icon className="w-4 h-4 text-slate-400" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
                           {item.label}
                         </p>
-                        <p className="text-sm font-semibold text-slate-700 break-words">
+                        <p className="text-sm font-semibold text-slate-700 wrap-break-words">
                           {item.value}
                         </p>
                       </div>
@@ -843,7 +837,7 @@ const PublicCheckout: React.FC = () => {
                 {[...selectedVisitor.tools, ...selectedVisitor.customTools]
                   .length > 0 && (
                   <div className="flex items-start gap-3 py-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5">
                       <Wrench className="w-4 h-4 text-emerald-500" />
                     </div>
                     <div>
@@ -942,8 +936,8 @@ const PublicCheckout: React.FC = () => {
           <div className="animate-scale-in text-center py-6">
             {/* Success animation */}
             <div className="relative w-28 h-28 mx-auto mb-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full animate-ping opacity-20" />
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full shadow-2xl shadow-emerald-500/30 flex items-center justify-center">
+              <div className="absolute inset-0 bg-linear-to-br from-emerald-400 to-teal-500 rounded-full animate-ping opacity-20" />
+              <div className="absolute inset-0 bg-linaer-to-br from-emerald-400 to-teal-500 rounded-full shadow-2xl shadow-emerald-500/30 flex items-center justify-center">
                 <CheckCircle2 className="w-14 h-14 text-white" />
               </div>
             </div>
@@ -958,7 +952,7 @@ const PublicCheckout: React.FC = () => {
 
             {/* Checkout receipt */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-lg overflow-hidden max-w-xs mx-auto mb-6">
-              <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 text-white text-center">
+              <div className="bg-linear-to-r from-emerald-500 to-teal-500 p-4 text-white text-center">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <Shield className="w-4 h-4" />
                   <span className="text-[10px] uppercase tracking-widest font-semibold opacity-80">
@@ -1060,7 +1054,7 @@ const PublicCheckout: React.FC = () => {
 
             <button
               onClick={resetAll}
-              className="w-full max-w-xs mx-auto py-3.5 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-semibold rounded-2xl shadow-lg shadow-slate-700/20 hover:shadow-xl transition-all flex items-center justify-center gap-2"
+              className="w-full max-w-xs mx-auto py-3.5 bg-linear-to-r from-slate-700 to-slate-800 text-white font-semibold rounded-2xl shadow-lg shadow-slate-700/20 hover:shadow-xl transition-all flex items-center justify-center gap-2"
             >
               <DoorOpen className="w-4 h-4" />
               Done

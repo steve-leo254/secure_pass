@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-  QrCode,
   Copy,
   Check,
   Download,
   ExternalLink,
   Smartphone,
-  Monitor,
   Shield,
   ArrowRight,
   Printer,
-  Share2,
 } from 'lucide-react';
 
 const QRCodePage: React.FC = () => {
@@ -109,7 +106,7 @@ const QRCodePage: React.FC = () => {
         {/* QR Code Display */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm animate-scale-in overflow-hidden">
           {/* Decorative top bar */}
-          <div className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+          <div className="h-2 bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
 
           <div className="p-8 text-center">
             {/* Size selector */}
@@ -135,7 +132,7 @@ const QRCodePage: React.FC = () => {
             >
               {/* Mini logo above QR */}
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-md bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
                   <Shield className="w-3 h-3 text-white" />
                 </div>
                 <span className="text-xs font-extrabold text-slate-800 tracking-tight">
@@ -170,7 +167,7 @@ const QRCodePage: React.FC = () => {
             <div className="flex flex-wrap gap-2 justify-center">
               <button
                 onClick={downloadQR}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
               >
                 <Download className="w-4 h-4" />
                 Download
@@ -240,7 +237,7 @@ const QRCodePage: React.FC = () => {
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-4">
                   <div
-                    className={`w-9 h-9 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-md`}
+                    className={`w-9 h-9 rounded-xl bg-linear-to-br ${item.color} flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-md`}
                   >
                     {item.step}
                   </div>
@@ -258,7 +255,7 @@ const QRCodePage: React.FC = () => {
           </div>
 
           {/* URL */}
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-5">
+          <div className="bg-linear-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-5">
             <h4 className="font-bold text-indigo-800 text-sm mb-3 flex items-center gap-2">
               <ExternalLink className="w-4 h-4" />
               Direct Registration Link
@@ -269,7 +266,7 @@ const QRCodePage: React.FC = () => {
               </code>
               <button
                 onClick={copyLink}
-                className="text-indigo-500 hover:text-indigo-700 transition-colors flex-shrink-0"
+                className="text-indigo-500 hover:text-indigo-700 transition-colors shrink-0"
               >
                 <Copy className="w-4 h-4" />
               </button>
@@ -294,19 +291,19 @@ const QRCodePage: React.FC = () => {
             </h4>
             <ul className="space-y-1.5 text-xs text-amber-700">
               <li className="flex items-start gap-2">
-                <span className="mt-1 w-1 h-1 rounded-full bg-amber-500 flex-shrink-0"></span>
+                <span className="mt-1 w-1 h-1 rounded-full bg-amber-500 shrink-0"></span>
                 Print the QR code on A4 or larger for easy scanning
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-1 w-1 h-1 rounded-full bg-amber-500 flex-shrink-0"></span>
+                <span className="mt-1 w-1 h-1 rounded-full bg-amber-500 shrink-0"></span>
                 Place it at eye level near the entrance
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-1 w-1 h-1 rounded-full bg-amber-500 flex-shrink-0"></span>
+                <span className="mt-1 w-1 h-1 rounded-full bg-amber-500 shrink-0"></span>
                 Ensure good lighting for reliable scanning
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-1 w-1 h-1 rounded-full bg-amber-500 flex-shrink-0"></span>
+                <span className="mt-1 w-1 h-1 rounded-full bg-amber-500 shrink-0"></span>
                 Test the QR code periodically to verify it works
               </li>
             </ul>

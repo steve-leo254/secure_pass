@@ -123,7 +123,7 @@ export default function AllRecords() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-linear-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
             <FileText className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -145,7 +145,7 @@ export default function AllRecords() {
       {/* Filters */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
         <div className="flex flex-col lg:flex-row gap-3">
-          <div className="relative flex-1">
+          <div className="relative flex-2">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               value={search}
@@ -514,7 +514,7 @@ export default function AllRecords() {
               </button>
               <button
                 onClick={handleEdit}
-                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all"
+                className="flex-1 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all"
               >
                 Save Changes
               </button>
@@ -525,7 +525,7 @@ export default function AllRecords() {
 
       {/* Delete Modal */}
       {deleteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -551,7 +551,7 @@ export default function AllRecords() {
               </button>
               <button
                 onClick={handleDelete}
-                className="flex-1 py-3 bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-red-500/25 active:scale-[0.98] transition-all"
+                className="flex-1 py-3 bg-linear-to-r from-red-500 to-rose-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-red-500/25 active:scale-[0.98] transition-all"
               >
                 Delete Record
               </button>

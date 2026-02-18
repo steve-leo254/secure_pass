@@ -1,7 +1,7 @@
-import React from 'react';
-import { useVisitors } from '../context/VistorContext';
-import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { useVisitors } from "../context/VistorContext";
+import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 import {
   Users,
   UserCheck,
@@ -14,9 +14,9 @@ import {
   Activity,
   Wrench as WrenchIcon,
   BarChart3,
-} from 'lucide-react';
-import { CATEGORIES } from '../types';
-import { format } from 'date-fns';
+} from "lucide-react";
+import { CATEGORIES } from "../types";
+import { format } from "date-fns";
 import {
   AreaChart,
   Area,
@@ -25,7 +25,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
+} from "recharts";
 
 const Dashboard: React.FC = () => {
   const { getStats, getActiveVisitors, getTodayVisitors, getDailyData } =
@@ -38,49 +38,69 @@ const Dashboard: React.FC = () => {
 
   const statCards = [
     {
-      label: 'Total Today',
+      label: "Total Today",
       value: stats.totalToday,
       icon: Users,
-      gradient: 'from-blue-500 to-cyan-500',
-      shadow: 'shadow-blue-500/20',
+      gradient: "from-blue-500 to-cyan-500",
+      shadow: "shadow-blue-500/20",
     },
     {
-      label: 'Currently In',
+      label: "Currently In",
       value: stats.currentlyIn,
       icon: UserCheck,
-      gradient: 'from-emerald-500 to-teal-500',
-      shadow: 'shadow-emerald-500/20',
+      gradient: "from-emerald-500 to-teal-500",
+      shadow: "shadow-emerald-500/20",
     },
     {
-      label: 'Checked Out',
+      label: "Checked Out",
       value: stats.checkedOut,
       icon: UserX,
-      gradient: 'from-amber-500 to-orange-500',
-      shadow: 'shadow-amber-500/20',
+      gradient: "from-amber-500 to-orange-500",
+      shadow: "shadow-amber-500/20",
     },
     {
-      label: 'Contractors',
+      label: "Contractors",
       value: stats.contractors,
       icon: HardHat,
-      gradient: 'from-violet-500 to-purple-500',
-      shadow: 'shadow-violet-500/20',
+      gradient: "from-violet-500 to-purple-500",
+      shadow: "shadow-violet-500/20",
     },
   ];
 
   const categoryStats = [
-    { label: 'Visitors', value: stats.visitors, color: 'bg-blue-500', icon: '👤' },
-    { label: 'Contractors', value: stats.contractors, color: 'bg-orange-500', icon: '🔧' },
-    { label: 'Technicians', value: stats.technicians, color: 'bg-purple-500', icon: '⚙️' },
-    { label: 'Deliveries', value: stats.deliveries, color: 'bg-green-500', icon: '📦' },
-    { label: 'Staff', value: stats.staff, color: 'bg-indigo-500', icon: '🏢' },
+    {
+      label: "Visitors",
+      value: stats.visitors,
+      color: "bg-blue-500",
+      icon: "👤",
+    },
+    {
+      label: "Contractors",
+      value: stats.contractors,
+      color: "bg-orange-500",
+      icon: "🔧",
+    },
+    {
+      label: "Technicians",
+      value: stats.technicians,
+      color: "bg-purple-500",
+      icon: "⚙️",
+    },
+    {
+      label: "Deliveries",
+      value: stats.deliveries,
+      color: "bg-green-500",
+      icon: "📦",
+    },
+    { label: "Staff", value: stats.staff, color: "bg-indigo-500", icon: "🏢" },
   ];
 
   const getCategoryBadge = (category: string) => {
     return (
       CATEGORIES.find((c) => c.value === category) || {
         label: category,
-        color: 'bg-gray-500',
-        icon: '👤',
+        color: "bg-gray-500",
+        icon: "👤",
       }
     );
   };
@@ -100,33 +120,33 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Welcome */}
       <div className="animate-fade-in">
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
+        <div className="bg-linear-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50"></div>
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <p className="text-indigo-200 text-sm mb-1">Welcome back,</p>
-              <h1 className="text-2xl lg:text-3xl font-bold">
+              <p className="text-indigo-200  text-center font-bold mb-1">Welcome back,</p>
+              <h1 className="text-2xl lg:text-3xl   font-bold">
                 {user?.name} 👋
               </h1>
-              <p className="text-indigo-200 text-sm mt-2">
+              <p className="text-indigo-200 text-xs font-bold text-center mt-2">
                 Here's what's happening at your premises today.
               </p>
             </div>
-            <div className="flex gap-3 self-start">
+            <div className="flex gap-2 self-center">
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 px-5 py-3 bg-white text-indigo-700 font-semibold rounded-xl hover:bg-indigo-50 transition-all duration-200 shadow-lg text-sm"
+                className="px-4 py-2.5 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all text-sm flex items-center gap-2"
               >
                 <UserPlus className="w-4 h-4" />
                 Register Visitor
               </Link>
-              {userRole === 'admin' && (
+              {userRole === "admin" && (
                 <Link
                   to="/analytics"
-                  className="inline-flex items-center gap-2 px-5 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-200 text-sm"
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-indigo-50/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-200 text-sm"
                 >
                   <BarChart3 className="w-4 h-4" />
                   Analytics
@@ -149,7 +169,7 @@ const Dashboard: React.FC = () => {
             >
               <div className="flex items-start justify-between mb-4">
                 <div
-                  className={`w-11 h-11 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg ${stat.shadow}`}
+                  className={`w-11 h-11 rounded-xl bg-linear-to-br ${stat.gradient} flex items-center justify-center shadow-lg ${stat.shadow}`}
                 >
                   <Icon className="w-5 h-5 text-white" />
                 </div>
@@ -172,7 +192,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-100 p-6 animate-fade-in shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-slate-800">7-Day Trend</h3>
-            {userRole === 'admin' && (
+            {userRole === "admin" && (
               <Link
                 to="/analytics"
                 className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
@@ -195,7 +215,7 @@ const Dashboard: React.FC = () => {
                   dataKey="date"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 9, fill: '#94a3b8' }}
+                  tick={{ fontSize: 9, fill: "#94a3b8" }}
                 />
                 <YAxis hide allowDecimals={false} />
                 <Tooltip content={<ChartTooltip />} />
@@ -206,7 +226,7 @@ const Dashboard: React.FC = () => {
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#miniGrad)"
-                  dot={{ r: 2.5, fill: '#6366f1', strokeWidth: 0 }}
+                  dot={{ r: 2.5, fill: "#6366f1", strokeWidth: 0 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -292,10 +312,10 @@ const Dashboard: React.FC = () => {
                         {visitor.unitVisited}
                       </p>
                     </div>
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                       <div className="flex items-center gap-1 text-[11px] text-slate-400">
                         <Clock className="w-3 h-3" />
-                        {format(new Date(visitor.timeIn), 'HH:mm')}
+                        {format(new Date(visitor.timeIn), "HH:mm")}
                       </div>
                       {[...visitor.tools, ...visitor.customTools].length >
                         0 && (
@@ -330,7 +350,7 @@ const Dashboard: React.FC = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-100">
-                  {['Visitor', 'Category', 'Unit', 'Time In', 'Status'].map(
+                  {["Visitor", "Category", "Unit", "Time In", "Status"].map(
                     (h) => (
                       <th
                         key={h}
@@ -338,7 +358,7 @@ const Dashboard: React.FC = () => {
                       >
                         {h}
                       </th>
-                    )
+                    ),
                   )}
                 </tr>
               </thead>
@@ -376,20 +396,20 @@ const Dashboard: React.FC = () => {
                         {visitor.unitVisited}
                       </td>
                       <td className="py-3 pr-4 text-sm text-slate-600">
-                        {format(new Date(visitor.timeIn), 'HH:mm')}
+                        {format(new Date(visitor.timeIn), "HH:mm")}
                       </td>
                       <td className="py-3">
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                            visitor.status === 'checked-in'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                              : 'bg-slate-50 text-slate-500 border border-slate-100'
+                            visitor.status === "checked-in"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                              : "bg-slate-50 text-slate-500 border border-slate-100"
                           }`}
                         >
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${visitor.status === 'checked-in' ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                            className={`w-1.5 h-1.5 rounded-full ${visitor.status === "checked-in" ? "bg-emerald-500" : "bg-slate-400"}`}
                           ></span>
-                          {visitor.status === 'checked-in' ? 'In' : 'Out'}
+                          {visitor.status === "checked-in" ? "In" : "Out"}
                         </span>
                       </td>
                     </tr>

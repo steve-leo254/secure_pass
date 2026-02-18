@@ -53,7 +53,7 @@ const Settings: React.FC = () => {
       </div>
 
       {/* Demo Data Section */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-6 animate-fade-in">
+      <div className="bg-linear-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-6 animate-fade-in">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-indigo-600" />
@@ -148,7 +148,7 @@ const Settings: React.FC = () => {
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
               >
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${getActionColor(log.action)}`}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${getActionColor(log.action)}`}
                 >
                   {log.action === 'CHECK_IN' ? (
                     <ArrowDownRight className="w-3.5 h-3.5" />
@@ -166,7 +166,7 @@ const Settings: React.FC = () => {
                     by {log.performedBy}
                   </p>
                 </div>
-                <span className="text-xs text-slate-400 flex-shrink-0">
+                <span className="text-xs text-slate-400 shrink-0">
                   {format(new Date(log.timestamp), 'MMM d, HH:mm')}
                 </span>
               </div>

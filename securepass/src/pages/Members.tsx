@@ -153,7 +153,7 @@ export default function Members() {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+            <thead className="bg-linear-to-r from-slate-50 to-white border-b border-slate-100">
               <tr>
                 <th className="text-left px-6 py-4 font-semibold text-slate-600">
                   Member ID
@@ -321,7 +321,7 @@ export default function Members() {
               </button>
               <button
                 onClick={handleEdit}
-                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all"
+                className="flex-1 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all"
               >
                 Save Changes
               </button>

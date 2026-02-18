@@ -263,17 +263,17 @@ const SystemAdmin: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="animate-fade-in">
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
+        <div className="bg-linear-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
           <div className="relative z-10">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center shadow-lg">
+                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-400 to-purple-500 flex items-center justify-center shadow-lg">
                     <Shield className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-indigo-300 text-xs uppercase tracking-widest font-semibold">
+                    <p className="text-indigo-300 text-xs uppercase tracking-widest font-bold">
                       System Administration
                     </p>
                     <h1 className="text-2xl font-black">SECUREPASS Control Center</h1>
@@ -286,7 +286,7 @@ const SystemAdmin: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowAddUser(true)}
-                  className="px-4 py-2.5 bg-white text-indigo-700 font-semibold rounded-xl hover:bg-indigo-50 transition-all text-sm flex items-center gap-2 shadow-lg"
+                className="px-4 py-2.5 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all text-sm flex items-center gap-2"
                 >
                   <UserPlus className="w-4 h-4" />
                   Add User
@@ -314,7 +314,7 @@ const SystemAdmin: React.FC = () => {
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${active
-                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
+                  ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
                   : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                 }`}
             >
@@ -322,7 +322,7 @@ const SystemAdmin: React.FC = () => {
               {tab.label}
               {tab.badge && (
                 <span
-                  className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${active ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
+                  className={`min-w-4.5 px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${active ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
                     }`}
                 >
                   {tab.badge}
@@ -347,7 +347,7 @@ const SystemAdmin: React.FC = () => {
               const Icon = card.icon;
               return (
                 <div key={card.label} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-lg ${card.shadow} mb-3`}>
+                  <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${card.gradient} flex items-center justify-center shadow-lg ${card.shadow} mb-3`}>
                     <Icon className="w-5 h-5 text-white" />
                   </div>
                   <h3 className={`${(card as any).isText ? 'text-lg' : 'text-2xl'} font-black text-slate-800`}>
@@ -425,7 +425,7 @@ const SystemAdmin: React.FC = () => {
                         key={r.id}
                         className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${r.read ? 'bg-slate-50/50' : 'bg-indigo-50/50 border border-indigo-100/50'}`}
                       >
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${r.type === 'expired' ? 'bg-red-500' : r.type === 'expiring_soon' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${r.type === 'expired' ? 'bg-red-500' : r.type === 'expiring_soon' ? 'bg-amber-500' : 'bg-blue-500'}`} />
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm truncate ${r.read ? 'text-slate-500' : 'text-slate-700 font-medium'}`}>
                             {r.message}
@@ -480,7 +480,7 @@ const SystemAdmin: React.FC = () => {
                       <tr key={user.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-2.5">
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xs ${user.status === 'active' ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-slate-400'}`}>
+                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xs ${user.status === 'active' ? 'bg-linear-to-br from-indigo-500 to-purple-600' : 'bg-slate-400'}`}>
                               {user.name.charAt(0)}
                             </div>
                             <div>
@@ -548,7 +548,7 @@ const SystemAdmin: React.FC = () => {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search users..." className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
             </div>
-            <button onClick={() => setShowAddUser(true)} className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
+            <button onClick={() => setShowAddUser(true)} className="px-5 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
               <UserPlus className="w-4 h-4" />
               Add User
             </button>
@@ -562,10 +562,10 @@ const SystemAdmin: React.FC = () => {
               const statusCfg = sub ? SUB_STATUS_CONFIG[sub.status] : null;
               return (
                 <div key={user.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
-                  <div className={`h-1.5 ${user.status === 'active' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : user.status === 'suspended' ? 'bg-red-500' : 'bg-slate-300'}`} />
+                  <div className={`h-1.5 ${user.status === 'active' ? 'bg-linear-to-r from-emerald-500 to-teal-500' : user.status === 'suspended' ? 'bg-red-500' : 'bg-slate-300'}`} />
                   <div className="p-5">
                     <div className="flex items-start gap-3 mb-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg ${user.status === 'active' ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/20' : 'bg-slate-400'}`}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg ${user.status === 'active' ? 'bg-linear-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/20' : 'bg-slate-400'}`}>
                         {user.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -728,7 +728,7 @@ const SystemAdmin: React.FC = () => {
               <h3 className="font-bold text-slate-800 text-lg">Subscription Packages</h3>
               <p className="text-sm text-slate-400">{packages.filter((p) => p.isActive).length} active packages</p>
             </div>
-            <button onClick={() => setShowAddPackage(true)} className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
+            <button onClick={() => setShowAddPackage(true)} className="px-4 py-2.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
               <Plus className="w-4 h-4" />
               Create Package
             </button>
@@ -741,7 +741,7 @@ const SystemAdmin: React.FC = () => {
                 <div key={pkg.id} className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition-all overflow-hidden relative ${pkg.isPopular ? 'border-indigo-200 ring-2 ring-indigo-100' : 'border-slate-100'}`}>
                   {pkg.isPopular && (
                     <div className="absolute top-3 right-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full text-[10px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-linear-to-r from-indigo-500 to-purple-600 text-white rounded-full text-[10px] font-bold">
                         <Star className="w-3 h-3" />
                         Popular
                       </span>
@@ -777,12 +777,12 @@ const SystemAdmin: React.FC = () => {
                     <div className="space-y-1 mb-4">
                       {pkg.features.slice(0, 4).map((f, i) => (
                         <div key={i} className="flex items-center gap-1.5 text-xs text-slate-500">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
                           {f}
                         </div>
                       ))}
                       {pkg.features.length > 4 && (
-                        <p className="text-[11px] text-slate-400 pl-[18px]">+{pkg.features.length - 4} more</p>
+                        <p className="text-[11px] text-slate-400 pl-4.5">+{pkg.features.length - 4} more</p>
                       )}
                     </div>
                     <div className="flex gap-2">
@@ -835,7 +835,7 @@ const SystemAdmin: React.FC = () => {
                   };
                   return (
                     <div key={r.id} className={`flex items-center gap-4 p-4 ${r.read ? '' : 'bg-indigo-50/30'} hover:bg-slate-50/50 transition-colors`}>
-                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${typeColors[r.type] || 'bg-slate-400'}`} />
+                      <div className={`w-3 h-3 rounded-full shrink-0 ${typeColors[r.type] || 'bg-slate-400'}`} />
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm ${r.read ? 'text-slate-500' : 'text-slate-700 font-semibold'}`}>{r.message}</p>
                         <div className="flex items-center gap-3 mt-0.5">
@@ -948,7 +948,7 @@ const SystemAdmin: React.FC = () => {
 
               <div className="flex gap-3 pt-4">
                 <button onClick={() => { setShowAddUser(false); resetUserForm(); }} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-all">Cancel</button>
-                <button onClick={handleAddUser} disabled={!newUserName || !newUserEmail} className="flex-[2] py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <button onClick={handleAddUser} disabled={!newUserName || !newUserEmail} className="flex-2 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                   <UserPlus className="w-4 h-4" />
                   Create User
                 </button>
@@ -1025,7 +1025,7 @@ const SystemAdmin: React.FC = () => {
                     } else { handleAddPackage(); }
                   }}
                   disabled={!pkgName || !pkgPrice}
-                  className="flex-[2] py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-2 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {editingPackage ? 'Update Package' : 'Create Package'}
@@ -1063,7 +1063,7 @@ const SystemAdmin: React.FC = () => {
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowExtendModal(null)} className="flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-semibold text-sm">Cancel</button>
-                <button onClick={handleExtend} className="flex-[2] py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
+                <button onClick={handleExtend} className="flex-2 py-2.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
                   <CalendarPlus className="w-4 h-4" />
                   Extend by {extendDays} days
                 </button>
@@ -1084,7 +1084,7 @@ const SystemAdmin: React.FC = () => {
         return (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowUserDetail(null)}>
             <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl animate-scale-in max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white rounded-t-2xl">
+              <div className="bg-linear-to-r from-indigo-600 to-purple-600 p-6 text-white rounded-t-2xl">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold border border-white/30">
                     {user.name.charAt(0)}
@@ -1109,7 +1109,7 @@ const SystemAdmin: React.FC = () => {
                   const Icon = item.icon;
                   return (
                     <div key={item.label} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
                         <Icon className="w-4 h-4 text-slate-400" />
                       </div>
                       <div>

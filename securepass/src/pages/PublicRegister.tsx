@@ -17,8 +17,6 @@ import {
   Plus,
   X,
   UserPlus,
-  Sparkles,
-  MapPin,
   Clock,
   ArrowRight,
   Fingerprint,
@@ -29,7 +27,6 @@ import {
   CalendarCheck,
   ShieldCheck,
   Star,
-  ChevronDown,
 } from 'lucide-react';
 
 const PublicRegister: React.FC = () => {
@@ -172,7 +169,7 @@ const PublicRegister: React.FC = () => {
     category === 'staff';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 relative" 
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50/40 relative" 
         >
       <div ref={topRef} />
 
@@ -192,7 +189,7 @@ const PublicRegister: React.FC = () => {
           <div className="animate-fade-in">
             {/* Hero */}
             <div className="text-center mb-8">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-indigo-500/30 relative">
+              <div className="w-20 h-20 rounded-3xl bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-indigo-500/30 relative">
                 <Shield className="w-10 h-10 text-white" />
                 <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 border-4 border-white flex items-center justify-center">
                   <CheckCircle2 className="w-3.5 h-3.5 text-white" />
@@ -240,7 +237,7 @@ const PublicRegister: React.FC = () => {
                     style={{ animationDelay: `${i * 0.1}s` }}
                   >
                     <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg flex-shrink-0`}
+                      className={`w-12 h-12 rounded-xl bg-linear-to-br ${item.color} flex items-center justify-center shadow-lg shrink-0`}
                     >
                       <Icon className="w-6 h-6 text-white" />
                     </div>
@@ -275,7 +272,7 @@ const PublicRegister: React.FC = () => {
             {/* CTA */}
             <button
               onClick={() => setStep(1)}
-              className="w-full py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-2xl hover:shadow-indigo-500/30 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 text-base"
+              className="w-full py-4 bg-linear-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-2xl hover:shadow-indigo-500/30 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 text-base"
             >
               Start Registration
               <ArrowRight className="w-5 h-5" />
@@ -301,7 +298,7 @@ const PublicRegister: React.FC = () => {
                           step > s.num
                             ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
                             : step === s.num
-                              ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25 scale-110'
+                              ? 'bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25 scale-110'
                               : 'bg-slate-100 text-slate-400'
                         }`}
                       >
@@ -342,7 +339,7 @@ const PublicRegister: React.FC = () => {
             {step === 1 && (
               <div className="space-y-4 animate-slide-left">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
+                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -471,7 +468,7 @@ const PublicRegister: React.FC = () => {
             {step === 2 && (
               <div className="space-y-4 animate-slide-left">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md">
+                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md">
                     <FileText className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -667,7 +664,7 @@ const PublicRegister: React.FC = () => {
             {step === 3 && (
               <div className="space-y-4 animate-slide-left">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md">
+                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md">
                     <BadgeCheck className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -683,7 +680,7 @@ const PublicRegister: React.FC = () => {
                 {/* Summary Card */}
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                   {/* Visitor header */}
-                  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-5 text-white">
+                  <div className="bg-linear-to-r from-indigo-500 to-purple-600 p-5 text-white">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold border border-white/30">
                         {fullName.charAt(0).toUpperCase() || '?'}
@@ -749,14 +746,14 @@ const PublicRegister: React.FC = () => {
                           key={item.label}
                           className="flex items-start gap-3 py-2 border-b border-slate-50 last:border-0"
                         >
-                          <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 mt-0.5">
                             <Icon className="w-4 h-4 text-slate-400" />
                           </div>
                           <div className="min-w-0">
                             <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
                               {item.label}
                             </p>
-                            <p className="text-sm font-semibold text-slate-700 capitalize break-words">
+                            <p className="text-sm font-semibold text-slate-700 capitalize wrap-break-words">
                               {item.value || '—'}
                             </p>
                           </div>
@@ -767,7 +764,7 @@ const PublicRegister: React.FC = () => {
                     {/* Tools */}
                     {[...selectedTools, ...customTools].length > 0 && (
                       <div className="flex items-start gap-3 py-2">
-                        <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 mt-0.5">
                           <Wrench className="w-4 h-4 text-amber-500" />
                         </div>
                         <div>
@@ -792,7 +789,7 @@ const PublicRegister: React.FC = () => {
 
                     {notes && (
                       <div className="flex items-start gap-3 py-2">
-                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 mt-0.5">
                           <FileText className="w-4 h-4 text-slate-400" />
                         </div>
                         <div>
@@ -844,7 +841,7 @@ const PublicRegister: React.FC = () => {
               {step < 3 ? (
                 <button
                   onClick={nextStep}
-                  className="flex-[2] py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 text-sm"
+                  className="flex-2 py-3.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 text-sm"
                 >
                   Continue
                   <ChevronRight className="w-4 h-4" />
@@ -853,7 +850,7 @@ const PublicRegister: React.FC = () => {
                 <button
                   onClick={handleSubmit}
                   disabled={!agreedToTerms || loading}
-                  className="flex-[2] py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                  className="flex-2 py-3.5 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                 >
                   {loading ? (
                     <>
@@ -877,8 +874,8 @@ const PublicRegister: React.FC = () => {
           <div className="animate-scale-in text-center py-8">
             {/* Animated success */}
             <div className="relative w-28 h-28 mx-auto mb-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full animate-ping opacity-20"></div>
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full shadow-2xl shadow-emerald-500/30 flex items-center justify-center">
+              <div className="absolute inset-0 bg-linear-to-br from-emerald-400 to-teal-500 rounded-full animate-ping opacity-20"></div>
+              <div className="absolute inset-0 bg-linear-to-br from-emerald-400 to-teal-500 rounded-full shadow-2xl shadow-emerald-500/30 flex items-center justify-center">
                 <CheckCircle2 className="w-14 h-14 text-white" />
               </div>
             </div>
@@ -895,7 +892,7 @@ const PublicRegister: React.FC = () => {
 
             {/* Visitor Pass Card */}
             <div className="my-6 bg-white rounded-2xl border border-slate-100 shadow-lg overflow-hidden max-w-md mx-auto">
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white text-center">
+              <div className="bg-linear-to-r from-indigo-500 to-purple-600 p-4 text-white text-center">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <Shield className="w-4 h-4" />
                   <span className="text-[10px] uppercase tracking-widest font-semibold opacity-80">
@@ -963,7 +960,7 @@ const PublicRegister: React.FC = () => {
             {/* Important notice */}
             <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 mb-6 max-w-md mx-auto">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
                   <Star className="w-4 h-4 text-amber-600" />
                 </div>
                 <div className="text-left">
@@ -980,7 +977,7 @@ const PublicRegister: React.FC = () => {
 
             <button
               onClick={resetForm}
-              className="w-full max-w-md mx-auto py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
+              className="w-full max-w-md mx-auto py-3.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
             >
               <UserPlus className="w-4 h-4" />
               Register Another Visitor

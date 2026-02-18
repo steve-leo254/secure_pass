@@ -9,8 +9,7 @@ import {
   Users,
   ClipboardCheck,
   Wrench,
-  QrCode,
-  Settings,
+    Settings,
   LogOut,
   Menu,
   X,
@@ -125,7 +124,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const utilityNav = [
     { path: '/profile', label: 'My Profile', icon: User, badge: null },
-    { path: '/qr', label: 'QR Code', icon: QrCode, badge: null },
 
     ...(isAdmin
       ? [
@@ -194,16 +192,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
           ${
             active
-              ? 'bg-gradient-to-r from-indigo-500/15 to-purple-500/10 text-indigo-700 dark:text-white shadow-sm border border-indigo-100/50'
+              ? 'bg-linear-to-r from-indigo-500/15 to-purple-500/10 text-indigo-700 dark:text-white shadow-sm border border-indigo-100/50'
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
           }
           ${collapsed ? 'justify-center px-2' : ''}`}
       >
         <div
-          className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200
+          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200
             ${
               active
-                ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/25'
+                ? 'bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/25'
                 : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'
             }`}
         >
@@ -230,7 +228,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/20 flex">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50/20 flex">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -243,16 +241,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-50 transform transition-all duration-300 ease-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
-          ${sidebarCollapsed ? 'w-[72px]' : 'w-[260px]'}`}
+          ${sidebarCollapsed ? 'w-18' : 'w-65'}`}
       >
         <div className="h-full flex flex-col bg-white border-r border-slate-200/80 shadow-sm">
           {/* Logo */}
           <div
-            className={`flex items-center border-b border-slate-100 h-16 flex-shrink-0 ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4'}`}
+            className={`flex items-center border-b border-slate-100 h-16 shrink-0 ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4'}`}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 flex-shrink-0">
-                <Shield className="w-[18px] h-[18px] text-white" />
+              <div className="w-9 h-9 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
+                <Shield className="w-4.5 text-white" />
               </div>
               {!sidebarCollapsed && (
                 <div className="overflow-hidden">
@@ -380,19 +378,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* User profile */}
           <div
-            className={`border-t border-slate-100 p-3 flex-shrink-0 ${sidebarCollapsed ? 'flex justify-center' : ''}`}
+            className={`border-t border-slate-100 p-3 shrink-0 ${sidebarCollapsed ? 'flex justify-center' : ''}`}
           >
             {sidebarCollapsed ? (
               <button
                 onClick={handleLogout}
-                className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md"
+                className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md"
                 title={user?.name}
               >
                 {user?.name?.charAt(0) || 'U'}
               </button>
             ) : (
               <div className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">
                   {user?.name?.charAt(0) || 'U'}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -419,15 +417,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 h-16 flex-shrink-0">
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 h-16 shrink-0">
           <div className="h-full px-4 lg:px-6 flex items-center justify-between gap-4">
             {/* Left side */}
             <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors flex-shrink-0"
+                className="lg:hidden w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors shrink-0"
               >
-                <Menu className="w-[18px] h-[18px] text-slate-600" />
+                <Menu className="w-4.5 text-slate-600" />
               </button>
 
               {/* Breadcrumbs */}
@@ -435,7 +433,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {breadcrumbs.map((crumb, i) => (
                   <React.Fragment key={crumb.path}>
                     {i > 0 && (
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                     )}
                     <Link
                       to={crumb.path}
@@ -525,7 +523,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                             className="flex items-start gap-3 p-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0"
                           >
                             <div
-                              className={`w-7 h-7 rounded-lg ${getActionColor(log.action)} bg-opacity-10 flex items-center justify-center flex-shrink-0 mt-0.5`}
+                              className={`w-7 h-7 rounded-lg ${getActionColor(log.action)} bg-opacity-10 flex items-center justify-center shrink-0 mt-0.5`}
                             >
                               <span
                                 className={`${getActionColor(log.action).replace('bg-', 'text-')}`}
@@ -573,11 +571,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   }}
                   className="flex items-center gap-2 py-1.5 pl-1.5 pr-3 rounded-xl hover:bg-slate-50 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm shrink-0">
                     {user?.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-xs">
+                      <div className="w-full h-full bg-linear-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-xs">
                         {user?.name?.charAt(0) || 'U'}
                       </div>
                     )}
@@ -597,7 +595,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <div className="absolute right-0 top-12 w-56 bg-white rounded-2xl shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden animate-scale-in z-50">
                     <div className="p-4 border-b border-slate-100">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
                           {user?.name?.charAt(0) || 'U'}
                         </div>
                         <div>

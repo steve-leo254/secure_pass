@@ -12,7 +12,6 @@ import RegisterVisitor from "./pages/RegisterVisitor";
 import ActiveVisitors from "./pages/ActiveVisitors";
 import AllRecords from "./pages/AllRecords";
 import Settings from "./pages/Settings";
-import QRPage from "./pages/QRPage";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import ToolsManagement from "./pages/ToolsManagement";
 import MemberRegister from "./pages/MemberRegister";
@@ -124,15 +123,7 @@ export default function App() {
                 </Protected>
               }
             />
-            <Route
-              path="/qr"
-              element={
-                <Protected>
-                  <QRPage />
-                </Protected>
-              }
-            />
-            <Route
+                        <Route
               path="/member-register"
               element={
                 <Protected>

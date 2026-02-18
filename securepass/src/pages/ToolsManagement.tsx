@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useVisitors } from '../context/VistorContext';
-import { Wrench, Plus, X, CheckCircle2, Tag, Edit2, Save } from 'lucide-react';
+import { Wrench, Plus, X, CheckCircle2, Tag, Edit2 } from 'lucide-react';
 import type { Category } from '../types';
 
 const ToolsManagement: React.FC = () => {
@@ -67,7 +67,7 @@ const ToolsManagement: React.FC = () => {
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-linear-to-br from-slate-700 to-slate-800 rounded-xl flex items-center justify-center">
           <Wrench className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -99,7 +99,7 @@ const ToolsManagement: React.FC = () => {
               <button
                 onClick={handleAddTool}
                 disabled={!newTool.trim()}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center gap-2"
+                className="px-6 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Add Tool
@@ -171,7 +171,7 @@ const ToolsManagement: React.FC = () => {
               <button
                 onClick={handleAddCategory}
                 disabled={!newCategory.name.trim() || !newCategory.value.trim()}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold text-sm rounded-xl hover:shadow-lg hover:shadow-purple-500/25 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center gap-2"
+                className="px-6 py-3 bg-linear-to-r from-purple-600 to-pink-600 text-white font-semibold text-sm rounded-xl hover:shadow-lg hover:shadow-purple-500/25 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Add Category
