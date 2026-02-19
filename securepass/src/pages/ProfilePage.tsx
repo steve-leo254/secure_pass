@@ -254,7 +254,7 @@ const ProfilePage: React.FC = () => {
               <>
                 <button
                   onClick={() => setShowAvatarModal(true)}
-                  className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 bg-slate-100 text-slate-800 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-1.5"
                 >
                   <Camera className="w-3.5 h-3.5" />
                   Photo
@@ -391,6 +391,32 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <div className="space-y-4">
+            {/*Name*/}
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+                <Mail className="w-4 h-4 text-slate-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
+                  Name 
+                </p>
+                {isEditing ? (
+                  <input
+                    type="name"
+                    value={editName}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+                  />
+                ) : (
+                  <p className="text-sm font-semibold text-slate-700">
+                    {user?.name || '—'}
+                  </p>
+                )}
+              </div>
+            </div>
+
+
+
             {/* Email */}
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">

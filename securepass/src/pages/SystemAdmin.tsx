@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useSystemAdmin } from '../context/SystemAdminContext';
 import {
   BILLING_LABELS,
@@ -172,7 +172,7 @@ const SystemAdmin: React.FC = () => {
 
     // Create subscription if package selected
     if (newUserPackage && newUserEndDate) {
-      // We need the user id — but it's auto-generated. For simplicity, we'll find the latest user
+      // We need the user id â€” but it's auto-generated. For simplicity, we'll find the latest user
       setTimeout(() => {
         const latestUser = JSON.parse(localStorage.getItem('sp_system_users') || '[]');
         const lastUser = latestUser[latestUser.length - 1];
@@ -489,7 +489,7 @@ const SystemAdmin: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 pr-4 text-sm text-slate-600">{user.property || '—'}</td>
+                        <td className="py-3 pr-4 text-sm text-slate-600">{user.property || 'â€”'}</td>
                         <td className="py-3 pr-4">
                           {pkg ? (
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${BILLING_COLORS[pkg.billing]} text-white`}>
@@ -506,7 +506,7 @@ const SystemAdmin: React.FC = () => {
                               {statusCfg.label}
                             </span>
                           ) : (
-                            <span className="text-xs text-slate-400">—</span>
+                            <span className="text-xs text-slate-400">â€”</span>
                           )}
                         </td>
                         <td className="py-3 pr-4">
@@ -515,7 +515,7 @@ const SystemAdmin: React.FC = () => {
                               {daysLeft <= 0 ? 'Expired' : `${daysLeft}d left`}
                             </span>
                           ) : (
-                            <span className="text-xs text-slate-400">—</span>
+                            <span className="text-xs text-slate-400">â€”</span>
                           )}
                         </td>
                         <td className="py-3">
@@ -671,7 +671,7 @@ const SystemAdmin: React.FC = () => {
                     const statusCfg = SUB_STATUS_CONFIG[sub.status];
                     return (
                       <tr key={sub.id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                        <td className="px-5 py-3 text-sm font-semibold text-slate-700">{user?.name || '—'}</td>
+                        <td className="px-5 py-3 text-sm font-semibold text-slate-700">{user?.name || 'â€”'}</td>
                         <td className="px-5 py-3">
                           {pkg && (
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${BILLING_COLORS[pkg.billing]} text-white`}>
@@ -912,6 +912,7 @@ const SystemAdmin: React.FC = () => {
                 <div>
                   <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Role *</label>
                   <select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value as SystemUserRole)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 appearance-none">
+                    <option value="superadmin">Super Admin</option>
                     <option value="admin">Admin</option>
                     <option value="security">Security</option>
                   </select>
@@ -936,7 +937,7 @@ const SystemAdmin: React.FC = () => {
                   <select value={newUserPackage} onChange={(e) => setNewUserPackage(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 appearance-none">
                     <option value="">Select package...</option>
                     {packages.filter((p) => p.isActive).map((p) => (
-                      <option key={p.id} value={p.id}>{p.name} — KES {p.price}/{p.billing}</option>
+                      <option key={p.id} value={p.id}>{p.name} â€” KES {p.price}/{p.billing}</option>
                     ))}
                   </select>
                 </div>
@@ -1114,7 +1115,7 @@ const SystemAdmin: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-[11px] text-slate-400 uppercase tracking-wider">{item.label}</p>
-                        <p className="text-sm font-semibold text-slate-700 capitalize">{item.value || '—'}</p>
+                        <p className="text-sm font-semibold text-slate-700 capitalize">{item.value || 'â€”'}</p>
                       </div>
                     </div>
                   );

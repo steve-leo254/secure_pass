@@ -53,7 +53,7 @@ export default function App() {
               <DataProvider>
               <Routes>
             <Route path="/" element={<LoginGuard />} />
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
             <Route path="/termsandcondition" element={<TermsAndConditions />} />
             <Route path="/system-admin" element={<Protected roles={["property_manager"]}><SystemAdmin /></Protected>} />
             <Route path="/visitor-register" element={<PublicRegister />} />
