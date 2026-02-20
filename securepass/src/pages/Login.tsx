@@ -35,12 +35,16 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
     
-    if (login(username, password)) {
-      navigate("/dashboard");
-    } else {
-      setError("Invalid credentials. Please try again.");
+    try {
+      const success = await login(username, password);
+      if (success) {
+        navigate("/dashboard");
+      } else {
+        setError("Invalid credentials. Please try again.");
+      }
+    } catch (error) {
+      setError("Login failed. Please try again.");
     }
     
     setLoading(false);

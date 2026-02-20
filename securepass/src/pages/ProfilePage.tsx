@@ -150,10 +150,10 @@ const ProfilePage: React.FC = () => {
 
   const handlePasswordChange = () => {
     setPasswordError('');
-    if (currentPassword !== user?.password) {
-      setPasswordError('Current password is incorrect');
-      return;
-    }
+    // Password change functionality disabled for now
+    setPasswordError('Password change feature temporarily disabled');
+    return;
+    
     if (newPassword.length < 6) {
       setPasswordError('New password must be at least 6 characters');
       return;
@@ -162,13 +162,11 @@ const ProfilePage: React.FC = () => {
       setPasswordError('Passwords do not match');
       return;
     }
-    updateProfile({ password: newPassword });
+    // updateProfile({ password: newPassword });
     setShowPasswordModal(false);
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   const getInitials = (name: string) => {
