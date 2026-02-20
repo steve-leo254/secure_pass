@@ -1,4 +1,16 @@
 import { createContext, useContext, useState } from 'react';
+import { apiService } from '../services/api';
+
+interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: {
+    id: string;
+    username: string;
+    name: string;
+    role: string;
+  };
+}
 
 export type UserRole = 'property_manager' | 'security';
 
@@ -16,7 +28,6 @@ export type Gender = 'male' | 'female' | 'other';
 export interface User {
   id: string;
   username: string;
-  password: string;
   role: UserRole;
   name: string;
   email?: string;
@@ -113,7 +124,7 @@ interface AuthContextType {
   userRole: 'admin' | 'security_desk';
   logout: () => void;
   user: User | null;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   updateProfile: (updates: Partial<User>) => void;
@@ -128,17 +139,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<'admin' | 'security_desk'>('security_desk');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const login = (username: string, password: string): boolean => {
-    const foundUser = DEFAULT_USERS.find(
-      (u) => u.username === username && u.password === password
-    );
-    if (foundUser) {
-      setUser(foundUser);
-      setUserRole(foundUser.role === 'property_manager' ? 'admin' : 'security_desk');
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const response = await apiService.login(username, password);
+      const user: User = {
+        id: response.user.id,
+        username: response.user.username,
+        role: response.user.role as UserRole,
+        name: response.user.name,
+      };
+      
+      setUser(user);
+      setUserRole(user.role === 'property_manager' ? 'admin' : 'security_desk');
       setIsAuthenticated(true);
       return true;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
     }
-    return false;
   };
 
   const loginAs = (role: 'security' | 'property_manager') => {
