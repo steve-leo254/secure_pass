@@ -20,6 +20,7 @@ import type {
 } from '../types';
 import { CATEGORY_CHART_COLORS, CATEGORIES } from '../types';
 import { useBilling } from './BillingContext';
+import { apiService } from '../services/api';
 
 interface VisitorContextType {
   visitors: Visitor[];
@@ -28,8 +29,8 @@ interface VisitorContextType {
   categories: Category[];
   addVisitor: (
     visitor: Omit<Visitor, 'id' | 'timeIn' | 'timeOut' | 'status'>
-  ) => Visitor;
-  checkoutVisitor: (id: string) => void;
+  ) => Promise<Visitor>;
+  checkoutVisitor: (id: string) => Promise<void>;
   updateVisitor: (id: string, data: Partial<Visitor>) => void;
   editVisitor: (id: string, data: Partial<Visitor>, performedBy: string) => void;
   deleteVisitor: (id: string, performedBy?: string) => void;
@@ -127,11 +128,51 @@ const loadCategories = (): Category[] => {
 export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [visitors, setVisitors] = useState<Visitor[]>(loadVisitors);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(loadAudit);
-  const [tools, setTools] = useState<string[]>(loadTools);
+  const [visitors, setVisitors] = useState<Visitor[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [tools, setTools] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>(loadCategories);
+  const [loading, setLoading] = useState(true);
   const { updateSystemUsage } = useBilling();
+
+  // Load data from API on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Load visitors from API
+        const apiVisitors = await apiService.getVisitors();
+        const visitorsData: Visitor[] = apiVisitors.map(v => ({
+          id: v.id,
+          fullName: v.full_name,
+          phoneNumber: v.phone_number,
+          idNumber: v.id_number,
+          category: v.category as VisitorCategory,
+          purpose: v.purpose,
+          gender: v.gender as 'male' | 'female' | 'other',
+          unitVisited: v.unit_visited,
+          tools: v.tools,
+          customTools: v.custom_tools,
+          timeIn: v.time_in,
+          timeOut: v.time_out,
+          status: v.status as 'checked-in' | 'checked-out',
+          registeredBy: v.registered_by,
+          checkedOutBy: v.checked_out_by,
+        }));
+        setVisitors(visitorsData);
+
+        // Load settings for tools
+        const settings = await apiService.getSettings();
+        setTools(settings.tools);
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   // Update billing usage whenever visitors change
   useEffect(() => {
@@ -175,46 +216,91 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const addVisitor = useCallback(
-    (
+    async (
       data: Omit<Visitor, 'id' | 'timeIn' | 'timeOut' | 'status'>
-    ): Visitor => {
-      const visitor: Visitor = {
-        ...data,
-        id: uuidv4(),
-        timeIn: new Date().toISOString(),
-        timeOut: null,
-        status: 'checked-in',
-      };
-      setVisitors((prev) => {
-        const updated = [visitor, ...prev];
-        saveVisitors(updated);
-        return updated;
-      });
-      addAuditLog(
-        'CHECK_IN',
-        data.registeredBy,
-        `${data.fullName} checked in to ${data.unitVisited}`,
-        data.category
-      );
-      return visitor;
+    ): Promise<Visitor> => {
+      try {
+        // Create visitor via API
+        const response = await apiService.createVisitor({
+          full_name: data.fullName,
+          phone_number: data.phoneNumber,
+          id_number: data.idNumber,
+          category: data.category,
+          purpose: data.purpose,
+          gender: data.gender,
+          unit_visited: data.unitVisited,
+          tools: data.tools,
+          custom_tools: data.customTools,
+        });
+
+        // Refresh visitors list
+        const apiVisitors = await apiService.getVisitors();
+        const visitorsData: Visitor[] = apiVisitors.map(v => ({
+          id: v.id,
+          fullName: v.full_name,
+          phoneNumber: v.phone_number,
+          idNumber: v.id_number,
+          category: v.category as VisitorCategory,
+          purpose: v.purpose,
+          gender: v.gender as 'male' | 'female' | 'other',
+          unitVisited: v.unit_visited,
+          tools: v.tools,
+          customTools: v.custom_tools,
+          timeIn: v.time_in,
+          timeOut: v.time_out,
+          status: v.status as 'checked-in' | 'checked-out',
+          registeredBy: v.registered_by,
+          checkedOutBy: v.checked_out_by,
+        }));
+        setVisitors(visitorsData);
+
+        // Add audit log
+        addAuditLog(
+          'CHECK_IN',
+          data.registeredBy,
+          `${data.fullName} checked in to ${data.unitVisited}`,
+          data.category
+        );
+
+        // Return the new visitor
+        return visitorsData.find(v => v.id === response.id)!;
+      } catch (error) {
+        console.error('Failed to add visitor:', error);
+        throw error;
+      }
     },
     [addAuditLog]
   );
 
   const checkoutVisitor = useCallback(
-    (id: string) => {
-      setVisitors((prev) => {
-        const updated = prev.map((v) =>
-          v.id === id
-            ? {
-                ...v,
-                timeOut: new Date().toISOString(),
-                status: 'checked-out' as const,
-              }
-            : v
-        );
-        saveVisitors(updated);
-        const visitor = prev.find((v) => v.id === id);
+    async (id: string) => {
+      try {
+        // Checkout visitor via API
+        await apiService.checkoutVisitor(id);
+
+        // Refresh visitors list
+        const apiVisitors = await apiService.getVisitors();
+        const visitorsData: Visitor[] = apiVisitors.map(v => ({
+          id: v.id,
+          fullName: v.full_name,
+          phoneNumber: v.phone_number,
+          idNumber: v.id_number,
+          category: v.category as VisitorCategory,
+          purpose: v.purpose,
+          gender: v.gender as 'male' | 'female' | 'other',
+          unitVisited: v.unit_visited,
+          tools: v.tools,
+          customTools: v.custom_tools,
+          timeIn: v.time_in,
+          timeOut: v.time_out,
+          status: v.status as 'checked-in' | 'checked-out',
+          registeredBy: v.registered_by,
+          checkedOutBy: v.checked_out_by,
+        }));
+        setVisitors(visitorsData);
+
+        // Add audit log
+        const visitor = visitorsData.find(v => v.id === id);
         if (visitor) {
           addAuditLog(
             'CHECK_OUT',
@@ -223,8 +309,10 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
             visitor.category
           );
         }
-        return updated;
-      });
+      } catch (error) {
+        console.error('Failed to checkout visitor:', error);
+        throw error;
+      }
     },
     [addAuditLog]
   );

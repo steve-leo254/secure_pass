@@ -3,14 +3,12 @@ import json
 import sqlite3
 import uuid
 from datetime import datetime
-from passlib.context import CryptContext
 import urllib.parse
 import os
-from dotenv import load_dotenv
+import hashlib
 
-load_dotenv()
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
 
 class SecurePassAPI(BaseHTTPRequestHandler):
     
@@ -117,7 +115,7 @@ class SecurePassAPI(BaseHTTPRequestHandler):
             user = cursor.fetchone()
             conn.close()
             
-            if not user or password != user['hashed_password']:
+            if not user or hash_password(password) != user['hashed_password']:
                 self.send_json_response({"error": "Invalid credentials"}, 401)
             else:
                 self.send_json_response({
