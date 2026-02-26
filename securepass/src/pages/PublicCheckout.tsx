@@ -30,7 +30,7 @@ import {
   FileText,
 } from 'lucide-react';
 
-import VisitorNav from '../components/VisitorNav';
+
 
 type SearchMode = 'phone' | 'id' | 'name';
 
@@ -387,13 +387,18 @@ const PublicCheckout: React.FC = () => {
                     type={searchMode === 'phone' ? 'tel' : 'text'}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && filteredVisitors.length > 0) {
+                        selectVisitor(filteredVisitors[0]);
+                      }
+                    }}
                     placeholder={searchPlaceholders[searchMode]}
-                    className="w-full pl-12 pr-10 py-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all text-sm"
+                    className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all text-sm"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors z-10"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -563,6 +568,13 @@ const PublicCheckout: React.FC = () => {
                 <p className="text-xs text-slate-400">
                   Confirm each tool before checking out
                 </p>
+                {(selectedVisitor.category === 'contractor' || selectedVisitor.category === 'technician' || selectedVisitor.category === 'staff') && (
+                  <div className="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-xs text-amber-700 font-medium">
+                      ⚠️ Gate man must verify all tools for contractors, technicians, and staff before checkout
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1069,8 +1081,8 @@ const PublicCheckout: React.FC = () => {
           <Shield className="w-3 h-3" />
           <span className="font-semibold">SECUREPASS</span>
         </div>
-        <p>Secure Visitor & Access Management System</p>
-        <p className="mt-1">© {new Date().getFullYear()} All rights reserved</p>
+        {/* <p>Secure Visitor & Access Management System</p>
+        <p className="mt-1">© {new Date().getFullYear()} All rights reserved</p> */}
       </footer>
     </div>
   );

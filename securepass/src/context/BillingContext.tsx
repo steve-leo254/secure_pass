@@ -75,7 +75,7 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: 'billing-' + Date.now(),
       totalRecordsAllowed: TRIAL_RECORDS_LIMIT,
       recordsUsed: 0,
-      balance: 0,
+      balance: 0, // Will be calculated based on registered records
       status: 'trial',
       trialRecordsUsed: 0,
       createdAt: new Date().toISOString(),
@@ -134,7 +134,7 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const updatedAccount: BillingAccount = {
         ...billingAccount,
         totalRecordsAllowed: billingAccount.totalRecordsAllowed + recordsAdded,
-        balance: billingAccount.balance + amount,
+        balance: billingAccount.balance + amount, // Add payment amount to calculated balance
         status: 'active',
         lastPaymentAt: new Date().toISOString(),
         payments: [...billingAccount.payments, newPayment]
@@ -151,10 +151,14 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updateSystemUsage = useCallback((totalRecords: number) => {
     if (!billingAccount) return;
 
+    // Calculate balance based on registered records
+    const calculatedBalance = totalRecords * COST_PER_UNIT;
+
     const updatedAccount: BillingAccount = {
       ...billingAccount,
       recordsUsed: totalRecords,
-      trialRecordsUsed: billingAccount.status === 'trial' ? Math.min(totalRecords, TRIAL_RECORDS_LIMIT) : billingAccount.trialRecordsUsed
+      trialRecordsUsed: billingAccount.status === 'trial' ? Math.min(totalRecords, TRIAL_RECORDS_LIMIT) : billingAccount.trialRecordsUsed,
+      balance: calculatedBalance
     };
 
     // Check if trial limit is reached
@@ -163,7 +167,7 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     saveBillingAccount(updatedAccount);
-  }, [saveBillingAccount]);
+  }, [saveBillingAccount, billingAccount]);
 
   const getBillingStatus = useCallback((): BillingStatus => {
     return billingAccount?.status || 'trial';

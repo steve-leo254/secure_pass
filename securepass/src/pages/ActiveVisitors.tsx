@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
 import { useVisitors } from "../context/VistorContext";
 import type { Visitor } from "../types";
 import {
@@ -34,7 +33,6 @@ const CAT_BADGE: Record<string, string> = {
 };
 
 export default function ActiveVisitors() {
-  const { user } = useAuth();
   const { getActiveVisitors, checkoutVisitor } = useVisitors();
   const activeVisitors = getActiveVisitors();
   const [search, setSearch] = useState("");
@@ -102,6 +100,11 @@ export default function ActiveVisitors() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  // Search is already filtered, no additional action needed
+                }
+              }}
               placeholder="Search by name, ID, phone, or unit..."
               className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition"
             />

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useVisitors } from '../context/VistorContext';
 import { CATEGORIES, TOOLS_LIST } from '../types';
 import type { VisitorCategory, Gender } from '../types';
-import VisitorNav from '../components/VisitorNav';
+import { format } from 'date-fns';
+
 import {
   Shield,
   User,
@@ -27,6 +28,8 @@ import {
   CalendarCheck,
   ShieldCheck,
   Star,
+  DoorOpen,
+  Download,
 } from 'lucide-react';
 
 const PublicRegister: React.FC = () => {
@@ -99,6 +102,8 @@ const PublicRegister: React.FC = () => {
     if (!purpose.trim()) errs.purpose = 'Purpose of visit is required';
     if (!unitVisited.trim())
       errs.unitVisited = 'Please specify the unit you are visiting';
+    else if (!validateUnit(unitVisited))
+      errs.unitVisited = 'Invalid unit. Please enter a valid unit, shop, house, or office number';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -117,7 +122,7 @@ const PublicRegister: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!agreedToTerms) return;
-    
+
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1500));
 
@@ -157,6 +162,62 @@ const PublicRegister: React.FC = () => {
     setStep(0);
   };
 
+  const validateUnit = (unit: string) => {
+    const validUnits = [
+      'Unit 1A', 'Unit 1B', 'Unit 2A', 'Unit 2B', 'Unit 3A', 'Unit 3B',
+      'Unit 4A', 'Unit 4B', 'Unit 5A', 'Unit 5B', 'Shop 1', 'Shop 2',
+      'Shop 3', 'Shop 4', 'Shop 5', 'House 1', 'House 2', 'House 3',
+      'Office 1', 'Office 2', 'Office 3', 'Reception', 'Admin Office'
+    ];
+    return validUnits.some(validUnit => 
+      unit.toLowerCase().includes(validUnit.toLowerCase()) || 
+      validUnit.toLowerCase().includes(unit.toLowerCase())
+    );
+  };
+
+  const downloadVisitorInfo = () => {
+    // Create PDF content
+    const pdfContent = `
+VISITOR PASS INFORMATION
+=====================
+
+Personal Details:
+----------------
+Full Name: ${fullName}
+Phone Number: ${phoneNumber}
+ID/Passport: ${idNumber}
+Gender: ${gender}
+
+Visit Information:
+------------------
+Category: ${category}
+Purpose of Visit: ${purpose}
+Unit/Office Visited: ${unitVisited}
+Check-in Time: ${format(currentTime, 'yyyy-MM-dd HH:mm:ss')}
+Status: Checked In
+
+${selectedTools.length > 0 ? `
+Tools/Equipment:
+-----------------
+${selectedTools.join('\n')}
+` : ''}
+
+Important Notes:
+--------------
+Please proceed to security desk for verification.
+Don't forget to check out when you leave.
+This pass must be visible at all times during your visit.
+    `;
+
+    const dataUri = 'data:text/plain;charset=utf-8,' + encodeURIComponent(pdfContent);
+    const exportFileDefaultName = `visitor-pass-${fullName.replace(/\s+/g, '-')}-${format(currentTime, 'yyyy-MM-dd-HHmm')}.txt`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
   const stepLabels = [
     { num: 1, label: 'Personal' },
     { num: 2, label: 'Visit Info' },
@@ -169,8 +230,8 @@ const PublicRegister: React.FC = () => {
     category === 'staff';
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50/40 relative" 
-        >
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50/40 relative"
+    >
       <div ref={topRef} />
 
       {/* Background decorations */}
@@ -181,7 +242,7 @@ const PublicRegister: React.FC = () => {
       </div>
 
       {/* Header */}
-      <VisitorNav />
+      
 
       <div className="max-w-4xl mx-auto px-4 py-6 relative z-10">
         {/* Step 0: Welcome */}
@@ -294,13 +355,12 @@ const PublicRegister: React.FC = () => {
                   <React.Fragment key={s.num}>
                     <div className="flex flex-col items-center gap-1.5">
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-500 ${
-                          step > s.num
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-500 ${step > s.num
                             ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
                             : step === s.num
                               ? 'bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25 scale-110'
                               : 'bg-slate-100 text-slate-400'
-                        }`}
+                          }`}
                       >
                         {step > s.num ? (
                           <CheckCircle2 className="w-5 h-5" />
@@ -309,9 +369,8 @@ const PublicRegister: React.FC = () => {
                         )}
                       </div>
                       <span
-                        className={`text-[10px] font-semibold ${
-                          step >= s.num ? 'text-slate-700' : 'text-slate-400'
-                        }`}
+                        className={`text-[10px] font-semibold ${step >= s.num ? 'text-slate-700' : 'text-slate-400'
+                          }`}
                       >
                         {s.label}
                       </span>
@@ -319,11 +378,10 @@ const PublicRegister: React.FC = () => {
                     {i < stepLabels.length - 1 && (
                       <div className="flex-1 h-1 mx-3 rounded-full bg-slate-100 overflow-hidden -mt-5">
                         <div
-                          className={`h-full rounded-full transition-all duration-700 ease-out ${
-                            step > s.num
+                          className={`h-full rounded-full transition-all duration-700 ease-out ${step > s.num
                               ? 'bg-emerald-500 w-full'
                               : 'bg-indigo-500 w-0'
-                          }`}
+                            }`}
                           style={{
                             width: step > s.num ? '100%' : '0%',
                           }}
@@ -364,11 +422,10 @@ const PublicRegister: React.FC = () => {
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className={`w-full px-4 py-3.5 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm ${
-                        errors.fullName
+                      className={`w-full px-4 py-3.5 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm ${errors.fullName
                           ? 'border-red-300 focus:ring-red-500/20 focus:border-red-400'
                           : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
-                      }`}
+                        }`}
                       placeholder="Enter your full name"
                     />
                     {errors.fullName && (
@@ -390,11 +447,10 @@ const PublicRegister: React.FC = () => {
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      className={`w-full px-4 py-3.5 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm ${
-                        errors.phoneNumber
+                      className={`w-full px-4 py-3.5 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm ${errors.phoneNumber
                           ? 'border-red-300 focus:ring-red-500/20 focus:border-red-400'
                           : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
-                      }`}
+                        }`}
                       placeholder="e.g. 0712 345 678"
                     />
                     {errors.phoneNumber && (
@@ -416,11 +472,10 @@ const PublicRegister: React.FC = () => {
                       type="text"
                       value={idNumber}
                       onChange={(e) => setIdNumber(e.target.value)}
-                      className={`w-full px-4 py-3.5 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm ${
-                        errors.idNumber
+                      className={`w-full px-4 py-3.5 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm ${errors.idNumber
                           ? 'border-red-300 focus:ring-red-500/20 focus:border-red-400'
                           : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
-                      }`}
+                        }`}
                       placeholder="Enter ID or Passport number"
                     />
                     {errors.idNumber && (
@@ -448,11 +503,10 @@ const PublicRegister: React.FC = () => {
                           key={g.val}
                           type="button"
                           onClick={() => setGender(g.val)}
-                          className={`py-3 rounded-xl text-sm font-semibold transition-all duration-200 border flex flex-col items-center gap-1 ${
-                            gender === g.val
+                          className={`py-3 rounded-xl text-sm font-semibold transition-all duration-200 border flex flex-col items-center gap-1 ${gender === g.val
                               ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-sm ring-2 ring-indigo-200/50'
                               : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 hover:border-slate-300'
-                          }`}
+                            }`}
                         >
                           <span className="text-xl">{g.emoji}</span>
                           <span className="text-[11px]">{g.label}</span>
@@ -493,20 +547,18 @@ const PublicRegister: React.FC = () => {
                           key={cat.value}
                           type="button"
                           onClick={() => setCategory(cat.value)}
-                          className={`p-3 rounded-xl text-left transition-all duration-200 border flex items-center gap-3 ${
-                            category === cat.value
+                          className={`p-3 rounded-xl text-left transition-all duration-200 border flex items-center gap-3 ${category === cat.value
                               ? 'bg-indigo-50 border-indigo-300 shadow-sm ring-2 ring-indigo-200/50'
                               : 'bg-slate-50 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
-                          }`}
+                            }`}
                         >
                           <span className="text-2xl">{cat.icon}</span>
                           <div>
                             <span
-                              className={`text-xs font-semibold block ${
-                                category === cat.value
+                              className={`text-xs font-semibold block ${category === cat.value
                                   ? 'text-indigo-700'
                                   : 'text-slate-600'
-                              }`}
+                                }`}
                             >
                               {cat.label}
                             </span>
@@ -526,11 +578,10 @@ const PublicRegister: React.FC = () => {
                     <textarea
                       value={purpose}
                       onChange={(e) => setPurpose(e.target.value)}
-                      className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm resize-none ${
-                        errors.purpose
+                      className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm resize-none ${errors.purpose
                           ? 'border-red-300 focus:ring-red-500/20 focus:border-red-400'
                           : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
-                      }`}
+                        }`}
                       rows={3}
                       placeholder="Briefly describe why you are visiting..."
                     />
@@ -553,11 +604,10 @@ const PublicRegister: React.FC = () => {
                       type="text"
                       value={unitVisited}
                       onChange={(e) => setUnitVisited(e.target.value)}
-                      className={`w-full px-4 py-3.5 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm ${
-                        errors.unitVisited
+                      className={`w-full px-4 py-3.5 bg-slate-50 border rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all text-sm ${errors.unitVisited
                           ? 'border-red-300 focus:ring-red-500/20 focus:border-red-400'
                           : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-400'
-                      }`}
+                        }`}
                       placeholder="e.g., Unit 5A, Shop 12, House 23"
                     />
                     {errors.unitVisited && (
@@ -584,11 +634,10 @@ const PublicRegister: React.FC = () => {
                             key={tool}
                             type="button"
                             onClick={() => toggleTool(tool)}
-                            className={`px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 border ${
-                              selectedTools.includes(tool)
+                            className={`px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 border ${selectedTools.includes(tool)
                                 ? 'bg-amber-50 border-amber-300 text-amber-700 shadow-sm ring-1 ring-amber-200/50'
                                 : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
-                            }`}
+                              }`}
                           >
                             {selectedTools.includes(tool)
                               ? '✅'
@@ -819,8 +868,15 @@ const PublicRegister: React.FC = () => {
                         I confirm the above information is correct
                       </span>
                       <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                        I agree to follow the premises safety and visitor
-                        policies. I understand my visit is being recorded for
+                        I agree to follow the{' '}
+                        <button
+                          type="button"
+                          onClick={() => window.open('/terms-and-conditions', '_blank')}
+                          className="text-indigo-600 hover:text-indigo-700 underline font-medium"
+                        >
+                          premises safety and visitor policies
+                        </button>
+                        . I understand my visit is being recorded for
                         security purposes.
                       </p>
                     </div>
@@ -975,12 +1031,21 @@ const PublicRegister: React.FC = () => {
               </div>
             </div>
 
+            {/* Download visitor info button */}
+            <button
+              onClick={downloadVisitorInfo}
+              className="w-full max-w-xs mx-auto py-3.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 mb-3"
+            >
+              <Download className="w-4 h-4" />
+              Download My Info
+            </button>
+            
             <button
               onClick={resetForm}
-              className="w-full max-w-md mx-auto py-3.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-2xl shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
+              className="w-full max-w-xs mx-auto py-3.5 bg-linear-to-r from-slate-700 to-slate-800 text-white font-semibold rounded-2xl shadow-lg shadow-slate-700/20 hover:shadow-xl transition-all flex items-center justify-center gap-2"
             >
-              <UserPlus className="w-4 h-4" />
-              Register Another Visitor
+              <DoorOpen className="w-4 h-4" />
+              Done
             </button>
           </div>
         )}
@@ -992,8 +1057,8 @@ const PublicRegister: React.FC = () => {
           <Shield className="w-3 h-3" />
           <span className="font-semibold">SECUREPASS</span>
         </div>
-        <p>Secure Visitor & Access Management System</p>
-        <p className="mt-1">© {new Date().getFullYear()} All rights reserved</p>
+        {/* <p>Secure Visitor & Access Management System</p> */}
+        {/* <p className="mt-1">© {new Date().getFullYear()} All rights reserved</p> */}
       </footer>
     </div>
   );

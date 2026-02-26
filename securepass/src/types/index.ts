@@ -204,12 +204,37 @@ export type PackageBilling = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'ann
 export type SystemUserRole = 'superadmin' | 'admin' | 'security';
 export type SystemUserStatus = 'active' | 'inactive' | 'suspended';
 
+// Coin System Types
+export interface CoinPackage {
+  id: string;
+  name: string;
+  coins: number;
+  price: number; // KES price
+  currency: string;
+  bonusCoins?: number; // Extra coins as bonus
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CoinTransaction {
+  id: string;
+  userId: string;
+  type: 'purchase' | 'redemption' | 'refund' | 'bonus';
+  amount: number;
+  balance: number; // Balance after transaction
+  description: string;
+  createdAt: string;
+  packageId?: string; // For redemption
+  coinPackageId?: string; // For purchase
+}
+
 export interface Package {
   id: string;
   name: string;
   billing: PackageBilling;
-  price: number;
+  price: number; // KES price (legacy)
   currency: string;
+  coinCost: number; // Cost in coins
   maxUsers: number;
   maxVisitorsPerDay: number;
   features: string[];
@@ -246,6 +271,9 @@ export interface SystemUser {
   createdAt: string;
   lastActive?: string;
   totalVisitors?: number;
+  coinBalance: number; // Current coin balance
+  totalCoinsPurchased: number; // Total coins ever purchased
+  totalCoinsRedeemed: number; // Total coins redeemed for packages
 }
 
 export interface SubscriptionReminder {

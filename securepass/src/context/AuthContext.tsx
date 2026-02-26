@@ -119,6 +119,7 @@ interface AuthContextType {
   updateProfile: (updates: Partial<User>) => void;
   updateAvatar: (avatar: string) => void;
   removeAvatar: () => void;
+  updatePassword: (newPassword: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -174,6 +175,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updatePassword = (newPassword: string) => {
+    if (user) {
+      setUser({ ...user, password: newPassword });
+    }
+  };
+
   return (
 
     <AuthContext.Provider
@@ -188,6 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateProfile,
         updateAvatar,
         removeAvatar,
+        updatePassword,
       }}
     >
       {children}

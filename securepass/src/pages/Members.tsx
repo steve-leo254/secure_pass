@@ -127,6 +127,11 @@ export default function Members() {
               placeholder="Search by name, ID, email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  // Search is already filtered, no additional action needed
+                }
+              }}
               className="w-full pl-12 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
             />
           </div>

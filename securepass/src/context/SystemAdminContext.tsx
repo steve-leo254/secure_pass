@@ -4,6 +4,7 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  useEffect,
   type ReactNode,
 } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,14 +17,18 @@ import type {
   SubscriptionStatus,
   SystemUserRole,
   SystemUserStatus,
+  CoinPackage,
+  CoinTransaction,
 } from '../types';
-import { addDays, addWeeks, addMonths, addYears, differenceInDays } from 'date-fns';
+import { addDays, addMonths, addYears, differenceInDays } from 'date-fns';
 
 interface SystemAdminContextType {
   packages: Package[];
   subscriptions: Subscription[];
   systemUsers: SystemUser[];
   reminders: SubscriptionReminder[];
+  coinPackages: CoinPackage[];
+  coinTransactions: CoinTransaction[];
 
   // Package CRUD
   addPackage: (pkg: Omit<Package, 'id' | 'createdAt'>) => void;
@@ -48,6 +53,14 @@ interface SystemAdminContextType {
   deleteReminder: (id: string) => void;
   generateAutoReminders: () => void;
 
+  // Coin System
+  purchaseCoins: (userId: string, coinPackageId: string) => void;
+  redeemPackage: (userId: string, packageId: string) => void;
+  addCoinPackage: (pkg: Omit<CoinPackage, 'id' | 'createdAt'>) => void;
+  updateCoinPackage: (id: string, data: Partial<CoinPackage>) => void;
+  deleteCoinPackage: (id: string) => void;
+  getUserCoinTransactions: (userId: string) => CoinTransaction[];
+
   // Queries
   getUserSubscription: (userId: string) => Subscription | undefined;
   getUserPackage: (userId: string) => Package | undefined;
@@ -63,7 +76,12 @@ interface SystemAdminContextType {
     totalRevenue: number;
     monthlyRevenue: number;
     totalPackages: number;
+    totalCoinsInSystem: number;
+    totalCoinsRedeemed: number;
   };
+
+  // Data Management
+  resetToDefaults: () => void;
 }
 
 const SystemAdminContext = createContext<SystemAdminContextType | undefined>(undefined);
@@ -73,6 +91,8 @@ const KEYS = {
   subscriptions: 'sp_subscriptions',
   systemUsers: 'sp_system_users',
   reminders: 'sp_reminders',
+  coinPackages: 'sp_coin_packages',
+  coinTransactions: 'sp_coin_transactions',
 };
 
 const load = <T,>(key: string, fallback: T[]): T[] => {
@@ -84,7 +104,51 @@ const save = (key: string, data: any) => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
-// Default packages
+// Default coin packages
+const DEFAULT_COIN_PACKAGES: CoinPackage[] = [
+  {
+    id: 'coins-1',
+    name: 'Bronze Pack',
+    coins: 100,
+    price: 500,
+    currency: 'KES',
+    bonusCoins: 10,
+    isActive: true,
+    createdAt: '2024-01-01',
+  },
+  {
+    id: 'coins-2',
+    name: 'Silver Pack',
+    coins: 250,
+    price: 1000,
+    currency: 'KES',
+    bonusCoins: 25,
+    isActive: true,
+    createdAt: '2024-01-01',
+  },
+  {
+    id: 'coins-3',
+    name: 'Gold Pack',
+    coins: 500,
+    price: 2000,
+    currency: 'KES',
+    bonusCoins: 75,
+    isActive: true,
+    createdAt: '2024-01-01',
+  },
+  {
+    id: 'coins-4',
+    name: 'Platinum Pack',
+    coins: 1000,
+    price: 3500,
+    currency: 'KES',
+    bonusCoins: 200,
+    isActive: true,
+    createdAt: '2024-01-01',
+  },
+];
+
+// Default packages with coin costs
 const DEFAULT_PACKAGES: Package[] = [
   {
     id: 'pkg-1',
@@ -92,6 +156,7 @@ const DEFAULT_PACKAGES: Package[] = [
     billing: 'daily',
     price: 50,
     currency: 'KES',
+    coinCost: 10,
     maxUsers: 2,
     maxVisitorsPerDay: 50,
     features: ['Basic registration', 'QR Code access', 'Daily reports'],
@@ -104,6 +169,7 @@ const DEFAULT_PACKAGES: Package[] = [
     billing: 'weekly',
     price: 300,
     currency: 'KES',
+    coinCost: 50,
     maxUsers: 5,
     maxVisitorsPerDay: 100,
     features: ['All Starter features', 'Tools tracking', 'Email notifications'],
@@ -116,6 +182,7 @@ const DEFAULT_PACKAGES: Package[] = [
     billing: 'monthly',
     price: 2500,
     currency: 'KES',
+    coinCost: 150,
     maxUsers: 15,
     maxVisitorsPerDay: 500,
     features: ['All Basic features', 'Analytics dashboard', 'CSV/PDF exports', 'Priority support'],
@@ -129,6 +196,7 @@ const DEFAULT_PACKAGES: Package[] = [
     billing: 'annually',
     price: 25000,
     currency: 'KES',
+    coinCost: 1000,
     maxUsers: 50,
     maxVisitorsPerDay: 2000,
     features: ['All Pro features', 'Multi-property', 'API access', 'Custom branding', 'Dedicated support'],
@@ -152,6 +220,9 @@ const DEFAULT_SYSTEM_USERS: SystemUser[] = [
     createdAt: '2024-06-15',
     lastActive: new Date().toISOString(),
     totalVisitors: 1245,
+    coinBalance: 150,
+    totalCoinsPurchased: 500,
+    totalCoinsRedeemed: 350,
   },
   {
     id: 'su-2',
@@ -166,6 +237,9 @@ const DEFAULT_SYSTEM_USERS: SystemUser[] = [
     createdAt: '2024-08-01',
     lastActive: new Date(Date.now() - 86400000).toISOString(),
     totalVisitors: 892,
+    coinBalance: 1000,
+    totalCoinsPurchased: 1200,
+    totalCoinsRedeemed: 200,
   },
   {
     id: 'su-3',
@@ -180,6 +254,9 @@ const DEFAULT_SYSTEM_USERS: SystemUser[] = [
     createdAt: '2024-10-20',
     lastActive: new Date(Date.now() - 172800000).toISOString(),
     totalVisitors: 3210,
+    coinBalance: 75,
+    totalCoinsPurchased: 250,
+    totalCoinsRedeemed: 175,
   },
   {
     id: 'su-4',
@@ -194,6 +271,9 @@ const DEFAULT_SYSTEM_USERS: SystemUser[] = [
     createdAt: '2024-04-10',
     lastActive: new Date(Date.now() - 604800000).toISOString(),
     totalVisitors: 456,
+    coinBalance: 25,
+    totalCoinsPurchased: 100,
+    totalCoinsRedeemed: 75,
   },
   {
     id: 'su-5',
@@ -208,6 +288,9 @@ const DEFAULT_SYSTEM_USERS: SystemUser[] = [
     createdAt: '2025-01-01',
     lastActive: new Date().toISOString(),
     totalVisitors: 78,
+    coinBalance: 200,
+    totalCoinsPurchased: 250,
+    totalCoinsRedeemed: 50,
   },
 ];
 
@@ -242,7 +325,7 @@ const DEFAULT_SUBSCRIPTIONS: Subscription[] = [
     packageId: 'pkg-3',
     startDate: '2024-10-20',
     endDate: addDays(new Date(), 5).toISOString(),
-    status: 'expiring',
+    status: 'active',
     autoRenew: false,
     amount: 2500,
     lastPaymentDate: '2025-01-01',
@@ -264,7 +347,7 @@ const DEFAULT_SUBSCRIPTIONS: Subscription[] = [
     packageId: 'pkg-1',
     startDate: '2025-01-01',
     endDate: addDays(new Date(), 12).toISOString(),
-    status: 'trial',
+    status: 'suspended',
     autoRenew: false,
     amount: 0,
   },
@@ -281,6 +364,61 @@ export const SystemAdminProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [reminders, setReminders] = useState<SubscriptionReminder[]>(() =>
     load(KEYS.reminders, [])
   );
+  const [coinPackages, setCoinPackages] = useState<CoinPackage[]>(() =>
+    load(KEYS.coinPackages, DEFAULT_COIN_PACKAGES)
+  );
+  const [coinTransactions, setCoinTransactions] = useState<CoinTransaction[]>(() =>
+    load(KEYS.coinTransactions, [])
+  );
+
+  const resetToDefaults = useCallback(() => {
+    localStorage.removeItem(KEYS.packages);
+    localStorage.removeItem(KEYS.subscriptions);
+    localStorage.removeItem(KEYS.systemUsers);
+    localStorage.removeItem(KEYS.reminders);
+    localStorage.removeItem(KEYS.coinPackages);
+    localStorage.removeItem(KEYS.coinTransactions);
+    
+    setPackages(DEFAULT_PACKAGES);
+    setSubscriptions(DEFAULT_SUBSCRIPTIONS);
+    setSystemUsers(DEFAULT_SYSTEM_USERS);
+    setReminders([]);
+    setCoinPackages(DEFAULT_COIN_PACKAGES);
+    setCoinTransactions([]);
+    
+    console.log('Reset all data to defaults');
+  }, []);
+
+  const cleanupOrphanedData = useCallback(() => {
+    // Remove subscriptions that don't have corresponding users
+    setSubscriptions((prev) => {
+      const validSubscriptions = prev.filter((sub) => 
+        systemUsers.some((user) => user.id === sub.userId)
+      );
+      if (validSubscriptions.length !== prev.length) {
+        save(KEYS.subscriptions, validSubscriptions);
+        console.log(`Cleaned up ${prev.length - validSubscriptions.length} orphaned subscriptions`);
+      }
+      return validSubscriptions;
+    });
+
+    // Remove users that don't have corresponding subscriptions (optional cleanup)
+    // setSystemUsers((prev) => {
+    //   const validUsers = prev.filter((user) => 
+    //     subscriptions.some((sub) => sub.userId === user.id)
+    //   );
+    //   if (validUsers.length !== prev.length) {
+    //     save(KEYS.systemUsers, validUsers);
+    //     console.log(`Cleaned up ${prev.length - validUsers.length} orphaned users`);
+    //   }
+    //   return validUsers;
+    // });
+  }, [systemUsers, subscriptions]);
+
+  // Run cleanup on mount
+  useEffect(() => {
+    cleanupOrphanedData();
+  }, []);
 
   // ---------- Packages ----------
   const addPackage = useCallback(
@@ -494,6 +632,151 @@ export const SystemAdminProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
   }, [subscriptions, systemUsers, reminders]);
 
+  // ---------- Coin System ----------
+  const purchaseCoins = useCallback(
+    (userId: string, coinPackageId: string) => {
+      const coinPackage = coinPackages.find((cp) => cp.id === coinPackageId);
+      const user = systemUsers.find((u) => u.id === userId);
+      
+      if (!coinPackage || !user) return;
+      
+      const totalCoins = coinPackage.coins + (coinPackage.bonusCoins || 0);
+      const newBalance = user.coinBalance + totalCoins;
+      
+      // Update user coin balance
+      setSystemUsers((prev) => {
+        const updated = prev.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                coinBalance: newBalance,
+                totalCoinsPurchased: u.totalCoinsPurchased + totalCoins,
+              }
+            : u
+        );
+        save(KEYS.systemUsers, updated);
+        return updated;
+      });
+      
+      // Create transaction record
+      const transaction: CoinTransaction = {
+        id: uuidv4(),
+        userId,
+        type: 'purchase',
+        amount: totalCoins,
+        balance: newBalance,
+        description: `Purchased ${coinPackage.name}`,
+        createdAt: new Date().toISOString(),
+        coinPackageId,
+      };
+      
+      setCoinTransactions((prev) => {
+        const updated = [transaction, ...prev];
+        save(KEYS.coinTransactions, updated);
+        return updated;
+      });
+    },
+    [coinPackages, systemUsers]
+  );
+
+  const redeemPackage = useCallback(
+    (userId: string, packageId: string) => {
+      const pkg = packages.find((p) => p.id === packageId);
+      const user = systemUsers.find((u) => u.id === userId);
+      
+      if (!pkg || !user || user.coinBalance < pkg.coinCost) return;
+      
+      const newBalance = user.coinBalance - pkg.coinCost;
+      
+      // Update user coin balance
+      setSystemUsers((prev) => {
+        const updated = prev.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                coinBalance: newBalance,
+                totalCoinsRedeemed: u.totalCoinsRedeemed + pkg.coinCost,
+              }
+            : u
+        );
+        save(KEYS.systemUsers, updated);
+        return updated;
+      });
+      
+      // Create transaction record
+      const transaction: CoinTransaction = {
+        id: uuidv4(),
+        userId,
+        type: 'redemption',
+        amount: -pkg.coinCost,
+        balance: newBalance,
+        description: `Redeemed ${pkg.name} package`,
+        createdAt: new Date().toISOString(),
+        packageId,
+      };
+      
+      setCoinTransactions((prev) => {
+        const updated = [transaction, ...prev];
+        save(KEYS.coinTransactions, updated);
+        return updated;
+      });
+      
+      // Create or update subscription
+      const existingSub = subscriptions.find((s) => s.userId === userId);
+      const subscriptionData = {
+        userId,
+        packageId,
+        startDate: new Date().toISOString(),
+        endDate: addMonths(new Date(), 1).toISOString(), // Default to 1 month
+        status: 'active' as const,
+        autoRenew: false,
+        amount: pkg.price,
+      };
+      
+      if (existingSub) {
+        updateSubscription(existingSub.id, subscriptionData);
+      } else {
+        createSubscription(subscriptionData);
+      }
+    },
+    [packages, systemUsers, subscriptions, updateSubscription, createSubscription]
+  );
+
+  const addCoinPackage = useCallback(
+    (pkg: Omit<CoinPackage, 'id' | 'createdAt'>) => {
+      setCoinPackages((prev) => {
+        const updated = [
+          ...prev,
+          { ...pkg, id: uuidv4(), createdAt: new Date().toISOString() },
+        ];
+        save(KEYS.coinPackages, updated);
+        return updated;
+      });
+    },
+    []
+  );
+
+  const updateCoinPackage = useCallback((id: string, data: Partial<CoinPackage>) => {
+    setCoinPackages((prev) => {
+      const updated = prev.map((p) => (p.id === id ? { ...p, ...data } : p));
+      save(KEYS.coinPackages, updated);
+      return updated;
+    });
+  }, []);
+
+  const deleteCoinPackage = useCallback((id: string) => {
+    setCoinPackages((prev) => {
+      const updated = prev.filter((p) => p.id !== id);
+      save(KEYS.coinPackages, updated);
+      return updated;
+    });
+  }, []);
+
+  const getUserCoinTransactions = useCallback(
+    (userId: string) => coinTransactions.filter((t) => t.userId === userId),
+    [coinTransactions]
+  );
+
   // ---------- Queries ----------
   const getUserSubscription = useCallback(
     (userId: string) => subscriptions.find((s) => s.userId === userId),
@@ -516,7 +799,25 @@ export const SystemAdminProvider: React.FC<{ children: ReactNode }> = ({ childre
           const dLeft = differenceInDays(new Date(s.endDate), now);
           return dLeft > 0 && dLeft <= days && s.status !== 'expired' && s.status !== 'suspended';
         })
-        .map((s) => ({ ...s, user: systemUsers.find((u) => u.id === s.userId) }));
+        .map((s) => ({ 
+          ...s, 
+          user: systemUsers.find((u) => u.id === s.userId) || {
+            id: s.userId,
+            name: 'Unknown User',
+            email: 'unknown@example.com',
+            phone: '',
+            role: 'admin' as const,
+            status: 'inactive' as const,
+            company: 'Unknown Company',
+            property: 'Unknown Property',
+            createdAt: new Date().toISOString(),
+            lastActive: new Date().toISOString(),
+            totalVisitors: 0,
+            coinBalance: 0,
+            totalCoinsPurchased: 0,
+            totalCoinsRedeemed: 0,
+          }
+        }));
     },
     [subscriptions, systemUsers]
   );
@@ -525,7 +826,23 @@ export const SystemAdminProvider: React.FC<{ children: ReactNode }> = ({ childre
     () =>
       subscriptions
         .filter((s) => new Date(s.endDate) < new Date() || s.status === 'expired')
-        .map((s) => ({ ...s, user: systemUsers.find((u) => u.id === s.userId) })),
+        .map((s) => ({ ...s, user: systemUsers.find((u) => u.id === s.userId) || {
+            id: s.userId,
+            name: 'Unknown User',
+            email: 'unknown@example.com',
+            phone: '',
+            role: 'admin' as const,
+            status: 'inactive' as const,
+            company: 'Unknown Company',
+            property: 'Unknown Property',
+            createdAt: new Date().toISOString(),
+            lastActive: new Date().toISOString(),
+            totalVisitors: 0,
+            subscriptionId: '',
+            coinBalance: 0,
+            totalCoinsPurchased: 0,
+            totalCoinsRedeemed: 0,
+          }})),
     [subscriptions, systemUsers]
   );
 
@@ -547,11 +864,19 @@ export const SystemAdminProvider: React.FC<{ children: ReactNode }> = ({ childre
       expiredSubscriptions: subscriptions.filter(
         (s) => s.status === 'expired' || new Date(s.endDate) < now
       ).length,
-      totalRevenue: subscriptions.reduce((acc, s) => acc + s.amount, 0),
+      totalRevenue: subscriptions.reduce((acc, s) => {
+        const pkg = packages.find(p => p.id === s.packageId);
+        return acc + (pkg?.price || 0);
+      }, 0),
       monthlyRevenue: subscriptions
         .filter((s) => s.status === 'active')
-        .reduce((acc, s) => acc + s.amount, 0),
+        .reduce((acc, s) => {
+          const pkg = packages.find(p => p.id === s.packageId);
+          return acc + (pkg?.price || 0);
+        }, 0),
       totalPackages: packages.filter((p) => p.isActive).length,
+      totalCoinsInSystem: systemUsers.reduce((acc, u) => acc + u.coinBalance, 0),
+      totalCoinsRedeemed: systemUsers.reduce((acc, u) => acc + u.totalCoinsRedeemed, 0),
     };
   }, [systemUsers, subscriptions, packages]);
 
@@ -561,6 +886,8 @@ export const SystemAdminProvider: React.FC<{ children: ReactNode }> = ({ childre
       subscriptions,
       systemUsers,
       reminders,
+      coinPackages,
+      coinTransactions,
       addPackage,
       updatePackage,
       deletePackage,
@@ -576,21 +903,29 @@ export const SystemAdminProvider: React.FC<{ children: ReactNode }> = ({ childre
       sendReminder,
       deleteReminder,
       generateAutoReminders,
+      purchaseCoins,
+      redeemPackage,
+      addCoinPackage,
+      updateCoinPackage,
+      deleteCoinPackage,
+      getUserCoinTransactions,
       getUserSubscription,
       getUserPackage,
       getExpiringSubscriptions,
       getExpiredSubscriptions,
       getUnreadReminders,
       getSystemStats,
+      resetToDefaults,
     }),
     [
-      packages, subscriptions, systemUsers, reminders,
+      packages, subscriptions, systemUsers, reminders, coinPackages, coinTransactions,
       addPackage, updatePackage, deletePackage,
       addSystemUser, updateSystemUser, deleteSystemUser,
       createSubscription, updateSubscription, cancelSubscription, extendSubscription,
       addReminder, markReminderRead, sendReminder, deleteReminder, generateAutoReminders,
+      purchaseCoins, redeemPackage, addCoinPackage, updateCoinPackage, deleteCoinPackage, getUserCoinTransactions,
       getUserSubscription, getUserPackage, getExpiringSubscriptions, getExpiredSubscriptions,
-      getUnreadReminders, getSystemStats,
+      getUnreadReminders, getSystemStats, resetToDefaults,
     ]
   );
 

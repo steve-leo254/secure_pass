@@ -5,6 +5,8 @@ import { DataProvider } from "./context/DataContext";
 import { BillingProvider } from "./context/BillingContext";
 import { SystemAdminProvider } from "./context/SystemAdminContext";
 import Layout from "./components/Layout";
+import VisitorLayout from "./components/VisitorLayout";
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import PublicRegister from './pages/PublicRegister';
 import Dashboard from "./pages/Dashboard";
@@ -43,6 +45,10 @@ const LoginGuard = () => {
   return <Login />;
 };
 
+const PublicVisitorLayout = ({ children }: { children: ReactNode }) => {
+  return <VisitorLayout>{children}</VisitorLayout>;
+};
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -52,12 +58,16 @@ export default function App() {
             <VisitorProvider>
               <DataProvider>
               <Routes>
-            <Route path="/" element={<LoginGuard />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginGuard />} />
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
-            <Route path="/termsandcondition" element={<TermsAndConditions />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/system-admin" element={<Protected roles={["property_manager"]}><SystemAdmin /></Protected>} />
-            <Route path="/visitor-register" element={<PublicRegister />} />
-            <Route path="/visitor-checkout" element={<PublicCheckout />} />
+            <Route path="/visitor-dashboard" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
+            <Route path="/visitor-registration" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
+            <Route path="/visitor-checkout" element={<PublicVisitorLayout><PublicCheckout /></PublicVisitorLayout>} />
+            <Route path="/visitor-profile" element={<PublicVisitorLayout><ProfilePage /></PublicVisitorLayout>} />
+            <Route path="/visitor-pass" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
 
             <Route
               path="/dashboard"

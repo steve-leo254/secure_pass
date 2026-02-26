@@ -150,6 +150,11 @@ export default function AllRecords() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  // Search is already filtered, no additional action needed
+                }
+              }}
               placeholder="Search records..."
               className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition"
             />

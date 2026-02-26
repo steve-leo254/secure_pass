@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useSystemAdmin } from '../context/SystemAdminContext';
+import { useAuth } from '../context/AuthContext';
 import {
   BILLING_LABELS,
   BILLING_COLORS,
@@ -8,8 +9,6 @@ import {
 import type {
   PackageBilling,
   SystemUserRole,
-  SystemUserStatus,
-  Package as PkgType,
 } from '../types';
 import { format, differenceInDays, formatDistanceToNow } from 'date-fns';
 import {
@@ -19,65 +18,53 @@ import {
   Package,
   Bell,
   UserPlus,
-  TrendingUp,
   DollarSign,
   AlertTriangle,
   CheckCircle2,
   Clock,
   Calendar,
   Search,
-  Filter,
   Edit3,
   Trash2,
   Save,
   X,
   Plus,
-  ChevronDown,
-  ChevronRight,
   Eye,
-  MoreHorizontal,
   Mail,
   Send,
   RefreshCw,
   Star,
-  Zap,
   Crown,
   Building2,
   Phone,
-  Hash,
   Activity,
   ArrowUpRight,
-  ArrowDownRight,
   Ban,
   PlayCircle,
   CalendarPlus,
-  Sparkles,
-  Loader2,
-  BadgeCheck,
   Timer,
-  Receipt,
-  ChevronUp,
 } from 'lucide-react';
 
 type Tab = 'overview' | 'users' | 'subscriptions' | 'packages' | 'reminders';
 
 const SystemAdmin: React.FC = () => {
+  const { user } = useAuth();
   const {
     packages,
     subscriptions,
     systemUsers,
     reminders,
+    coinPackages,
+    coinTransactions,
     addPackage,
     updatePackage,
     deletePackage,
     addSystemUser,
-    updateSystemUser,
     deleteSystemUser,
     createSubscription,
     updateSubscription,
     cancelSubscription,
     extendSubscription,
-    addReminder,
     markReminderRead,
     sendReminder,
     deleteReminder,
@@ -85,9 +72,11 @@ const SystemAdmin: React.FC = () => {
     getUserSubscription,
     getUserPackage,
     getExpiringSubscriptions,
-    getExpiredSubscriptions,
     getUnreadReminders,
     getSystemStats,
+    resetToDefaults,
+    deleteCoinPackage,
+    getUserCoinTransactions,
   } = useSystemAdmin();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -122,14 +111,27 @@ const SystemAdmin: React.FC = () => {
   const [pkgMaxVisitors, setPkgMaxVisitors] = useState('');
   const [pkgFeatures, setPkgFeatures] = useState('');
   const [pkgIsPopular, setPkgIsPopular] = useState(false);
+  const [pkgCoinCost, setPkgCoinCost] = useState('');
 
   // Extend
   const [extendDays, setExtendDays] = useState('30');
 
   const stats = getSystemStats();
   const expiringList = getExpiringSubscriptions(7);
-  const expiredList = getExpiredSubscriptions();
   const unreadReminders = getUnreadReminders();
+
+  // Check if current user can assign specific roles
+  const canAssignRole = (role: SystemUserRole): boolean => {
+    // Only admin can assign security and superadmin roles
+    if (role === 'security' || role === 'superadmin') {
+      return user?.role === 'property_manager';
+    }
+    // Admin can assign admin role
+    if (role === 'admin') {
+      return user?.role === 'property_manager';
+    }
+    return false;
+  };
 
   useEffect(() => {
     generateAutoReminders();
@@ -154,53 +156,84 @@ const SystemAdmin: React.FC = () => {
     setPkgMaxVisitors('');
     setPkgFeatures('');
     setPkgIsPopular(false);
+    setPkgCoinCost('');
   };
 
   const handleAddUser = () => {
-    if (!newUserName || !newUserEmail) return;
-    const userId = undefined; // will be generated
-    addSystemUser({
-      name: newUserName,
-      email: newUserEmail,
-      phone: newUserPhone,
-      role: newUserRole,
-      status: 'active',
-      company: newUserCompany,
-      property: newUserProperty,
-      totalVisitors: 0,
-    });
-
-    // Create subscription if package selected
-    if (newUserPackage && newUserEndDate) {
-      // We need the user id â€” but it's auto-generated. For simplicity, we'll find the latest user
-      setTimeout(() => {
-        const latestUser = JSON.parse(localStorage.getItem('sp_system_users') || '[]');
-        const lastUser = latestUser[latestUser.length - 1];
-        if (lastUser) {
-          createSubscription({
-            userId: lastUser.id,
-            packageId: newUserPackage,
-            startDate: new Date().toISOString(),
-            endDate: new Date(newUserEndDate).toISOString(),
-            status: 'active',
-            autoRenew: true,
-            amount: packages.find((p) => p.id === newUserPackage)?.price || 0,
-          });
-        }
-      }, 100);
+    if (!newUserName || !newUserEmail) {
+      alert('Please fill in all required fields (Name and Email).');
+      return;
     }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUserEmail)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    
+    // Validate role assignment permissions
+    if (!canAssignRole(newUserRole)) {
+      alert('You do not have permission to assign this role.');
+      return;
+    }
+    
+    try {
+      addSystemUser({
+        name: newUserName,
+        email: newUserEmail,
+        phone: newUserPhone,
+        role: newUserRole,
+        status: 'active',
+        company: newUserCompany,
+        property: newUserProperty,
+        totalVisitors: 0,
+        coinBalance: 0,
+        totalCoinsPurchased: 0,
+        totalCoinsRedeemed: 0,
+      });
 
-    resetUserForm();
-    setShowAddUser(false);
+      // Create subscription if package selected
+      if (newUserPackage && newUserEndDate) {
+        // We need the user id â€” but it's auto-generated. For simplicity, we'll find the latest user
+        setTimeout(() => {
+          try {
+            const latestUser = JSON.parse(localStorage.getItem('sp_system_users') || '[]');
+            const lastUser = latestUser[latestUser.length - 1];
+            if (lastUser) {
+              createSubscription({
+                userId: lastUser.id,
+                packageId: newUserPackage,
+                startDate: new Date().toISOString(),
+                endDate: new Date(newUserEndDate).toISOString(),
+                status: 'active',
+                autoRenew: true,
+                amount: packages.find((p) => p.id === newUserPackage)?.price || 0,
+              });
+            }
+          } catch (error) {
+            console.error('Error creating subscription:', error);
+          }
+        }, 100);
+      }
+
+      resetUserForm();
+      setShowAddUser(false);
+      alert('User created successfully!');
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('Error creating user. Please try again.');
+    }
   };
 
   const handleAddPackage = () => {
-    if (!pkgName || !pkgPrice) return;
+    if (!pkgName || !pkgPrice || !pkgCoinCost) return;
     addPackage({
       name: pkgName,
       billing: pkgBilling,
       price: Number(pkgPrice),
       currency: 'KES',
+      coinCost: Number(pkgCoinCost) || 0,
       maxUsers: Number(pkgMaxUsers) || 5,
       maxVisitorsPerDay: Number(pkgMaxVisitors) || 100,
       features: pkgFeatures
@@ -298,6 +331,17 @@ const SystemAdmin: React.FC = () => {
                   <Plus className="w-4 h-4" />
                   New Package
                 </button>
+                <button
+                  onClick={() => {
+                    if (confirm('Are you sure you want to reset all data to defaults? This will delete all custom data.')) {
+                      resetToDefaults();
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-red-500/20 border border-red-500/30 text-red-300 font-semibold rounded-xl hover:bg-red-500/30 transition-all text-sm flex items-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Reset Data
+                </button>
               </div>
             </div>
           </div>
@@ -342,7 +386,8 @@ const SystemAdmin: React.FC = () => {
               { label: 'Total Users', value: stats.totalUsers, icon: Users, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-500/15' },
               { label: 'Active Subscriptions', value: stats.activeSubscriptions, icon: CreditCard, gradient: 'from-emerald-500 to-teal-500', shadow: 'shadow-emerald-500/15' },
               { label: 'Expiring Soon', value: stats.expiringSubscriptions, icon: AlertTriangle, gradient: 'from-amber-500 to-orange-500', shadow: 'shadow-amber-500/15' },
-              { label: 'Monthly Revenue', value: `KES ${stats.monthlyRevenue.toLocaleString()}`, icon: DollarSign, gradient: 'from-violet-500 to-purple-500', shadow: 'shadow-violet-500/15', isText: true },
+              { label: 'Total Coins in System', value: `${stats.totalCoinsInSystem.toLocaleString()} coins`, icon: Crown, gradient: 'from-violet-500 to-purple-500', shadow: 'shadow-violet-500/15', isText: true },
+              { label: 'Coins Redeemed', value: `${stats.totalCoinsRedeemed.toLocaleString()} coins`, icon: Activity, gradient: 'from-rose-500 to-pink-500', shadow: 'shadow-rose-500/15', isText: true },
             ].map((card) => {
               const Icon = card.icon;
               return (
@@ -546,7 +591,11 @@ const SystemAdmin: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search users..." className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
+              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  // Search is already filtered, no additional action needed
+                }
+              }} placeholder="Search users..." className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
             </div>
             <button onClick={() => setShowAddUser(true)} className="px-5 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
               <UserPlus className="w-4 h-4" />
@@ -686,7 +735,22 @@ const SystemAdmin: React.FC = () => {
                             {daysLeft <= 0 ? 'Expired' : `${daysLeft}d`}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-sm font-semibold text-slate-700">KES {sub.amount.toLocaleString()}</td>
+                        <td className="px-5 py-3">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-slate-700">{pkg?.coinCost || 0} coins</span>
+                              <span className="text-xs text-slate-400">({pkg?.billing})</span>
+                            </div>
+                            {user && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-slate-400">Balance:</span>
+                                <span className={`text-xs font-bold ${user.coinBalance >= (pkg?.coinCost || 0) ? 'text-emerald-600' : 'text-red-600'}`}>
+                                  {user.coinBalance} coins
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-5 py-3">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${statusCfg.bg} ${statusCfg.color}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
@@ -786,7 +850,7 @@ const SystemAdmin: React.FC = () => {
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => { setEditingPackage(pkg.id); setPkgName(pkg.name); setPkgBilling(pkg.billing); setPkgPrice(String(pkg.price)); setPkgMaxUsers(String(pkg.maxUsers)); setPkgMaxVisitors(String(pkg.maxVisitorsPerDay)); setPkgFeatures(pkg.features.join('\n')); setPkgIsPopular(!!pkg.isPopular); setShowAddPackage(true); }} className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-all flex items-center justify-center gap-1">
+                      <button onClick={() => { setEditingPackage(pkg.id); setPkgName(pkg.name); setPkgBilling(pkg.billing); setPkgPrice(String(pkg.price)); setPkgCoinCost(String(pkg.coinCost)); setPkgMaxUsers(String(pkg.maxUsers)); setPkgMaxVisitors(String(pkg.maxVisitorsPerDay)); setPkgFeatures(pkg.features.join('\n')); setPkgIsPopular(!!pkg.isPopular); setShowAddPackage(true); }} className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-all flex items-center justify-center gap-1">
                         <Edit3 className="w-3 h-3" />
                         Edit
                       </button>
@@ -912,9 +976,9 @@ const SystemAdmin: React.FC = () => {
                 <div>
                   <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Role *</label>
                   <select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value as SystemUserRole)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 appearance-none">
-                    <option value="superadmin">Super Admin</option>
                     <option value="admin">Admin</option>
-                    <option value="security">Security</option>
+                    {canAssignRole('security') && <option value="security">Security</option>}
+                    {canAssignRole('superadmin') && <option value="superadmin">Super Admin</option>}
                   </select>
                 </div>
                 <div>
@@ -937,13 +1001,19 @@ const SystemAdmin: React.FC = () => {
                   <select value={newUserPackage} onChange={(e) => setNewUserPackage(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 appearance-none">
                     <option value="">Select package...</option>
                     {packages.filter((p) => p.isActive).map((p) => (
-                      <option key={p.id} value={p.id}>{p.name} â€” KES {p.price}/{p.billing}</option>
+                      <option key={p.id} value={p.id}>{p.name} - KES {p.price}/{p.billing}</option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-slate-600 mb-1.5 block">End Date</label>
-                  <input type="date" value={newUserEndDate} onChange={(e) => setNewUserEndDate(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" />
+                  <input 
+                    type="date" 
+                    value={newUserEndDate} 
+                    onChange={(e) => setNewUserEndDate(e.target.value)} 
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" 
+                  />
                 </div>
               </div>
 
@@ -995,6 +1065,10 @@ const SystemAdmin: React.FC = () => {
                   <input type="number" value={pkgPrice} onChange={(e) => setPkgPrice(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="0" />
                 </div>
                 <div>
+                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Coin Cost *</label>
+                  <input type="number" value={pkgCoinCost} onChange={(e) => setPkgCoinCost(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="0" />
+                </div>
+                <div>
                   <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Max Users</label>
                   <input type="number" value={pkgMaxUsers} onChange={(e) => setPkgMaxUsers(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="5" />
                 </div>
@@ -1019,13 +1093,14 @@ const SystemAdmin: React.FC = () => {
                     if (editingPackage) {
                       updatePackage(editingPackage, {
                         name: pkgName, billing: pkgBilling, price: Number(pkgPrice),
+                        coinCost: Number(pkgCoinCost) || 0,
                         maxUsers: Number(pkgMaxUsers) || 5, maxVisitorsPerDay: Number(pkgMaxVisitors) || 100,
                         features: pkgFeatures.split('\n').map((f) => f.trim()).filter(Boolean), isPopular: pkgIsPopular,
                       });
                       setEditingPackage(null); setShowAddPackage(false); resetPackageForm();
                     } else { handleAddPackage(); }
                   }}
-                  disabled={!pkgName || !pkgPrice}
+                  disabled={!pkgName || !pkgPrice || !pkgCoinCost}
                   className="flex-2 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Save className="w-4 h-4" />
@@ -1129,7 +1204,7 @@ const SystemAdmin: React.FC = () => {
                     <div className="bg-slate-50 rounded-xl p-4 space-y-2">
                       <div className="flex justify-between"><span className="text-xs text-slate-400">Package</span><span className="text-sm font-bold text-slate-700">{pkg.name}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-slate-400">Billing</span><span className="text-sm text-slate-700 capitalize">{pkg.billing}</span></div>
-                      <div className="flex justify-between"><span className="text-xs text-slate-400">Amount</span><span className="text-sm font-bold text-slate-700">KES {sub.amount.toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span className="text-xs text-slate-400">Amount</span><span className="text-sm font-bold text-slate-700">KES {pkg?.price?.toLocaleString() || 0}/{pkg?.billing || 'monthly'}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-slate-400">Ends</span><span className="text-sm text-slate-700">{format(new Date(sub.endDate), 'MMM d, yyyy')}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-slate-400">Days Left</span><span className={`text-sm font-bold ${daysLeft! <= 0 ? 'text-red-600' : daysLeft! <= 7 ? 'text-amber-600' : 'text-emerald-600'}`}>{daysLeft! <= 0 ? 'Expired' : `${daysLeft} days`}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-slate-400">Status</span>
