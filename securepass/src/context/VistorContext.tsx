@@ -20,7 +20,7 @@ import type {
 } from '../types';
 import { CATEGORY_CHART_COLORS, CATEGORIES } from '../types';
 import { useBilling } from './BillingContext';
-import { apiService } from '../services/api';
+import { apiService, type Tool, type Category as ApiCategory } from '../services/api';
 
 interface VisitorContextType {
   visitors: Visitor[];
@@ -31,9 +31,9 @@ interface VisitorContextType {
     visitor: Omit<Visitor, 'id' | 'timeIn' | 'timeOut' | 'status'>
   ) => Promise<Visitor>;
   checkoutVisitor: (id: string) => Promise<void>;
-  updateVisitor: (id: string, data: Partial<Visitor>) => void;
-  editVisitor: (id: string, data: Partial<Visitor>, performedBy: string) => void;
-  deleteVisitor: (id: string, performedBy?: string) => void;
+  updateVisitor: (id: string, data: Partial<Visitor>) => Promise<void>;
+  deleteVisitor: (id: string, performedBy?: string) => Promise<void>;
+  editVisitor: (id: string, data: Partial<Visitor>, performedBy: string) => Promise<void>;
   getActiveVisitors: () => Visitor[];
   getTodayVisitors: () => Visitor[];
   getStats: () => DashboardStats;
@@ -47,11 +47,11 @@ interface VisitorContextType {
   getWeeklyComparison: () => { thisWeek: number; lastWeek: number; change: number };
   getAverageVisitDuration: () => string;
   getRecentActivity: (limit?: number) => AuditLog[];
-  addTool: (tool: string) => void;
-  removeTool: (tool: string) => void;
-  addCategory: (category: Category) => void;
-  updateCategory: (id: string, data: Partial<Category>) => void;
-  deleteCategory: (id: string) => void;
+  addTool: (tool: string) => Promise<void>;
+  removeTool: (tool: string) => Promise<void>;
+  addCategory: (category: Category) => Promise<void>;
+  updateCategory: (id: string, data: Partial<Category>) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
 }
 
 const VisitorContext = createContext<VisitorContextType | undefined>(undefined);
@@ -131,7 +131,7 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [tools, setTools] = useState<string[]>([]);
-  const [categories, setCategories] = useState<Category[]>(loadCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const { updateSystemUsage } = useBilling();
 
@@ -160,9 +160,33 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
         }));
         setVisitors(visitorsData);
 
-        // Load settings for tools
-        const settings = await apiService.getSettings();
-        setTools(settings.tools);
+        // Load audit logs from API
+        const apiAuditLogs = await apiService.getAuditLogs();
+        const auditLogsData: AuditLog[] = apiAuditLogs.map(log => ({
+          id: log.id,
+          action: log.action,
+          performedBy: log.performed_by,
+          timestamp: log.timestamp,
+          details: log.details,
+          category: log.category as VisitorCategory,
+        }));
+        setAuditLogs(auditLogsData);
+
+        // Load tools from API
+        const apiTools = await apiService.getTools();
+        setTools(apiTools.map(t => t.name));
+
+        // Load categories from API
+        const apiCategories = await apiService.getCategories();
+        const categoriesData: Category[] = apiCategories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          value: cat.value,
+          color: cat.color,
+          icon: cat.icon,
+          isActive: cat.is_active,
+        }));
+        setCategories(categoriesData);
 
         setLoading(false);
       } catch (error) {
@@ -318,48 +342,122 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const updateVisitor = useCallback(
-    (id: string, data: Partial<Visitor>) => {
-      setVisitors((prev) => {
-        const updated = prev.map((v) =>
-          v.id === id ? { ...v, ...data } : v
-        );
-        saveVisitors(updated);
-        return updated;
-      });
-      addAuditLog('UPDATE', 'Admin', `Record ${id} updated`);
+    async (id: string, data: Partial<Visitor>) => {
+      try {
+        await apiService.updateVisitor(id, {
+          full_name: data.fullName,
+          phone_number: data.phoneNumber,
+          id_number: data.idNumber,
+          category: data.category,
+          purpose: data.purpose,
+          gender: data.gender,
+          unit_visited: data.unitVisited,
+          tools: data.tools,
+          custom_tools: data.customTools,
+        });
+
+        // Refresh visitors list
+        const apiVisitors = await apiService.getVisitors();
+        const visitorsData: Visitor[] = apiVisitors.map(v => ({
+          id: v.id,
+          fullName: v.full_name,
+          phoneNumber: v.phone_number,
+          idNumber: v.id_number,
+          category: v.category as VisitorCategory,
+          purpose: v.purpose,
+          gender: v.gender as 'male' | 'female' | 'other',
+          unitVisited: v.unit_visited,
+          tools: v.tools,
+          customTools: v.custom_tools,
+          timeIn: v.time_in,
+          timeOut: v.time_out,
+          status: v.status as 'checked-in' | 'checked-out',
+          registeredBy: v.registered_by,
+          checkedOutBy: v.checked_out_by,
+        }));
+        setVisitors(visitorsData);
+      } catch (error) {
+        console.error('Failed to update visitor:', error);
+        throw error;
+      }
     },
-    [addAuditLog]
+    []
   );
 
   const deleteVisitor = useCallback(
-    (id: string, performedBy: string = 'Admin') => {
-      setVisitors((prev) => {
-        const visitor = prev.find((v) => v.id === id);
-        const updated = prev.filter((v) => v.id !== id);
-        saveVisitors(updated);
-        addAuditLog(
-          'DELETE',
-          performedBy,
-          `Record for ${visitor?.fullName || id} deleted`
-        );
-        return updated;
-      });
+    async (id: string, performedBy?: string) => {
+      try {
+        await apiService.deleteVisitor(id);
+
+        // Refresh visitors list
+        const apiVisitors = await apiService.getVisitors();
+        const visitorsData: Visitor[] = apiVisitors.map(v => ({
+          id: v.id,
+          fullName: v.full_name,
+          phoneNumber: v.phone_number,
+          idNumber: v.id_number,
+          category: v.category as VisitorCategory,
+          purpose: v.purpose,
+          gender: v.gender as 'male' | 'female' | 'other',
+          unitVisited: v.unit_visited,
+          tools: v.tools,
+          customTools: v.custom_tools,
+          timeIn: v.time_in,
+          timeOut: v.time_out,
+          status: v.status as 'checked-in' | 'checked-out',
+          registeredBy: v.registered_by,
+          checkedOutBy: v.checked_out_by,
+        }));
+        setVisitors(visitorsData);
+      } catch (error) {
+        console.error('Failed to delete visitor:', error);
+        throw error;
+      }
     },
-    [addAuditLog]
+    []
   );
 
   const editVisitor = useCallback(
-    (id: string, data: Partial<Visitor>, performedBy: string = 'Admin') => {
-      setVisitors((prev) => {
-        const updated = prev.map((v) =>
-          v.id === id ? { ...v, ...data } : v
-        );
-        saveVisitors(updated);
-        addAuditLog('UPDATE', performedBy, `Record ${id} updated`);
-        return updated;
-      });
+    async (id: string, data: Partial<Visitor>, performedBy: string = 'Admin') => {
+      try {
+        await apiService.updateVisitor(id, {
+          full_name: data.fullName,
+          phone_number: data.phoneNumber,
+          id_number: data.idNumber,
+          category: data.category,
+          purpose: data.purpose,
+          gender: data.gender,
+          unit_visited: data.unitVisited,
+          tools: data.tools,
+          custom_tools: data.customTools,
+        });
+
+        // Refresh visitors list
+        const apiVisitors = await apiService.getVisitors();
+        const visitorsData: Visitor[] = apiVisitors.map(v => ({
+          id: v.id,
+          fullName: v.full_name,
+          phoneNumber: v.phone_number,
+          idNumber: v.id_number,
+          category: v.category as VisitorCategory,
+          purpose: v.purpose,
+          gender: v.gender as 'male' | 'female' | 'other',
+          unitVisited: v.unit_visited,
+          tools: v.tools,
+          customTools: v.custom_tools,
+          timeIn: v.time_in,
+          timeOut: v.time_out,
+          status: v.status as 'checked-in' | 'checked-out',
+          registeredBy: v.registered_by,
+          checkedOutBy: v.checked_out_by,
+        }));
+        setVisitors(visitorsData);
+      } catch (error) {
+        console.error('Failed to edit visitor:', error);
+        throw error;
+      }
     },
-    [addAuditLog]
+    []
   );
 
   const getActiveVisitors = useCallback(
@@ -542,76 +640,119 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const addTool = useCallback(
-    (tool: string) => {
-      setTools((prev) => {
-        const updated = [...new Set([...prev, tool])]; // Remove duplicates
-        saveTools(updated);
-        return updated;
-      });
+    async (tool: string) => {
+      try {
+        await apiService.addTool({ name: tool });
+        
+        // Refresh tools list
+        const apiTools = await apiService.getTools();
+        setTools(apiTools.map(t => t.name));
+      } catch (error) {
+        console.error('Failed to add tool:', error);
+        throw error;
+      }
     },
     []
   );
 
   const removeTool = useCallback(
-    (tool: string) => {
-      setTools((prev) => {
-        const updated = prev.filter((t) => t !== tool);
-        saveTools(updated);
-        return updated;
-      });
+    async (tool: string) => {
+      try {
+        await apiService.removeTool(tool);
+        
+        // Refresh tools list
+        const apiTools = await apiService.getTools();
+        setTools(apiTools.map(t => t.name));
+      } catch (error) {
+        console.error('Failed to remove tool:', error);
+        throw error;
+      }
     },
     []
   );
 
   const addCategory = useCallback(
-    (category: Category) => {
-      setCategories((prev) => {
-        const updated = [...prev, category];
-        saveCategories(updated);
-        addAuditLog(
-          'CATEGORY_ADD',
-          'Admin',
-          `Category ${category.name} added`
-        );
-        return updated;
-      });
+    async (category: Category) => {
+      try {
+        await apiService.addCategory({
+          name: category.name,
+          value: category.value,
+          color: category.color,
+          icon: category.icon,
+          is_active: category.isActive,
+        });
+        
+        // Refresh categories list
+        const apiCategories = await apiService.getCategories();
+        const categoriesData: Category[] = apiCategories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          value: cat.value,
+          color: cat.color,
+          icon: cat.icon,
+          isActive: cat.is_active,
+        }));
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Failed to add category:', error);
+        throw error;
+      }
     },
-    [addAuditLog]
+    []
   );
 
   const updateCategory = useCallback(
-    (id: string, data: Partial<Category>) => {
-      setCategories((prev) => {
-        const updated = prev.map((c) =>
-          c.id === id ? { ...c, ...data } : c
-        );
-        saveCategories(updated);
-        addAuditLog(
-          'CATEGORY_UPDATE',
-          'Admin',
-          `Category ${id} updated`
-        );
-        return updated;
-      });
+    async (id: string, data: Partial<Category>) => {
+      try {
+        await apiService.updateCategory(id, {
+          name: data.name || '',
+          value: data.value || '',
+          color: data.color || '',
+          icon: data.icon || '',
+          is_active: data.isActive ?? true,
+        });
+        
+        // Refresh categories list
+        const apiCategories = await apiService.getCategories();
+        const categoriesData: Category[] = apiCategories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          value: cat.value,
+          color: cat.color,
+          icon: cat.icon,
+          isActive: cat.is_active,
+        }));
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Failed to update category:', error);
+        throw error;
+      }
     },
-    [addAuditLog]
+    []
   );
 
   const deleteCategory = useCallback(
-    (id: string) => {
-      setCategories((prev) => {
-        const category = prev.find((c) => c.id === id);
-        const updated = prev.filter((c) => c.id !== id);
-        saveCategories(updated);
-        addAuditLog(
-          'CATEGORY_DELETE',
-          'Admin',
-          `Category ${category?.name || id} deleted`
-        );
-        return updated;
-      });
+    async (id: string) => {
+      try {
+        await apiService.deleteCategory(id);
+        
+        // Refresh categories list
+        const apiCategories = await apiService.getCategories();
+        const categoriesData: Category[] = apiCategories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          value: cat.value,
+          color: cat.color,
+          icon: cat.icon,
+          isActive: cat.is_active,
+        }));
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Failed to delete category:', error);
+        throw error;
+      }
     },
-    [addAuditLog]
+    []
   );
 
   const value = useMemo(
