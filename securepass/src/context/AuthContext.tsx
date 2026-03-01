@@ -30,6 +30,7 @@ export interface User {
   username: string;
   role: UserRole;
   name: string;
+  password?: string;
   email?: string;
   phone?: string;
   bio?: string;
@@ -101,6 +102,7 @@ export const TOOLS_LIST: string[] = [
   'Angle Grinder',
   'Multimeter',
 ];
+
 
 export const DEFAULT_USERS: User[] = [
   {

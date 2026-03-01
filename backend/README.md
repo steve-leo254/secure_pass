@@ -23,7 +23,7 @@ FastAPI backend for the SecurePass visitor management system.
 
 The server will run on `http://localhost:8000`
 
-## API Endpoints
+## API Endpoin
 
 ### Authentication
 - `POST /login` - User authentication
