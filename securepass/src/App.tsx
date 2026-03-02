@@ -52,8 +52,8 @@ const PublicVisitorLayout = ({ children }: { children: ReactNode }) => {
 export default function App() {
   return (
     <BrowserRouter>
-      <SystemAdminProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <SystemAdminProvider>
           <BillingProvider>
             <VisitorProvider>
               <DataProvider>
@@ -151,11 +151,11 @@ export default function App() {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-            </DataProvider>
-        </VisitorProvider>
-      </BillingProvider>
-    </AuthProvider>
-    </SystemAdminProvider>
+              </DataProvider>
+            </VisitorProvider>
+          </BillingProvider>
+        </SystemAdminProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

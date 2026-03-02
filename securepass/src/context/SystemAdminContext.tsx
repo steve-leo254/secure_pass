@@ -1,26 +1,15 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  type ReactNode,
-} from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import { apiService, type SystemUser as ApiSystemUser, type Package as ApiPackage, type Subscription as ApiSubscription, type CoinPackage as ApiCoinPackage, type CoinTransaction as ApiCoinTransaction, type SubscriptionReminder as ApiSubscriptionReminder } from '../services/api';
+import { useAuth } from './AuthContext';
 import type {
   Package,
   Subscription,
   SystemUser,
   SubscriptionReminder,
-  PackageBilling,
-  SubscriptionStatus,
-  SystemUserRole,
-  SystemUserStatus,
   CoinPackage,
   CoinTransaction,
 } from '../types';
-import { addDays, addMonths, addYears, differenceInDays } from 'date-fns';
+import { differenceInDays } from 'date-fns';
 
 interface SystemAdminContextType {
   packages: Package[];
@@ -31,34 +20,34 @@ interface SystemAdminContextType {
   coinTransactions: CoinTransaction[];
 
   // Package CRUD
-  addPackage: (pkg: Omit<Package, 'id' | 'createdAt'>) => void;
-  updatePackage: (id: string, data: Partial<Package>) => void;
-  deletePackage: (id: string) => void;
+  addPackage: (pkg: Omit<Package, 'id' | 'createdAt'>) => Promise<void>;
+  updatePackage: (id: string, data: Partial<Package>) => Promise<void>;
+  deletePackage: (id: string) => Promise<void>;
 
   // User CRUD
-  addSystemUser: (user: Omit<SystemUser, 'id' | 'createdAt'>) => void;
-  updateSystemUser: (id: string, data: Partial<SystemUser>) => void;
-  deleteSystemUser: (id: string) => void;
+  addSystemUser: (user: Omit<SystemUser, 'id' | 'createdAt'>) => Promise<void>;
+  updateSystemUser: (id: string, data: Partial<SystemUser>) => Promise<void>;
+  deleteSystemUser: (id: string) => Promise<void>;
 
   // Subscription
-  createSubscription: (sub: Omit<Subscription, 'id'>) => void;
-  updateSubscription: (id: string, data: Partial<Subscription>) => void;
-  cancelSubscription: (id: string) => void;
-  extendSubscription: (id: string, days: number) => void;
+  createSubscription: (sub: Omit<Subscription, 'id'>) => Promise<void>;
+  updateSubscription: (id: string, data: Partial<Subscription>) => Promise<void>;
+  cancelSubscription: (id: string) => Promise<void>;
+  extendSubscription: (id: string, days: number) => Promise<void>;
 
   // Reminders
-  addReminder: (r: Omit<SubscriptionReminder, 'id' | 'createdAt'>) => void;
-  markReminderRead: (id: string) => void;
-  sendReminder: (id: string) => void;
-  deleteReminder: (id: string) => void;
-  generateAutoReminders: () => void;
+  addReminder: (r: Omit<SubscriptionReminder, 'id' | 'createdAt'>) => Promise<void>;
+  markReminderRead: (id: string) => Promise<void>;
+  sendReminder: (id: string) => Promise<void>;
+  deleteReminder: (id: string) => Promise<void>;
+  generateAutoReminders: () => Promise<void>;
 
   // Coin System
-  purchaseCoins: (userId: string, coinPackageId: string) => void;
-  redeemPackage: (userId: string, packageId: string) => void;
-  addCoinPackage: (pkg: Omit<CoinPackage, 'id' | 'createdAt'>) => void;
-  updateCoinPackage: (id: string, data: Partial<CoinPackage>) => void;
-  deleteCoinPackage: (id: string) => void;
+  purchaseCoins: (userId: string, coinPackageId: string) => Promise<void>;
+  redeemPackage: (userId: string, packageId: string) => Promise<void>;
+  addCoinPackage: (pkg: Omit<CoinPackage, 'id' | 'createdAt'>) => Promise<void>;
+  updateCoinPackage: (id: string, data: Partial<CoinPackage>) => Promise<void>;
+  deleteCoinPackage: (id: string) => Promise<void>;
   getUserCoinTransactions: (userId: string) => CoinTransaction[];
 
   // Queries
@@ -82,803 +71,556 @@ interface SystemAdminContextType {
 
   // Data Management
   resetToDefaults: () => void;
+  loadData: () => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }
 
 const SystemAdminContext = createContext<SystemAdminContextType | undefined>(undefined);
 
-const KEYS = {
-  packages: 'sp_packages',
-  subscriptions: 'sp_subscriptions',
-  systemUsers: 'sp_system_users',
-  reminders: 'sp_reminders',
-  coinPackages: 'sp_coin_packages',
-  coinTransactions: 'sp_coin_transactions',
-};
+// Helper functions to convert between API and frontend types
+const convertApiPackageToPackage = (apiPackage: ApiPackage): Package => ({
+  id: apiPackage.id,
+  name: apiPackage.name,
+  billing: apiPackage.billing as any,
+  price: apiPackage.price,
+  currency: apiPackage.currency,
+  coinCost: apiPackage.coin_cost,
+  maxUsers: apiPackage.max_users,
+  maxVisitorsPerDay: apiPackage.max_visitors_per_day,
+  features: apiPackage.features,
+  isPopular: apiPackage.is_popular,
+  isActive: apiPackage.is_active,
+  createdAt: new Date(apiPackage.created_at).toISOString(),
+});
 
-const load = <T,>(key: string, fallback: T[]): T[] => {
-  const saved = localStorage.getItem(key);
-  return saved ? JSON.parse(saved) : fallback;
-};
+const convertPackageToApiPackage = (pkg: Omit<Package, 'id' | 'createdAt'>): Omit<ApiPackage, 'id' | 'created_at'> => ({
+  name: pkg.name,
+  billing: pkg.billing,
+  price: pkg.price,
+  currency: pkg.currency,
+  coin_cost: pkg.coinCost,
+  max_users: pkg.maxUsers,
+  max_visitors_per_day: pkg.maxVisitorsPerDay,
+  features: pkg.features,
+  is_popular: pkg.isPopular,
+  is_active: pkg.isActive,
+});
 
-const save = (key: string, data: any) => {
-  localStorage.setItem(key, JSON.stringify(data));
-};
+const convertApiSystemUserToSystemUser = (apiUser: ApiSystemUser): SystemUser => ({
+  id: apiUser.id,
+  name: apiUser.name,
+  email: apiUser.email,
+  phone: apiUser.phone || '',
+  role: apiUser.role as any,
+  status: apiUser.status as any,
+  company: apiUser.company || '',
+  property: apiUser.property || '',
+  totalVisitors: apiUser.total_visitors,
+  coinBalance: apiUser.coin_balance,
+  totalCoinsPurchased: apiUser.total_coins_purchased,
+  totalCoinsRedeemed: apiUser.total_coins_redeemed,
+  createdAt: new Date(apiUser.created_at).toISOString(),
+});
 
-// Default coin packages
-const DEFAULT_COIN_PACKAGES: CoinPackage[] = [
-  {
-    id: 'coins-1',
-    name: 'Bronze Pack',
-    coins: 100,
-    price: 500,
-    currency: 'KES',
-    bonusCoins: 10,
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-  {
-    id: 'coins-2',
-    name: 'Silver Pack',
-    coins: 250,
-    price: 1000,
-    currency: 'KES',
-    bonusCoins: 25,
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-  {
-    id: 'coins-3',
-    name: 'Gold Pack',
-    coins: 500,
-    price: 2000,
-    currency: 'KES',
-    bonusCoins: 75,
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-  {
-    id: 'coins-4',
-    name: 'Platinum Pack',
-    coins: 1000,
-    price: 3500,
-    currency: 'KES',
-    bonusCoins: 200,
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-];
+const convertSystemUserToApiSystemUser = (user: Omit<SystemUser, 'id' | 'createdAt'>): Omit<ApiSystemUser, 'id' | 'created_at'> => ({
+  name: user.name,
+  email: user.email,
+  phone: user.phone,
+  role: user.role,
+  status: user.status,
+  company: user.company,
+  property: user.property,
+  total_visitors: user.totalVisitors,
+  coin_balance: user.coinBalance,
+  total_coins_purchased: user.totalCoinsPurchased,
+  total_coins_redeemed: user.totalCoinsRedeemed,
+});
 
-// Default packages with coin costs
-const DEFAULT_PACKAGES: Package[] = [
-  {
-    id: 'pkg-1',
-    name: 'Starter',
-    billing: 'daily',
-    price: 50,
-    currency: 'KES',
-    coinCost: 10,
-    maxUsers: 2,
-    maxVisitorsPerDay: 50,
-    features: ['Basic registration', 'QR Code access', 'Daily reports'],
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-  {
-    id: 'pkg-2',
-    name: 'Basic',
-    billing: 'weekly',
-    price: 300,
-    currency: 'KES',
-    coinCost: 50,
-    maxUsers: 5,
-    maxVisitorsPerDay: 100,
-    features: ['All Starter features', 'Tools tracking', 'Email notifications'],
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-  {
-    id: 'pkg-3',
-    name: 'Professional',
-    billing: 'monthly',
-    price: 2500,
-    currency: 'KES',
-    coinCost: 150,
-    maxUsers: 15,
-    maxVisitorsPerDay: 500,
-    features: ['All Basic features', 'Analytics dashboard', 'CSV/PDF exports', 'Priority support'],
-    isPopular: true,
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-  {
-    id: 'pkg-4',
-    name: 'Enterprise',
-    billing: 'annually',
-    price: 25000,
-    currency: 'KES',
-    coinCost: 1000,
-    maxUsers: 50,
-    maxVisitorsPerDay: 2000,
-    features: ['All Pro features', 'Multi-property', 'API access', 'Custom branding', 'Dedicated support'],
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-];
+const convertApiSubscriptionToSubscription = (apiSub: ApiSubscription): Subscription => ({
+  id: apiSub.id,
+  userId: apiSub.user_id,
+  packageId: apiSub.package_id,
+  startDate: new Date(apiSub.start_date).toISOString(),
+  endDate: new Date(apiSub.end_date).toISOString(),
+  status: apiSub.status as any,
+  autoRenew: apiSub.auto_renew,
+  amount: apiSub.amount,
+  createdAt: new Date(apiSub.created_at).toISOString(),
+});
 
-// Default demo users
-const DEFAULT_SYSTEM_USERS: SystemUser[] = [
-  {
-    id: 'su-1',
-    name: 'Riverside Apartments',
-    email: 'admin@riverside.co.ke',
-    phone: '+254 700 111 222',
-    role: 'admin',
-    status: 'active',
-    company: 'Riverside Management Ltd',
-    property: 'Riverside Apartments',
-    subscriptionId: 'sub-1',
-    createdAt: '2024-06-15',
-    lastActive: new Date().toISOString(),
-    totalVisitors: 1245,
-    coinBalance: 150,
-    totalCoinsPurchased: 500,
-    totalCoinsRedeemed: 350,
-  },
-  {
-    id: 'su-2',
-    name: 'Greenfield Office Park',
-    email: 'security@greenfield.co.ke',
-    phone: '+254 711 222 333',
-    role: 'admin',
-    status: 'active',
-    company: 'Greenfield Properties',
-    property: 'Greenfield Office Park',
-    subscriptionId: 'sub-2',
-    createdAt: '2024-08-01',
-    lastActive: new Date(Date.now() - 86400000).toISOString(),
-    totalVisitors: 892,
-    coinBalance: 1000,
-    totalCoinsPurchased: 1200,
-    totalCoinsRedeemed: 200,
-  },
-  {
-    id: 'su-3',
-    name: 'Sunset Mall',
-    email: 'ops@sunsetmall.co.ke',
-    phone: '+254 722 333 444',
-    role: 'admin',
-    status: 'active',
-    company: 'Sunset Retail Group',
-    property: 'Sunset Mall',
-    subscriptionId: 'sub-3',
-    createdAt: '2024-10-20',
-    lastActive: new Date(Date.now() - 172800000).toISOString(),
-    totalVisitors: 3210,
-    coinBalance: 75,
-    totalCoinsPurchased: 250,
-    totalCoinsRedeemed: 175,
-  },
-  {
-    id: 'su-4',
-    name: 'Hilltop Residences',
-    email: 'hilltop@properties.co.ke',
-    phone: '+254 733 444 555',
-    role: 'admin',
-    status: 'inactive',
-    company: 'Hilltop Properties',
-    property: 'Hilltop Residences',
-    subscriptionId: 'sub-4',
-    createdAt: '2024-04-10',
-    lastActive: new Date(Date.now() - 604800000).toISOString(),
-    totalVisitors: 456,
-    coinBalance: 25,
-    totalCoinsPurchased: 100,
-    totalCoinsRedeemed: 75,
-  },
-  {
-    id: 'su-5',
-    name: 'Parkview Heights',
-    email: 'admin@parkview.co.ke',
-    phone: '+254 744 555 666',
-    role: 'security',
-    status: 'active',
-    company: 'Parkview Developers',
-    property: 'Parkview Heights',
-    subscriptionId: 'sub-5',
-    createdAt: '2025-01-01',
-    lastActive: new Date().toISOString(),
-    totalVisitors: 78,
-    coinBalance: 200,
-    totalCoinsPurchased: 250,
-    totalCoinsRedeemed: 50,
-  },
-];
+const convertSubscriptionToApiSubscription = (sub: Omit<Subscription, 'id'>): Omit<ApiSubscription, 'id' | 'created_at'> => ({
+  user_id: sub.userId,
+  package_id: sub.packageId,
+  start_date: sub.startDate,
+  end_date: sub.endDate,
+  status: sub.status,
+  auto_renew: sub.autoRenew,
+  amount: sub.amount,
+});
 
-const DEFAULT_SUBSCRIPTIONS: Subscription[] = [
-  {
-    id: 'sub-1',
-    userId: 'su-1',
-    packageId: 'pkg-3',
-    startDate: '2024-12-01',
-    endDate: addMonths(new Date(), 1).toISOString(),
-    status: 'active',
-    autoRenew: true,
-    amount: 2500,
-    lastPaymentDate: '2025-01-01',
-    nextPaymentDate: addMonths(new Date(), 1).toISOString(),
-  },
-  {
-    id: 'sub-2',
-    userId: 'su-2',
-    packageId: 'pkg-4',
-    startDate: '2024-08-01',
-    endDate: addYears(new Date('2024-08-01'), 1).toISOString(),
-    status: 'active',
-    autoRenew: true,
-    amount: 25000,
-    lastPaymentDate: '2024-08-01',
-    nextPaymentDate: addYears(new Date('2024-08-01'), 1).toISOString(),
-  },
-  {
-    id: 'sub-3',
-    userId: 'su-3',
-    packageId: 'pkg-3',
-    startDate: '2024-10-20',
-    endDate: addDays(new Date(), 5).toISOString(),
-    status: 'active',
-    autoRenew: false,
-    amount: 2500,
-    lastPaymentDate: '2025-01-01',
-    nextPaymentDate: addDays(new Date(), 5).toISOString(),
-  },
-  {
-    id: 'sub-4',
-    userId: 'su-4',
-    packageId: 'pkg-2',
-    startDate: '2024-04-10',
-    endDate: new Date(Date.now() - 864000000).toISOString(),
-    status: 'expired',
-    autoRenew: false,
-    amount: 300,
-  },
-  {
-    id: 'sub-5',
-    userId: 'su-5',
-    packageId: 'pkg-1',
-    startDate: '2025-01-01',
-    endDate: addDays(new Date(), 12).toISOString(),
-    status: 'suspended',
-    autoRenew: false,
-    amount: 0,
-  },
-];
+const convertApiCoinPackageToCoinPackage = (apiPkg: ApiCoinPackage): CoinPackage => ({
+  id: apiPkg.id,
+  name: apiPkg.name,
+  coins: apiPkg.coins,
+  price: apiPkg.price,
+  currency: apiPkg.currency,
+  bonusCoins: 0,
+  isActive: apiPkg.is_active,
+  createdAt: new Date(apiPkg.created_at).toISOString(),
+});
 
-export const SystemAdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [packages, setPackages] = useState<Package[]>(() => load(KEYS.packages, DEFAULT_PACKAGES));
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(() =>
-    load(KEYS.subscriptions, DEFAULT_SUBSCRIPTIONS)
-  );
-  const [systemUsers, setSystemUsers] = useState<SystemUser[]>(() =>
-    load(KEYS.systemUsers, DEFAULT_SYSTEM_USERS)
-  );
-  const [reminders, setReminders] = useState<SubscriptionReminder[]>(() =>
-    load(KEYS.reminders, [])
-  );
-  const [coinPackages, setCoinPackages] = useState<CoinPackage[]>(() =>
-    load(KEYS.coinPackages, DEFAULT_COIN_PACKAGES)
-  );
-  const [coinTransactions, setCoinTransactions] = useState<CoinTransaction[]>(() =>
-    load(KEYS.coinTransactions, [])
-  );
+const convertCoinPackageToApiCoinPackage = (pkg: Omit<CoinPackage, 'id' | 'createdAt'>): Omit<ApiCoinPackage, 'id' | 'created_at'> => ({
+  name: pkg.name,
+  coins: pkg.coins,
+  price: pkg.price,
+  currency: pkg.currency,
+  is_active: pkg.isActive,
+});
 
-  const resetToDefaults = useCallback(() => {
-    localStorage.removeItem(KEYS.packages);
-    localStorage.removeItem(KEYS.subscriptions);
-    localStorage.removeItem(KEYS.systemUsers);
-    localStorage.removeItem(KEYS.reminders);
-    localStorage.removeItem(KEYS.coinPackages);
-    localStorage.removeItem(KEYS.coinTransactions);
-    
-    setPackages(DEFAULT_PACKAGES);
-    setSubscriptions(DEFAULT_SUBSCRIPTIONS);
-    setSystemUsers(DEFAULT_SYSTEM_USERS);
-    setReminders([]);
-    setCoinPackages(DEFAULT_COIN_PACKAGES);
-    setCoinTransactions([]);
-    
-    console.log('Reset all data to defaults');
+const convertApiCoinTransactionToCoinTransaction = (apiTx: ApiCoinTransaction): CoinTransaction => ({
+  id: apiTx.id,
+  userId: apiTx.user_id,
+  coinPackageId: apiTx.coin_package_id,
+  type: apiTx.transaction_type as any,
+  coins: apiTx.coins,
+  amount: apiTx.amount,
+  createdAt: new Date(apiTx.created_at).toISOString(),
+});
+
+const convertApiReminderToReminder = (apiReminder: ApiSubscriptionReminder): SubscriptionReminder => ({
+  id: apiReminder.id,
+  userId: apiReminder.user_id,
+  subscriptionId: apiReminder.subscription_id,
+  type: apiReminder.type,
+  message: apiReminder.message,
+  read: apiReminder.read,
+  sent: apiReminder.sent,
+  createdAt: new Date(apiReminder.created_at).toISOString(),
+});
+
+const convertReminderToApiReminder = (reminder: Omit<SubscriptionReminder, 'id' | 'createdAt'>): Omit<ApiSubscriptionReminder, 'id' | 'created_at'> => ({
+  user_id: reminder.userId,
+  subscription_id: reminder.subscriptionId,
+  type: reminder.type,
+  message: reminder.message,
+  read: reminder.read,
+  sent: reminder.sent,
+});
+
+export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
+  const [reminders, setReminders] = useState<SubscriptionReminder[]>([]);
+  const [coinPackages, setCoinPackages] = useState<CoinPackage[]>([]);
+  const [coinTransactions, setCoinTransactions] = useState<CoinTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load all data from API
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Try to load each endpoint individually to avoid one failure breaking all
+      try {
+        const packagesRes = await apiService.getPackages();
+        setPackages(packagesRes.map(convertApiPackageToPackage));
+      } catch (err) {
+        console.error('Failed to load packages:', err);
+      }
+
+      try {
+        const usersRes = await apiService.getSystemUsers();
+        setSystemUsers(usersRes.map(convertApiSystemUserToSystemUser));
+      } catch (err) {
+        console.error('Failed to load users:', err);
+      }
+
+      try {
+        const subscriptionsRes = await apiService.getSubscriptions();
+        setSubscriptions(subscriptionsRes.map(convertApiSubscriptionToSubscription));
+      } catch (err) {
+        console.error('Failed to load subscriptions:', err);
+      }
+
+      try {
+        const coinPackagesRes = await apiService.getCoinPackages();
+        setCoinPackages(coinPackagesRes.map(convertApiCoinPackageToCoinPackage));
+      } catch (err) {
+        console.error('Failed to load coin packages:', err);
+      }
+
+      try {
+        const coinTransactionsRes = await apiService.getCoinTransactions();
+        setCoinTransactions(coinTransactionsRes.map(convertApiCoinTransactionToCoinTransaction));
+      } catch (err) {
+        console.error('Failed to load coin transactions:', err);
+      }
+
+      try {
+        const remindersRes = await apiService.getReminders();
+        setReminders(remindersRes.map(convertApiReminderToReminder));
+      } catch (err) {
+        console.error('Failed to load reminders:', err);
+      }
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const cleanupOrphanedData = useCallback(() => {
-    // Remove subscriptions that don't have corresponding users
-    setSubscriptions((prev) => {
-      const validSubscriptions = prev.filter((sub) => 
-        systemUsers.some((user) => user.id === sub.userId)
-      );
-      if (validSubscriptions.length !== prev.length) {
-        save(KEYS.subscriptions, validSubscriptions);
-        console.log(`Cleaned up ${prev.length - validSubscriptions.length} orphaned subscriptions`);
-      }
-      return validSubscriptions;
-    });
-
-    // Remove users that don't have corresponding subscriptions (optional cleanup)
-    // setSystemUsers((prev) => {
-    //   const validUsers = prev.filter((user) => 
-    //     subscriptions.some((sub) => sub.userId === user.id)
-    //   );
-    //   if (validUsers.length !== prev.length) {
-    //     save(KEYS.systemUsers, validUsers);
-    //     console.log(`Cleaned up ${prev.length - validUsers.length} orphaned users`);
-    //   }
-    //   return validUsers;
-    // });
-  }, [systemUsers, subscriptions]);
-
-  // Run cleanup on mount
+  // Load data on mount and when authentication changes
   useEffect(() => {
-    cleanupOrphanedData();
-  }, []);
+    if (isAuthenticated) {
+      loadData();
+    } else {
+      // Clear data when not authenticated
+      setPackages([]);
+      setSubscriptions([]);
+      setSystemUsers([]);
+      setReminders([]);
+      setCoinPackages([]);
+      setCoinTransactions([]);
+      setError(null);
+      setLoading(false);
+    }
+  }, [isAuthenticated, loadData]);
 
-  // ---------- Packages ----------
-  const addPackage = useCallback(
-    (pkg: Omit<Package, 'id' | 'createdAt'>) => {
-      setPackages((prev) => {
-        const updated = [
-          ...prev,
-          { ...pkg, id: uuidv4(), createdAt: new Date().toISOString() },
-        ];
-        save(KEYS.packages, updated);
-        return updated;
+  // Package CRUD
+  const addPackage = useCallback(async (pkg: Omit<Package, 'id' | 'createdAt'>) => {
+    try {
+      await apiService.createPackage(convertPackageToApiPackage(pkg));
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add package');
+      throw err;
+    }
+  }, [loadData]);
+
+  const updatePackage = useCallback(async (id: string, data: Partial<Package>) => {
+    try {
+      await apiService.updatePackage(id, convertPackageToApiPackage(data as Omit<Package, 'id' | 'createdAt'>));
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update package');
+      throw err;
+    }
+  }, [loadData]);
+
+  const deletePackage = useCallback(async (id: string) => {
+    try {
+      await apiService.deletePackage(id);
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete package');
+      throw err;
+    }
+  }, [loadData]);
+
+  // User CRUD
+  const addSystemUser = useCallback(async (user: Omit<SystemUser, 'id' | 'createdAt'>) => {
+    try {
+      await apiService.createSystemUser(convertSystemUserToApiSystemUser(user));
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add user');
+      throw err;
+    }
+  }, [loadData]);
+
+  const updateSystemUser = useCallback(async (id: string, data: Partial<SystemUser>) => {
+    try {
+      await apiService.updateSystemUser(id, convertSystemUserToApiSystemUser(data as Omit<SystemUser, 'id' | 'createdAt'>));
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user');
+      throw err;
+    }
+  }, [loadData]);
+
+  const deleteSystemUser = useCallback(async (id: string) => {
+    try {
+      await apiService.deleteSystemUser(id);
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete user');
+      throw err;
+    }
+  }, [loadData]);
+
+  // Subscription operations
+  const createSubscription = useCallback(async (sub: Omit<Subscription, 'id'>) => {
+    try {
+      await apiService.createSubscription(convertSubscriptionToApiSubscription(sub));
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create subscription');
+      throw err;
+    }
+  }, [loadData]);
+
+  const updateSubscription = useCallback(async (id: string, data: Partial<Subscription>) => {
+    try {
+      await apiService.updateSubscription(id, convertSubscriptionToApiSubscription(data as Omit<Subscription, 'id'>));
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update subscription');
+      throw err;
+    }
+  }, [loadData]);
+
+  const cancelSubscription = useCallback(async (id: string) => {
+    try {
+      await apiService.cancelSubscription(id);
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to cancel subscription');
+      throw err;
+    }
+  }, [loadData]);
+
+  const extendSubscription = useCallback(async (id: string, days: number) => {
+    try {
+      await apiService.extendSubscription(id, days);
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to extend subscription');
+      throw err;
+    }
+  }, [loadData]);
+
+  // Reminder operations
+  const addReminder = useCallback(async (r: Omit<SubscriptionReminder, 'id' | 'createdAt'>) => {
+    try {
+      await apiService.createReminder(convertReminderToApiReminder(r));
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add reminder');
+      throw err;
+    }
+  }, [loadData]);
+
+  const markReminderRead = useCallback(async (id: string) => {
+    try {
+      await apiService.markReminderRead(id);
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark reminder as read');
+      throw err;
+    }
+  }, [loadData]);
+
+  const sendReminder = useCallback(async (id: string) => {
+    try {
+      // In a real app, this would send an email/notification
+      // For now, just mark as sent
+      await apiService.markReminderRead(id);
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send reminder');
+      throw err;
+    }
+  }, [loadData]);
+
+  const deleteReminder = useCallback(async (id: string) => {
+    try {
+      await apiService.deleteReminder(id);
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete reminder');
+      throw err;
+    }
+  }, [loadData]);
+
+  const generateAutoReminders = useCallback(async () => {
+    try {
+      // Generate reminders for expiring subscriptions
+      const expiringSubs = subscriptions.filter(sub => {
+        const daysUntilExpiry = differenceInDays(new Date(sub.endDate), new Date());
+        return daysUntilExpiry <= 7 && daysUntilExpiry > 0 && sub.status === 'active';
       });
-    },
-    []
-  );
 
-  const updatePackage = useCallback((id: string, data: Partial<Package>) => {
-    setPackages((prev) => {
-      const updated = prev.map((p) => (p.id === id ? { ...p, ...data } : p));
-      save(KEYS.packages, updated);
-      return updated;
-    });
-  }, []);
-
-  const deletePackage = useCallback((id: string) => {
-    setPackages((prev) => {
-      const updated = prev.filter((p) => p.id !== id);
-      save(KEYS.packages, updated);
-      return updated;
-    });
-  }, []);
-
-  // ---------- Users ----------
-  const addSystemUser = useCallback(
-    (user: Omit<SystemUser, 'id' | 'createdAt'>) => {
-      setSystemUsers((prev) => {
-        const updated = [
-          ...prev,
-          { ...user, id: uuidv4(), createdAt: new Date().toISOString() },
-        ];
-        save(KEYS.systemUsers, updated);
-        return updated;
-      });
-    },
-    []
-  );
-
-  const updateSystemUser = useCallback(
-    (id: string, data: Partial<SystemUser>) => {
-      setSystemUsers((prev) => {
-        const updated = prev.map((u) => (u.id === id ? { ...u, ...data } : u));
-        save(KEYS.systemUsers, updated);
-        return updated;
-      });
-    },
-    []
-  );
-
-  const deleteSystemUser = useCallback((id: string) => {
-    setSystemUsers((prev) => {
-      const updated = prev.filter((u) => u.id !== id);
-      save(KEYS.systemUsers, updated);
-      return updated;
-    });
-  }, []);
-
-  // ---------- Subscriptions ----------
-  const createSubscription = useCallback(
-    (sub: Omit<Subscription, 'id'>) => {
-      const newSub = { ...sub, id: uuidv4() };
-      setSubscriptions((prev) => {
-        const updated = [...prev, newSub];
-        save(KEYS.subscriptions, updated);
-        return updated;
-      });
-      // Link to user
-      setSystemUsers((prev) => {
-        const updated = prev.map((u) =>
-          u.id === sub.userId ? { ...u, subscriptionId: newSub.id } : u
-        );
-        save(KEYS.systemUsers, updated);
-        return updated;
-      });
-    },
-    []
-  );
-
-  const updateSubscription = useCallback(
-    (id: string, data: Partial<Subscription>) => {
-      setSubscriptions((prev) => {
-        const updated = prev.map((s) => (s.id === id ? { ...s, ...data } : s));
-        save(KEYS.subscriptions, updated);
-        return updated;
-      });
-    },
-    []
-  );
-
-  const cancelSubscription = useCallback((id: string) => {
-    updateSubscription(id, { status: 'suspended', autoRenew: false });
-  }, [updateSubscription]);
-
-  const extendSubscription = useCallback(
-    (id: string, days: number) => {
-      setSubscriptions((prev) => {
-        const updated = prev.map((s) => {
-          if (s.id !== id) return s;
-          const current = new Date(s.endDate) > new Date() ? new Date(s.endDate) : new Date();
-          return {
-            ...s,
-            endDate: addDays(current, days).toISOString(),
-            status: 'active' as SubscriptionStatus,
-          };
-        });
-        save(KEYS.subscriptions, updated);
-        return updated;
-      });
-    },
-    []
-  );
-
-  // ---------- Reminders ----------
-  const addReminder = useCallback(
-    (r: Omit<SubscriptionReminder, 'id' | 'createdAt'>) => {
-      setReminders((prev) => {
-        const updated = [
-          { ...r, id: uuidv4(), createdAt: new Date().toISOString() },
-          ...prev,
-        ];
-        save(KEYS.reminders, updated);
-        return updated;
-      });
-    },
-    []
-  );
-
-  const markReminderRead = useCallback((id: string) => {
-    setReminders((prev) => {
-      const updated = prev.map((r) => (r.id === id ? { ...r, read: true } : r));
-      save(KEYS.reminders, updated);
-      return updated;
-    });
-  }, []);
-
-  const sendReminder = useCallback((id: string) => {
-    setReminders((prev) => {
-      const updated = prev.map((r) =>
-        r.id === id ? { ...r, sentAt: new Date().toISOString() } : r
-      );
-      save(KEYS.reminders, updated);
-      return updated;
-    });
-  }, []);
-
-  const deleteReminder = useCallback((id: string) => {
-    setReminders((prev) => {
-      const updated = prev.filter((r) => r.id !== id);
-      save(KEYS.reminders, updated);
-      return updated;
-    });
-  }, []);
-
-  const generateAutoReminders = useCallback(() => {
-    const now = new Date();
-    const newReminders: SubscriptionReminder[] = [];
-
-    subscriptions.forEach((sub) => {
-      const endDate = new Date(sub.endDate);
-      const daysLeft = differenceInDays(endDate, now);
-      const user = systemUsers.find((u) => u.id === sub.userId);
-      const existing = reminders.find(
-        (r) => r.userId === sub.userId && r.type === 'expiring_soon' && !r.read
-      );
-
-      if (daysLeft <= 7 && daysLeft > 0 && sub.status !== 'expired' && !existing) {
-        newReminders.push({
-          id: uuidv4(),
-          userId: sub.userId,
-          type: 'expiring_soon',
-          message: `${user?.name || 'User'}'s subscription expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
-          read: false,
-          dueDate: sub.endDate,
-          createdAt: now.toISOString(),
-        });
-      }
-
-      if (daysLeft <= 0 && sub.status !== 'suspended') {
-        const existingExpired = reminders.find(
-          (r) => r.userId === sub.userId && r.type === 'expired' && !r.read
-        );
-        if (!existingExpired) {
-          newReminders.push({
-            id: uuidv4(),
-            userId: sub.userId,
-            type: 'expired',
-            message: `${user?.name || 'User'}'s subscription has expired`,
+      for (const sub of expiringSubs) {
+        const user = systemUsers.find(u => u.id === sub.userId);
+        if (user) {
+          await apiService.createReminder({
+            user_id: sub.userId,
+            subscription_id: sub.id,
+            type: 'expiring_soon',
+            message: `Your subscription will expire in ${differenceInDays(new Date(sub.endDate), new Date())} days`,
             read: false,
-            dueDate: sub.endDate,
-            createdAt: now.toISOString(),
+            sent: false,
           });
         }
       }
-    });
 
-    if (newReminders.length > 0) {
-      setReminders((prev) => {
-        const updated = [...newReminders, ...prev];
-        save(KEYS.reminders, updated);
-        return updated;
-      });
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate reminders');
+      throw err;
     }
-  }, [subscriptions, systemUsers, reminders]);
+  }, [subscriptions, systemUsers, loadData]);
 
-  // ---------- Coin System ----------
-  const purchaseCoins = useCallback(
-    (userId: string, coinPackageId: string) => {
-      const coinPackage = coinPackages.find((cp) => cp.id === coinPackageId);
-      const user = systemUsers.find((u) => u.id === userId);
-      
-      if (!coinPackage || !user) return;
-      
-      const totalCoins = coinPackage.coins + (coinPackage.bonusCoins || 0);
-      const newBalance = user.coinBalance + totalCoins;
-      
-      // Update user coin balance
-      setSystemUsers((prev) => {
-        const updated = prev.map((u) =>
-          u.id === userId
-            ? {
-                ...u,
-                coinBalance: newBalance,
-                totalCoinsPurchased: u.totalCoinsPurchased + totalCoins,
-              }
-            : u
-        );
-        save(KEYS.systemUsers, updated);
-        return updated;
+  // Coin operations
+  const purchaseCoins = useCallback(async (userId: string, coinPackageId: string) => {
+    try {
+      const coinPackage = coinPackages.find(pkg => pkg.id === coinPackageId);
+      if (!coinPackage) throw new Error('Coin package not found');
+
+      await apiService.createCoinTransaction({
+        user_id: userId,
+        coin_package_id: coinPackageId,
+        transaction_type: 'purchase',
+        coins: coinPackage.coins,
+        amount: coinPackage.price,
       });
-      
-      // Create transaction record
-      const transaction: CoinTransaction = {
-        id: uuidv4(),
-        userId,
-        type: 'purchase',
-        amount: totalCoins,
-        balance: newBalance,
-        description: `Purchased ${coinPackage.name}`,
-        createdAt: new Date().toISOString(),
-        coinPackageId,
-      };
-      
-      setCoinTransactions((prev) => {
-        const updated = [transaction, ...prev];
-        save(KEYS.coinTransactions, updated);
-        return updated;
+
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to purchase coins');
+      throw err;
+    }
+  }, [coinPackages, loadData]);
+
+  const redeemPackage = useCallback(async (userId: string, packageId: string) => {
+    try {
+      const pkg = packages.find(p => p.id === packageId);
+      if (!pkg) throw new Error('Package not found');
+
+      await apiService.createCoinTransaction({
+        user_id: userId,
+        coin_package_id: '', // This would be a special system package
+        transaction_type: 'redeem',
+        coins: -pkg.coinCost,
+        amount: 0,
       });
-    },
-    [coinPackages, systemUsers]
-  );
 
-  const redeemPackage = useCallback(
-    (userId: string, packageId: string) => {
-      const pkg = packages.find((p) => p.id === packageId);
-      const user = systemUsers.find((u) => u.id === userId);
-      
-      if (!pkg || !user || user.coinBalance < pkg.coinCost) return;
-      
-      const newBalance = user.coinBalance - pkg.coinCost;
-      
-      // Update user coin balance
-      setSystemUsers((prev) => {
-        const updated = prev.map((u) =>
-          u.id === userId
-            ? {
-                ...u,
-                coinBalance: newBalance,
-                totalCoinsRedeemed: u.totalCoinsRedeemed + pkg.coinCost,
-              }
-            : u
-        );
-        save(KEYS.systemUsers, updated);
-        return updated;
-      });
-      
-      // Create transaction record
-      const transaction: CoinTransaction = {
-        id: uuidv4(),
-        userId,
-        type: 'redemption',
-        amount: -pkg.coinCost,
-        balance: newBalance,
-        description: `Redeemed ${pkg.name} package`,
-        createdAt: new Date().toISOString(),
-        packageId,
-      };
-      
-      setCoinTransactions((prev) => {
-        const updated = [transaction, ...prev];
-        save(KEYS.coinTransactions, updated);
-        return updated;
-      });
-      
-      // Create or update subscription
-      const existingSub = subscriptions.find((s) => s.userId === userId);
-      const subscriptionData = {
-        userId,
-        packageId,
-        startDate: new Date().toISOString(),
-        endDate: addMonths(new Date(), 1).toISOString(), // Default to 1 month
-        status: 'active' as const,
-        autoRenew: false,
-        amount: pkg.price,
-      };
-      
-      if (existingSub) {
-        updateSubscription(existingSub.id, subscriptionData);
-      } else {
-        createSubscription(subscriptionData);
-      }
-    },
-    [packages, systemUsers, subscriptions, updateSubscription, createSubscription]
-  );
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to redeem package');
+      throw err;
+    }
+  }, [packages, loadData]);
 
-  const addCoinPackage = useCallback(
-    (pkg: Omit<CoinPackage, 'id' | 'createdAt'>) => {
-      setCoinPackages((prev) => {
-        const updated = [
-          ...prev,
-          { ...pkg, id: uuidv4(), createdAt: new Date().toISOString() },
-        ];
-        save(KEYS.coinPackages, updated);
-        return updated;
-      });
-    },
-    []
-  );
+  const addCoinPackage = useCallback(async (pkg: Omit<CoinPackage, 'id' | 'createdAt'>) => {
+    try {
+      await apiService.createCoinPackage(convertCoinPackageToApiCoinPackage(pkg));
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add coin package');
+      throw err;
+    }
+  }, [loadData]);
 
-  const updateCoinPackage = useCallback((id: string, data: Partial<CoinPackage>) => {
-    setCoinPackages((prev) => {
-      const updated = prev.map((p) => (p.id === id ? { ...p, ...data } : p));
-      save(KEYS.coinPackages, updated);
-      return updated;
-    });
-  }, []);
+  const updateCoinPackage = useCallback(async (id: string, data: Partial<CoinPackage>) => {
+    try {
+      await apiService.updateCoinPackage(id, convertCoinPackageToApiCoinPackage(data as Omit<CoinPackage, 'id' | 'createdAt'>));
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update coin package');
+      throw err;
+    }
+  }, [loadData]);
 
-  const deleteCoinPackage = useCallback((id: string) => {
-    setCoinPackages((prev) => {
-      const updated = prev.filter((p) => p.id !== id);
-      save(KEYS.coinPackages, updated);
-      return updated;
-    });
-  }, []);
+  const deleteCoinPackage = useCallback(async (id: string) => {
+    try {
+      await apiService.deleteCoinPackage(id);
+      await loadData(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete coin package');
+      throw err;
+    }
+  }, [loadData]);
 
-  const getUserCoinTransactions = useCallback(
-    (userId: string) => coinTransactions.filter((t) => t.userId === userId),
-    [coinTransactions]
-  );
+  // Queries
+  const getUserSubscription = useCallback((userId: string) => {
+    return subscriptions.find(sub => sub.userId === userId);
+  }, [subscriptions]);
 
-  // ---------- Queries ----------
-  const getUserSubscription = useCallback(
-    (userId: string) => subscriptions.find((s) => s.userId === userId),
-    [subscriptions]
-  );
+  const getUserPackage = useCallback((userId: string) => {
+    const subscription = getUserSubscription(userId);
+    if (!subscription) return undefined;
+    return packages.find(pkg => pkg.id === subscription.packageId);
+  }, [getUserSubscription, packages]);
 
-  const getUserPackage = useCallback(
-    (userId: string) => {
-      const sub = subscriptions.find((s) => s.userId === userId);
-      return sub ? packages.find((p) => p.id === sub.packageId) : undefined;
-    },
-    [subscriptions, packages]
-  );
+  const getExpiringSubscriptions = useCallback((days = 7) => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() + days);
 
-  const getExpiringSubscriptions = useCallback(
-    (days: number = 7) => {
-      const now = new Date();
-      return subscriptions
-        .filter((s) => {
-          const dLeft = differenceInDays(new Date(s.endDate), now);
-          return dLeft > 0 && dLeft <= days && s.status !== 'expired' && s.status !== 'suspended';
-        })
-        .map((s) => ({ 
-          ...s, 
-          user: systemUsers.find((u) => u.id === s.userId) || {
-            id: s.userId,
-            name: 'Unknown User',
-            email: 'unknown@example.com',
-            phone: '',
-            role: 'admin' as const,
-            status: 'inactive' as const,
-            company: 'Unknown Company',
-            property: 'Unknown Property',
-            createdAt: new Date().toISOString(),
-            lastActive: new Date().toISOString(),
-            totalVisitors: 0,
-            coinBalance: 0,
-            totalCoinsPurchased: 0,
-            totalCoinsRedeemed: 0,
-          }
-        }));
-    },
-    [subscriptions, systemUsers]
-  );
+    return subscriptions
+      .filter(sub => {
+        const expiryDate = new Date(sub.endDate);
+        return expiryDate <= cutoffDate && expiryDate > new Date() && sub.status === 'active';
+      })
+      .map(sub => ({
+        ...sub,
+        user: systemUsers.find(user => user.id === sub.userId),
+      }));
+  }, [subscriptions, systemUsers]);
 
-  const getExpiredSubscriptions = useCallback(
-    () =>
-      subscriptions
-        .filter((s) => new Date(s.endDate) < new Date() || s.status === 'expired')
-        .map((s) => ({ ...s, user: systemUsers.find((u) => u.id === s.userId) || {
-            id: s.userId,
-            name: 'Unknown User',
-            email: 'unknown@example.com',
-            phone: '',
-            role: 'admin' as const,
-            status: 'inactive' as const,
-            company: 'Unknown Company',
-            property: 'Unknown Property',
-            createdAt: new Date().toISOString(),
-            lastActive: new Date().toISOString(),
-            totalVisitors: 0,
-            subscriptionId: '',
-            coinBalance: 0,
-            totalCoinsPurchased: 0,
-            totalCoinsRedeemed: 0,
-          }})),
-    [subscriptions, systemUsers]
-  );
+  const getExpiredSubscriptions = useCallback(() => {
+    return subscriptions
+      .filter(sub => {
+        const expiryDate = new Date(sub.endDate);
+        return expiryDate <= new Date() && sub.status === 'active';
+      })
+      .map(sub => ({
+        ...sub,
+        user: systemUsers.find(user => user.id === sub.userId),
+      }));
+  }, [subscriptions, systemUsers]);
 
-  const getUnreadReminders = useCallback(
-    () => reminders.filter((r) => !r.read),
-    [reminders]
-  );
+  const getUnreadReminders = useCallback(() => {
+    return reminders.filter(reminder => !reminder.read);
+  }, [reminders]);
 
   const getSystemStats = useCallback(() => {
-    const now = new Date();
+    const totalUsers = systemUsers.length;
+    const activeUsers = systemUsers.filter(user => user.status === 'active').length;
+    const activeSubscriptions = subscriptions.filter(sub => sub.status === 'active').length;
+    const expiringSubscriptions = getExpiringSubscriptions().length;
+    const expiredSubscriptions = getExpiredSubscriptions().length;
+    const totalRevenue = subscriptions.reduce((sum, sub) => sum + sub.amount, 0);
+    const monthlyRevenue = subscriptions
+      .filter(sub => {
+        const subDate = new Date(sub.createdAt);
+        const now = new Date();
+        return subDate.getMonth() === now.getMonth() && subDate.getFullYear() === now.getFullYear();
+      })
+      .reduce((sum, sub) => sum + sub.amount, 0);
+    const totalPackages = packages.length;
+    const totalCoinsInSystem = systemUsers.reduce((sum, user) => sum + user.coinBalance, 0);
+    const totalCoinsRedeemed = systemUsers.reduce((sum, user) => sum + user.totalCoinsRedeemed, 0);
+
     return {
-      totalUsers: systemUsers.length,
-      activeUsers: systemUsers.filter((u) => u.status === 'active').length,
-      activeSubscriptions: subscriptions.filter((s) => s.status === 'active' || s.status === 'trial').length,
-      expiringSubscriptions: subscriptions.filter((s) => {
-        const d = differenceInDays(new Date(s.endDate), now);
-        return d > 0 && d <= 7;
-      }).length,
-      expiredSubscriptions: subscriptions.filter(
-        (s) => s.status === 'expired' || new Date(s.endDate) < now
-      ).length,
-      totalRevenue: subscriptions.reduce((acc, s) => {
-        const pkg = packages.find(p => p.id === s.packageId);
-        return acc + (pkg?.price || 0);
-      }, 0),
-      monthlyRevenue: subscriptions
-        .filter((s) => s.status === 'active')
-        .reduce((acc, s) => {
-          const pkg = packages.find(p => p.id === s.packageId);
-          return acc + (pkg?.price || 0);
-        }, 0),
-      totalPackages: packages.filter((p) => p.isActive).length,
-      totalCoinsInSystem: systemUsers.reduce((acc, u) => acc + u.coinBalance, 0),
-      totalCoinsRedeemed: systemUsers.reduce((acc, u) => acc + u.totalCoinsRedeemed, 0),
+      totalUsers,
+      activeUsers,
+      activeSubscriptions,
+      expiringSubscriptions,
+      expiredSubscriptions,
+      totalRevenue,
+      monthlyRevenue,
+      totalPackages,
+      totalCoinsInSystem,
+      totalCoinsRedeemed,
     };
-  }, [systemUsers, subscriptions, packages]);
+  }, [systemUsers, subscriptions, packages, getExpiringSubscriptions, getExpiredSubscriptions]);
+
+  const getUserCoinTransactions = useCallback((userId: string) => {
+    return coinTransactions.filter(tx => tx.userId === userId);
+  }, [coinTransactions]);
+
+  const resetToDefaults = useCallback(() => {
+    // In API-based version, this would reset to default data via API
+    // For now, just reload data
+    loadData();
+  }, [loadData]);
 
   const value = useMemo(
     () => ({
@@ -916,28 +658,58 @@ export const SystemAdminProvider: React.FC<{ children: ReactNode }> = ({ childre
       getUnreadReminders,
       getSystemStats,
       resetToDefaults,
+      loadData,
+      loading,
+      error,
     }),
     [
-      packages, subscriptions, systemUsers, reminders, coinPackages, coinTransactions,
-      addPackage, updatePackage, deletePackage,
-      addSystemUser, updateSystemUser, deleteSystemUser,
-      createSubscription, updateSubscription, cancelSubscription, extendSubscription,
-      addReminder, markReminderRead, sendReminder, deleteReminder, generateAutoReminders,
-      purchaseCoins, redeemPackage, addCoinPackage, updateCoinPackage, deleteCoinPackage, getUserCoinTransactions,
-      getUserSubscription, getUserPackage, getExpiringSubscriptions, getExpiredSubscriptions,
-      getUnreadReminders, getSystemStats, resetToDefaults,
+      packages,
+      subscriptions,
+      systemUsers,
+      reminders,
+      coinPackages,
+      coinTransactions,
+      addPackage,
+      updatePackage,
+      deletePackage,
+      addSystemUser,
+      updateSystemUser,
+      deleteSystemUser,
+      createSubscription,
+      updateSubscription,
+      cancelSubscription,
+      extendSubscription,
+      addReminder,
+      markReminderRead,
+      sendReminder,
+      deleteReminder,
+      generateAutoReminders,
+      purchaseCoins,
+      redeemPackage,
+      addCoinPackage,
+      updateCoinPackage,
+      deleteCoinPackage,
+      getUserCoinTransactions,
+      getUserSubscription,
+      getUserPackage,
+      getExpiringSubscriptions,
+      getExpiredSubscriptions,
+      getUnreadReminders,
+      getSystemStats,
+      resetToDefaults,
+      loadData,
+      loading,
+      error,
     ]
   );
 
-  return (
-    <SystemAdminContext.Provider value={value}>
-      {children}
-    </SystemAdminContext.Provider>
-  );
+  return <SystemAdminContext.Provider value={value}>{children}</SystemAdminContext.Provider>;
 };
 
-export const useSystemAdmin = (): SystemAdminContextType => {
-  const ctx = useContext(SystemAdminContext);
-  if (!ctx) throw new Error('useSystemAdmin must be inside SystemAdminProvider');
-  return ctx;
+export const useSystemAdmin = () => {
+  const context = useContext(SystemAdminContext);
+  if (context === undefined) {
+    throw new Error('useSystemAdmin must be used within a SystemAdminProvider');
+  }
+  return context;
 };
