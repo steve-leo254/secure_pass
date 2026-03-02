@@ -12,7 +12,7 @@ interface LoginResponse {
   };
 }
 
-export type UserRole = 'property_manager' | 'security';
+export type UserRole = 'property_manager' | 'security' | 'superadmin';
 
 export type VisitorCategory =
   | 'contractor'
@@ -121,7 +121,7 @@ export const DEFAULT_USERS: User[] = [
 
 interface AuthContextType {
   loginAs: (role: 'security' | 'property_manager') => void;
-  userRole: 'admin' | 'security_desk';
+  userRole: 'admin' | 'security_desk' | 'superadmin';
   logout: () => void;
   user: User | null;
   login: (username: string, password: string) => Promise<boolean>;
@@ -137,7 +137,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<'admin' | 'security_desk'>('security_desk');
+  const [userRole, setUserRole] = useState<'admin' | 'security_desk' | 'superadmin'>('security_desk');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
@@ -152,7 +152,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       setUser(user);
-      setUserRole(user.role === 'property_manager' ? 'admin' : 'security_desk');
+      // Handle different roles properly
+      if (user.role === 'superadmin') {
+        setUserRole('superadmin');
+      } else if (user.role === 'property_manager') {
+        setUserRole('admin');
+      } else {
+        setUserRole('security_desk');
+      }
       setIsAuthenticated(true);
       setAccessToken(response.access_token);
       

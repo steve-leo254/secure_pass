@@ -146,7 +146,6 @@ const convertApiSubscriptionToSubscription = (apiSub: ApiSubscription): Subscrip
   status: apiSub.status as any,
   autoRenew: apiSub.auto_renew,
   amount: apiSub.amount,
-  createdAt: new Date(apiSub.created_at).toISOString(),
 });
 
 const convertSubscriptionToApiSubscription = (sub: Omit<Subscription, 'id'>): Omit<ApiSubscription, 'id' | 'created_at'> => ({
@@ -183,29 +182,30 @@ const convertApiCoinTransactionToCoinTransaction = (apiTx: ApiCoinTransaction): 
   userId: apiTx.user_id,
   coinPackageId: apiTx.coin_package_id,
   type: apiTx.transaction_type as any,
-  coins: apiTx.coins,
   amount: apiTx.amount,
+  balance: 0, // Not available from API
+  description: `${apiTx.transaction_type} - ${apiTx.coins} coins`,
   createdAt: new Date(apiTx.created_at).toISOString(),
 });
 
 const convertApiReminderToReminder = (apiReminder: ApiSubscriptionReminder): SubscriptionReminder => ({
   id: apiReminder.id,
   userId: apiReminder.user_id,
-  subscriptionId: apiReminder.subscription_id,
-  type: apiReminder.type,
+  type: apiReminder.type as any,
   message: apiReminder.message,
   read: apiReminder.read,
-  sent: apiReminder.sent,
+  sentAt: apiReminder.sent ? new Date().toISOString() : undefined,
+  dueDate: new Date().toISOString(), // Not available from API
   createdAt: new Date(apiReminder.created_at).toISOString(),
 });
 
 const convertReminderToApiReminder = (reminder: Omit<SubscriptionReminder, 'id' | 'createdAt'>): Omit<ApiSubscriptionReminder, 'id' | 'created_at'> => ({
   user_id: reminder.userId,
-  subscription_id: reminder.subscriptionId,
+  subscription_id: '', // Not available in frontend interface
   type: reminder.type,
   message: reminder.message,
   read: reminder.read,
-  sent: reminder.sent,
+  sent: !!reminder.sentAt,
 });
 
 export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -290,7 +290,7 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setError(null);
       setLoading(false);
     }
-  }, [isAuthenticated, loadData]);
+  }, [isAuthenticated]);
 
   // Package CRUD
   const addPackage = useCallback(async (pkg: Omit<Package, 'id' | 'createdAt'>) => {
@@ -326,7 +326,19 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // User CRUD
   const addSystemUser = useCallback(async (user: Omit<SystemUser, 'id' | 'createdAt'>) => {
     try {
+      // Create the user first
       await apiService.createSystemUser(convertSystemUserToApiSystemUser(user));
+      
+      // Generate a welcome reminder for the new user
+      await apiService.createReminder({
+        user_id: 'temp-user-id', // This will be updated after user creation
+        subscription_id: '',
+        type: 'payment_due',
+        message: `Welcome ${user.name}! Please set up your subscription to activate your account.`,
+        read: false,
+        sent: false,
+      });
+      
       await loadData(); // Refresh data
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add user');
@@ -358,12 +370,26 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const createSubscription = useCallback(async (sub: Omit<Subscription, 'id'>) => {
     try {
       await apiService.createSubscription(convertSubscriptionToApiSubscription(sub));
+      
+      // Generate a confirmation reminder for the new subscription
+      const user = systemUsers.find(u => u.id === sub.userId);
+      if (user) {
+        await apiService.createReminder({
+          user_id: sub.userId,
+          subscription_id: 'temp-sub-id', // This will be updated after subscription creation
+          type: 'payment_due',
+          message: `${user.name}'s subscription has been activated! Next payment: ${new Date(sub.endDate).toLocaleDateString()}`,
+          read: false,
+          sent: false,
+        });
+      }
+      
       await loadData(); // Refresh data
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create subscription');
       throw err;
     }
-  }, [loadData]);
+  }, [systemUsers, loadData]);
 
   const updateSubscription = useCallback(async (id: string, data: Partial<Subscription>) => {
     try {
@@ -440,20 +466,45 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const generateAutoReminders = useCallback(async () => {
     try {
-      // Generate reminders for expiring subscriptions
+      const now = new Date();
+      
+      // Generate reminders for expiring subscriptions (within 7 days)
       const expiringSubs = subscriptions.filter(sub => {
-        const daysUntilExpiry = differenceInDays(new Date(sub.endDate), new Date());
+        const daysUntilExpiry = differenceInDays(new Date(sub.endDate), now);
         return daysUntilExpiry <= 7 && daysUntilExpiry > 0 && sub.status === 'active';
       });
 
+      // Generate reminders for expired subscriptions
+      const expiredSubs = subscriptions.filter(sub => {
+        const daysSinceExpiry = differenceInDays(now, new Date(sub.endDate));
+        return daysSinceExpiry <= 3 && daysSinceExpiry > 0 && sub.status === 'active';
+      });
+
+      // Process expiring subscriptions
       for (const sub of expiringSubs) {
+        const user = systemUsers.find(u => u.id === sub.userId);
+        if (user) {
+          const daysLeft = differenceInDays(new Date(sub.endDate), now);
+          await apiService.createReminder({
+            user_id: sub.userId,
+            subscription_id: sub.id,
+            type: 'expiring_soon',
+            message: `${user.name}'s subscription expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+            read: false,
+            sent: false,
+          });
+        }
+      }
+
+      // Process expired subscriptions
+      for (const sub of expiredSubs) {
         const user = systemUsers.find(u => u.id === sub.userId);
         if (user) {
           await apiService.createReminder({
             user_id: sub.userId,
             subscription_id: sub.id,
-            type: 'expiring_soon',
-            message: `Your subscription will expire in ${differenceInDays(new Date(sub.endDate), new Date())} days`,
+            type: 'expired',
+            message: `${user.name}'s subscription expired on ${new Date(sub.endDate).toLocaleDateString()}`,
             read: false,
             sent: false,
           });
@@ -589,7 +640,7 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const totalRevenue = subscriptions.reduce((sum, sub) => sum + sub.amount, 0);
     const monthlyRevenue = subscriptions
       .filter(sub => {
-        const subDate = new Date(sub.createdAt);
+        const subDate = new Date(sub.startDate); // Use startDate instead of createdAt
         const now = new Date();
         return subDate.getMonth() === now.getMonth() && subDate.getFullYear() === now.getFullYear();
       })
