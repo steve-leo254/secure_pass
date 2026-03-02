@@ -314,3 +314,16 @@ export const SUB_STATUS_CONFIG: Record<
   suspended: { label: 'Suspended', color: 'text-slate-700', bg: 'bg-slate-100', dot: 'bg-slate-500' },
   cancelled: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50', dot: 'bg-red-500' },
 };
+
+export interface SystemStats {
+  totalUsers: number;
+  activeUsers: number;
+  activeSubscriptions: number;
+  expiringSubscriptions: number;
+  expiredSubscriptions: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  totalPackages: number;
+  totalCoinsInSystem: number;
+  totalCoinsRedeemed: number;
+}
