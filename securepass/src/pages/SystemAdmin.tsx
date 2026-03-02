@@ -756,7 +756,12 @@ const SystemAdmin: React.FC = () => {
                     const user = systemUsers.find((u) => u.id === sub.userId);
                     const pkg = packages.find((p) => p.id === sub.packageId);
                     const daysLeft = getDaysLeft(sub.endDate);
-                    const statusCfg = SUB_STATUS_CONFIG[sub.status];
+                    const statusCfg = SUB_STATUS_CONFIG[sub.status as keyof typeof SUB_STATUS_CONFIG] || {
+                      label: sub.status || 'Unknown',
+                      color: 'text-slate-700',
+                      bg: 'bg-slate-100',
+                      dot: 'bg-slate-500'
+                    };
                     return (
                       <tr key={sub.id} className="border-b border-slate-50 hover:bg-slate-50/50">
                         <td className="px-5 py-3 text-sm font-semibold text-slate-700">{user?.name || 'â€”'}</td>

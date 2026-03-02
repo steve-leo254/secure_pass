@@ -394,8 +394,12 @@ async def delete_package_endpoint(package_id: str, db: Session = Depends(get_db)
 # Subscriptions
 @app.get("/system/subscriptions", response_model=List[SubscriptionSchema])
 async def get_subscriptions_endpoint(db: Session = Depends(get_db)):
-    subscriptions = get_subscriptions(db)
-    return subscriptions
+    try:
+        subscriptions = get_subscriptions(db)
+        return subscriptions
+    except Exception as e:
+        print(f"Error in get_subscriptions_endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/system/subscriptions", response_model=dict)
 async def create_subscription_endpoint(subscription: SubscriptionCreate, db: Session = Depends(get_db)):
