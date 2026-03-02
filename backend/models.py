@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship, sessionmaker
 from datetime import datetime
 import uuid
 import enum
+import json
 
 Base = declarative_base()
 
@@ -112,6 +113,14 @@ class Package(Base):
     is_popular = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Property to handle JSON conversion for features
+    @property
+    def features_list(self):
+        try:
+            return json.loads(self.features) if self.features else []
+        except (json.JSONDecodeError, TypeError):
+            return []
     
     # Relationships
     subscriptions = relationship("Subscription", back_populates="package")

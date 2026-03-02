@@ -5,9 +5,14 @@ from models import (
     SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder
 )
 from schemas import (
-    UserCreate, VisitorCreate, VisitorUpdate, AuditLogCreate, ToolCreate, CategoryCreate, CategoryUpdate,
-    SystemUserCreate, SystemUserUpdate, PackageCreate, PackageUpdate, SubscriptionCreate, SubscriptionUpdate,
-    CoinPackageCreate, CoinPackageUpdate, CoinTransactionCreate, SubscriptionReminderCreate, SubscriptionReminderUpdate
+    User as UserSchema, UserResponse, LoginRequest, LoginResponse,
+    SystemUser as SystemUserSchema, SystemUserCreate, SystemUserUpdate,
+    Package as PackageSchema, PackageCreate, PackageUpdate,
+    Subscription as SubscriptionSchema, SubscriptionCreate, SubscriptionUpdate,
+    CoinPackage as CoinPackageSchema, CoinPackageCreate, CoinPackageUpdate,
+    CoinTransaction as CoinTransactionSchema, CoinTransactionCreate,
+    SubscriptionReminder as SubscriptionReminderSchema, SubscriptionReminderCreate,
+    SystemStats
 )
 from datetime import datetime, timedelta
 import json
@@ -219,7 +224,28 @@ def delete_system_user(db: Session, user_id: str):
 
 # Package CRUD
 def get_packages(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Package).filter(Package.is_active == True).offset(skip).limit(limit).all()
+    packages = db.query(Package).filter(Package.is_active == True).offset(skip).limit(limit).all()
+    
+    # Convert to dict and handle JSON conversion for features
+    result = []
+    for package in packages:
+        package_dict = {
+            'id': package.id,
+            'name': package.name,
+            'billing': package.billing,
+            'price': package.price,
+            'currency': package.currency,
+            'coin_cost': package.coin_cost,
+            'max_users': package.max_users,
+            'max_visitors_per_day': package.max_visitors_per_day,
+            'features': package.features_list,  # Use the property
+            'is_popular': package.is_popular,
+            'is_active': package.is_active,
+            'created_at': package.created_at
+        }
+        result.append(package_dict)
+    
+    return result
 
 def get_package(db: Session, package_id: str):
     return db.query(Package).filter(Package.id == package_id).first()
@@ -264,7 +290,25 @@ def delete_package(db: Session, package_id: str):
 
 # Subscription CRUD
 def get_subscriptions(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Subscription).offset(skip).limit(limit).all()
+    subscriptions = db.query(Subscription).offset(skip).limit(limit).all()
+    
+    # Convert to dict and handle JSON conversion
+    result = []
+    for sub in subscriptions:
+        sub_dict = {
+            'id': sub.id,
+            'user_id': sub.user_id,
+            'package_id': sub.package_id,
+            'start_date': sub.start_date,
+            'end_date': sub.end_date,
+            'status': sub.status,
+            'auto_renew': sub.auto_renew,
+            'amount': sub.amount,
+            'created_at': sub.created_at
+        }
+        result.append(sub_dict)
+    
+    return result
 
 def get_subscription(db: Session, subscription_id: str):
     return db.query(Subscription).filter(Subscription.id == subscription_id).first()
@@ -380,7 +424,24 @@ def create_coin_transaction(db: Session, transaction: CoinTransactionCreate):
 
 # Subscription Reminder CRUD
 def get_subscription_reminders(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(SubscriptionReminder).order_by(SubscriptionReminder.created_at.desc()).offset(skip).limit(limit).all()
+    reminders = db.query(SubscriptionReminder).order_by(SubscriptionReminder.created_at.desc()).offset(skip).limit(limit).all()
+    
+    # Convert to dict to avoid serialization issues
+    result = []
+    for reminder in reminders:
+        reminder_dict = {
+            'id': reminder.id,
+            'user_id': reminder.user_id,
+            'subscription_id': reminder.subscription_id,
+            'type': reminder.type,
+            'message': reminder.message,
+            'read': reminder.read,
+            'sent': reminder.sent,
+            'created_at': reminder.created_at
+        }
+        result.append(reminder_dict)
+    
+    return result
 
 def get_unread_reminders(db: Session):
     return db.query(SubscriptionReminder).filter(SubscriptionReminder.read == False).order_by(SubscriptionReminder.created_at.desc()).all()

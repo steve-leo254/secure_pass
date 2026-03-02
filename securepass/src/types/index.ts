@@ -199,7 +199,7 @@ export const DEFAULT_USERS: User[] = [
 ];
 
 // Subscription & Package Management Types
-export type SubscriptionStatus = 'active' | 'expiring' | 'expired' | 'trial' | 'suspended';
+export type SubscriptionStatus = 'active' | 'expiring' | 'expired' | 'trial' | 'suspended' | 'cancelled';
 export type PackageBilling = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
 export type SystemUserRole = 'superadmin' | 'admin' | 'security';
 export type SystemUserStatus = 'active' | 'inactive' | 'suspended';
@@ -312,4 +312,5 @@ export const SUB_STATUS_CONFIG: Record<
   expired: { label: 'Expired', color: 'text-red-700', bg: 'bg-red-50', dot: 'bg-red-500' },
   trial: { label: 'Trial', color: 'text-blue-700', bg: 'bg-blue-50', dot: 'bg-blue-500' },
   suspended: { label: 'Suspended', color: 'text-slate-700', bg: 'bg-slate-100', dot: 'bg-slate-500' },
+  cancelled: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50', dot: 'bg-red-500' },
 };
