@@ -1,8 +1,15 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
-from models import User, Visitor, AuditLog, Tool, Category
-from schemas import UserCreate, VisitorCreate, VisitorUpdate, AuditLogCreate, ToolCreate, CategoryCreate, CategoryUpdate
-from datetime import datetime
+from models import (
+    User, Visitor, AuditLog, Tool, Category,
+    SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder
+)
+from schemas import (
+    UserCreate, VisitorCreate, VisitorUpdate, AuditLogCreate, ToolCreate, CategoryCreate, CategoryUpdate,
+    SystemUserCreate, SystemUserUpdate, PackageCreate, PackageUpdate, SubscriptionCreate, SubscriptionUpdate,
+    CoinPackageCreate, CoinPackageUpdate, CoinTransactionCreate, SubscriptionReminderCreate, SubscriptionReminderUpdate
+)
+from datetime import datetime, timedelta
 import json
 import hashlib
 
@@ -161,3 +168,335 @@ def delete_category(db: Session, category_id: str):
         db.delete(db_category)
         db.commit()
     return db_category
+
+# System Admin CRUD
+
+# System User CRUD
+def get_system_users(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(SystemUser).offset(skip).limit(limit).all()
+
+def get_system_user(db: Session, user_id: str):
+    return db.query(SystemUser).filter(SystemUser.id == user_id).first()
+
+def get_system_user_by_email(db: Session, email: str):
+    return db.query(SystemUser).filter(SystemUser.email == email).first()
+
+def create_system_user(db: Session, user: SystemUserCreate):
+    db_user = SystemUser(
+        name=user.name,
+        email=user.email,
+        phone=user.phone,
+        role=user.role,
+        status=user.status,
+        company=user.company,
+        property=user.property,
+        total_visitors=user.total_visitors,
+        coin_balance=user.coin_balance,
+        total_coins_purchased=user.total_coins_purchased,
+        total_coins_redeemed=user.total_coins_redeemed
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def update_system_user(db: Session, user_id: str, user: SystemUserUpdate):
+    db_user = db.query(SystemUser).filter(SystemUser.id == user_id).first()
+    if db_user:
+        update_data = user.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_user, field, value)
+        db.commit()
+        db.refresh(db_user)
+    return db_user
+
+def delete_system_user(db: Session, user_id: str):
+    db_user = db.query(SystemUser).filter(SystemUser.id == user_id).first()
+    if db_user:
+        db.delete(db_user)
+        db.commit()
+    return db_user
+
+# Package CRUD
+def get_packages(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(Package).filter(Package.is_active == True).offset(skip).limit(limit).all()
+
+def get_package(db: Session, package_id: str):
+    return db.query(Package).filter(Package.id == package_id).first()
+
+def create_package(db: Session, package: PackageCreate):
+    db_package = Package(
+        name=package.name,
+        billing=package.billing,
+        price=package.price,
+        currency=package.currency,
+        coin_cost=package.coin_cost,
+        max_users=package.max_users,
+        max_visitors_per_day=package.max_visitors_per_day,
+        features=json.dumps(package.features),
+        is_popular=package.is_popular,
+        is_active=package.is_active
+    )
+    db.add(db_package)
+    db.commit()
+    db.refresh(db_package)
+    return db_package
+
+def update_package(db: Session, package_id: str, package: PackageUpdate):
+    db_package = db.query(Package).filter(Package.id == package_id).first()
+    if db_package:
+        update_data = package.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            if field == 'features':
+                setattr(db_package, field, json.dumps(value))
+            else:
+                setattr(db_package, field, value)
+        db.commit()
+        db.refresh(db_package)
+    return db_package
+
+def delete_package(db: Session, package_id: str):
+    db_package = db.query(Package).filter(Package.id == package_id).first()
+    if db_package:
+        db.delete(db_package)
+        db.commit()
+    return db_package
+
+# Subscription CRUD
+def get_subscriptions(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(Subscription).offset(skip).limit(limit).all()
+
+def get_subscription(db: Session, subscription_id: str):
+    return db.query(Subscription).filter(Subscription.id == subscription_id).first()
+
+def get_user_subscription(db: Session, user_id: str):
+    return db.query(Subscription).filter(Subscription.user_id == user_id).first()
+
+def create_subscription(db: Session, subscription: SubscriptionCreate):
+    db_subscription = Subscription(
+        user_id=subscription.user_id,
+        package_id=subscription.package_id,
+        start_date=subscription.start_date,
+        end_date=subscription.end_date,
+        status=subscription.status,
+        auto_renew=subscription.auto_renew,
+        amount=subscription.amount
+    )
+    db.add(db_subscription)
+    db.commit()
+    db.refresh(db_subscription)
+    return db_subscription
+
+def update_subscription(db: Session, subscription_id: str, subscription: SubscriptionUpdate):
+    db_subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
+    if db_subscription:
+        update_data = subscription.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_subscription, field, value)
+        db.commit()
+        db.refresh(db_subscription)
+    return db_subscription
+
+def extend_subscription(db: Session, subscription_id: str, days: int):
+    db_subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
+    if db_subscription:
+        db_subscription.end_date = db_subscription.end_date + timedelta(days=days)
+        db_subscription.status = "active"
+        db.commit()
+        db.refresh(db_subscription)
+    return db_subscription
+
+def cancel_subscription(db: Session, subscription_id: str):
+    db_subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
+    if db_subscription:
+        db_subscription.status = "cancelled"
+        db.commit()
+        db.refresh(db_subscription)
+    return db_subscription
+
+def delete_subscription(db: Session, subscription_id: str):
+    db_subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
+    if db_subscription:
+        db.delete(db_subscription)
+        db.commit()
+    return db_subscription
+
+# Coin Package CRUD
+def get_coin_packages(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(CoinPackage).filter(CoinPackage.is_active == True).offset(skip).limit(limit).all()
+
+def get_coin_package(db: Session, coin_package_id: str):
+    return db.query(CoinPackage).filter(CoinPackage.id == coin_package_id).first()
+
+def create_coin_package(db: Session, coin_package: CoinPackageCreate):
+    db_coin_package = CoinPackage(
+        name=coin_package.name,
+        coins=coin_package.coins,
+        price=coin_package.price,
+        currency=coin_package.currency,
+        is_active=coin_package.is_active
+    )
+    db.add(db_coin_package)
+    db.commit()
+    db.refresh(db_coin_package)
+    return db_coin_package
+
+def update_coin_package(db: Session, coin_package_id: str, coin_package: CoinPackageUpdate):
+    db_coin_package = db.query(CoinPackage).filter(CoinPackage.id == coin_package_id).first()
+    if db_coin_package:
+        update_data = coin_package.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_coin_package, field, value)
+        db.commit()
+        db.refresh(db_coin_package)
+    return db_coin_package
+
+def delete_coin_package(db: Session, coin_package_id: str):
+    db_coin_package = db.query(CoinPackage).filter(CoinPackage.id == coin_package_id).first()
+    if db_coin_package:
+        db.delete(db_coin_package)
+        db.commit()
+    return db_coin_package
+
+# Coin Transaction CRUD
+def get_coin_transactions(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(CoinTransaction).order_by(CoinTransaction.created_at.desc()).offset(skip).limit(limit).all()
+
+def get_user_coin_transactions(db: Session, user_id: str):
+    return db.query(CoinTransaction).filter(CoinTransaction.user_id == user_id).order_by(CoinTransaction.created_at.desc()).all()
+
+def create_coin_transaction(db: Session, transaction: CoinTransactionCreate):
+    db_transaction = CoinTransaction(
+        user_id=transaction.user_id,
+        coin_package_id=transaction.coin_package_id,
+        transaction_type=transaction.transaction_type,
+        coins=transaction.coins,
+        amount=transaction.amount
+    )
+    db.add(db_transaction)
+    db.commit()
+    db.refresh(db_transaction)
+    return db_transaction
+
+# Subscription Reminder CRUD
+def get_subscription_reminders(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(SubscriptionReminder).order_by(SubscriptionReminder.created_at.desc()).offset(skip).limit(limit).all()
+
+def get_unread_reminders(db: Session):
+    return db.query(SubscriptionReminder).filter(SubscriptionReminder.read == False).order_by(SubscriptionReminder.created_at.desc()).all()
+
+def create_subscription_reminder(db: Session, reminder: SubscriptionReminderCreate):
+    db_reminder = SubscriptionReminder(
+        user_id=reminder.user_id,
+        subscription_id=reminder.subscription_id,
+        type=reminder.type,
+        message=reminder.message,
+        read=reminder.read,
+        sent=reminder.sent
+    )
+    db.add(db_reminder)
+    db.commit()
+    db.refresh(db_reminder)
+    return db_reminder
+
+def update_subscription_reminder(db: Session, reminder_id: str, reminder: SubscriptionReminderUpdate):
+    db_reminder = db.query(SubscriptionReminder).filter(SubscriptionReminder.id == reminder_id).first()
+    if db_reminder:
+        update_data = reminder.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_reminder, field, value)
+        db.commit()
+        db.refresh(db_reminder)
+    return db_reminder
+
+def mark_reminder_read(db: Session, reminder_id: str):
+    db_reminder = db.query(SubscriptionReminder).filter(SubscriptionReminder.id == reminder_id).first()
+    if db_reminder:
+        db_reminder.read = True
+        db.commit()
+        db.refresh(db_reminder)
+    return db_reminder
+
+def delete_subscription_reminder(db: Session, reminder_id: str):
+    db_reminder = db.query(SubscriptionReminder).filter(SubscriptionReminder.id == reminder_id).first()
+    if db_reminder:
+        db.delete(db_reminder)
+        db.commit()
+    return db_reminder
+
+# System Stats
+def get_system_stats(db: Session):
+    total_users = db.query(SystemUser).count()
+    active_users = db.query(SystemUser).filter(SystemUser.status == "active").count()
+    active_subscriptions = db.query(Subscription).filter(Subscription.status == "active").count()
+    
+    # Expiring subscriptions (within 7 days)
+    seven_days_from_now = datetime.utcnow() + timedelta(days=7)
+    expiring_subscriptions = db.query(Subscription).filter(
+        and_(
+            Subscription.end_date <= seven_days_from_now,
+            Subscription.end_date > datetime.utcnow(),
+            Subscription.status == "active"
+        )
+    ).count()
+    
+    expired_subscriptions = db.query(Subscription).filter(
+        and_(
+            Subscription.end_date <= datetime.utcnow(),
+            Subscription.status == "active"
+        )
+    ).count()
+    
+    # Update expired subscriptions
+    db.query(Subscription).filter(
+        and_(
+            Subscription.end_date <= datetime.utcnow(),
+            Subscription.status == "active"
+        )
+    ).update({"status": "expired"})
+    db.commit()
+    
+    total_revenue = db.query(Subscription).filter(Subscription.status != "cancelled").with_entities(
+        db.func.sum(Subscription.amount)
+    ).scalar() or 0
+    
+    # Monthly revenue (last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    monthly_revenue = db.query(Subscription).filter(
+        Subscription.created_at >= thirty_days_ago
+    ).with_entities(
+        db.func.sum(Subscription.amount)
+    ).scalar() or 0
+    
+    total_packages = db.query(Package).filter(Package.is_active == True).count()
+    
+    total_coins_in_system = db.query(SystemUser).with_entities(
+        db.func.sum(SystemUser.coin_balance)
+    ).scalar() or 0
+    
+    total_coins_redeemed = db.query(SystemUser).with_entities(
+        db.func.sum(SystemUser.total_coins_redeemed)
+    ).scalar() or 0
+    
+    return {
+        "total_users": total_users,
+        "active_users": active_users,
+        "active_subscriptions": active_subscriptions,
+        "expiring_subscriptions": expiring_subscriptions,
+        "expired_subscriptions": expired_subscriptions,
+        "total_revenue": total_revenue,
+        "monthly_revenue": monthly_revenue,
+        "total_packages": total_packages,
+        "total_coins_in_system": total_coins_in_system,
+        "total_coins_redeemed": total_coins_redeemed
+    }
+
+def get_expiring_subscriptions(db: Session, days: int = 7):
+    cutoff_date = datetime.utcnow() + timedelta(days=days)
+    return db.query(Subscription).filter(
+        and_(
+            Subscription.end_date <= cutoff_date,
+            Subscription.end_date > datetime.utcnow(),
+            Subscription.status == "active"
+        )
+    ).all()

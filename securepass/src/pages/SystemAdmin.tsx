@@ -77,6 +77,9 @@ const SystemAdmin: React.FC = () => {
     resetToDefaults,
     deleteCoinPackage,
     getUserCoinTransactions,
+    loadData,
+    loading,
+    error,
   } = useSystemAdmin();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -134,8 +137,8 @@ const SystemAdmin: React.FC = () => {
   };
 
   useEffect(() => {
-    generateAutoReminders();
-  }, []);
+    loadData();
+  }, [loadData]);
 
   const resetUserForm = () => {
     setNewUserName('');
@@ -603,36 +606,71 @@ const SystemAdmin: React.FC = () => {
             </button>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredUsers.map((user) => {
-              const sub = getUserSubscription(user.id);
-              const pkg = getUserPackage(user.id);
-              const daysLeft = sub ? getDaysLeft(sub.endDate) : null;
-              const statusCfg = sub ? SUB_STATUS_CONFIG[sub.status] : null;
-              return (
-                <div key={user.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
-                  <div className={`h-1.5 ${user.status === 'active' ? 'bg-linear-to-r from-emerald-500 to-teal-500' : user.status === 'suspended' ? 'bg-red-500' : 'bg-slate-300'}`} />
-                  <div className="p-5">
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg ${user.status === 'active' ? 'bg-linear-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/20' : 'bg-slate-400'}`}>
-                        {user.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-slate-800 truncate">{user.name}</h4>
-                        <p className="text-xs text-slate-400 truncate">{user.email}</p>
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${user.role === 'superadmin' ? 'bg-purple-100 text-purple-700' : user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
-                        {user.role}
-                      </span>
-                    </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center gap-2 text-slate-500">
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Loading users...
+              </div>
+            </div>
+          )}
 
-                    <div className="space-y-2 text-sm mb-4">
-                      {user.property && (
-                        <div className="flex items-center gap-2 text-slate-500">
-                          <Building2 className="w-3.5 h-3.5" />
-                          <span className="truncate">{user.property}</span>
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertTriangle className="w-4 h-4" />
+                <span className="text-sm">Error loading users: {error}</span>
+                <button onClick={loadData} className="ml-auto text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded-md transition-colors">
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && filteredUsers.length === 0 && (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500 text-sm">
+                {searchQuery ? 'No users found matching your search' : 'No users found. Add your first user to get started.'}
+              </p>
+            </div>
+          )}
+
+          {/* Users Grid */}
+          {!loading && !error && filteredUsers.length > 0 && (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredUsers.map((user) => {
+                const sub = getUserSubscription(user.id);
+                const pkg = getUserPackage(user.id);
+                const daysLeft = sub ? getDaysLeft(sub.endDate) : null;
+                const statusCfg = sub ? SUB_STATUS_CONFIG[sub.status] : null;
+                return (
+                  <div key={user.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
+                    <div className={`h-1.5 ${user.status === 'active' ? 'bg-linear-to-r from-emerald-500 to-teal-500' : user.status === 'suspended' ? 'bg-red-500' : 'bg-slate-300'}`} />
+                    <div className="p-5">
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg ${user.status === 'active' ? 'bg-linear-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/20' : 'bg-slate-400'}`}>
+                          {user.name.charAt(0)}
                         </div>
-                      )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-slate-800 truncate">{user.name}</h4>
+                          <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${user.role === 'superadmin' ? 'bg-purple-100 text-purple-700' : user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
+                          {user.role}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 text-sm mb-4">
+                        {user.property && (
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <Building2 className="w-3.5 h-3.5" />
+                            <span className="truncate">{user.property}</span>
+                          </div>
+                        )}
                       {pkg && (
                         <div className="flex items-center justify-between">
                           <span className="text-slate-400 text-xs">Package</span>
@@ -681,6 +719,7 @@ const SystemAdmin: React.FC = () => {
               );
             })}
           </div>
+          )}
         </div>
       )}
 
