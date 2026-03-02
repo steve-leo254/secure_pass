@@ -6,14 +6,20 @@ import json
 from datetime import datetime
 
 # Import models, schemas, CRUD operations, and database
-from models import User, Visitor, AuditLog, Tool, Category
+from models import User, Visitor, AuditLog, Tool, Category, SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder
 from schemas import (
     User as UserSchema, UserResponse, LoginRequest, LoginResponse,
     Visitor as VisitorSchema, VisitorCreate, VisitorUpdate,
     AuditLog as AuditLogSchema, AuditLogCreate,
     Tool as ToolSchema, ToolCreate,
     Category as CategorySchema, CategoryCreate, CategoryUpdate,
-    SystemSettings
+    SystemUser as SystemUserSchema, SystemUserCreate, SystemUserUpdate,
+    Package as PackageSchema, PackageCreate, PackageUpdate,
+    Subscription as SubscriptionSchema, SubscriptionCreate, SubscriptionUpdate,
+    CoinPackage as CoinPackageSchema, CoinPackageCreate, CoinPackageUpdate,
+    CoinTransaction as CoinTransactionSchema, CoinTransactionCreate,
+    SubscriptionReminder as SubscriptionReminderSchema, SubscriptionReminderCreate, SubscriptionReminderUpdate,
+    SystemSettings, SystemStats
 )
 from crud import (
     get_user_by_username, get_users, create_user,
@@ -21,6 +27,14 @@ from crud import (
     get_audit_logs, create_audit_log,
     get_tools, get_tool_by_name, create_tool, delete_tool,
     get_categories, get_category, create_category, update_category, delete_category,
+    # System Admin CRUD
+    get_system_users, get_system_user, get_system_user_by_email, create_system_user, update_system_user, delete_system_user,
+    get_packages, get_package, create_package, update_package, delete_package,
+    get_subscriptions, get_subscription, get_user_subscription, create_subscription, update_subscription, extend_subscription, cancel_subscription, delete_subscription,
+    get_coin_packages, get_coin_package, create_coin_package, update_coin_package, delete_coin_package,
+    get_coin_transactions, get_user_coin_transactions, create_coin_transaction,
+    get_subscription_reminders, get_unread_reminders, create_subscription_reminder, update_subscription_reminder, mark_reminder_read, delete_subscription_reminder,
+    get_system_stats, get_expiring_subscriptions,
     hash_password
 )
 from database import get_db, create_tables
@@ -295,6 +309,216 @@ async def get_settings_endpoint(db: Session = Depends(get_db)):
         tools=[tool.name for tool in tools],
         categories=categories
     )
+
+# ============ SYSTEM ADMIN ENDPOINTS ============
+
+# System Users
+@app.get("/system/users", response_model=List[SystemUserSchema])
+async def get_system_users_endpoint(db: Session = Depends(get_db)):
+    users = get_system_users(db)
+    return users
+
+@app.post("/system/users", response_model=dict)
+async def create_system_user_endpoint(user: SystemUserCreate, db: Session = Depends(get_db)):
+    # Check if email already exists
+    existing_user = get_system_user_by_email(db, user.email)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+    
+    new_user = create_system_user(db, user)
+    return {"message": "System user created successfully", "id": new_user.id}
+
+@app.put("/system/users/{user_id}", response_model=dict)
+async def update_system_user_endpoint(user_id: str, user: SystemUserUpdate, db: Session = Depends(get_db)):
+    updated_user = update_system_user(db, user_id, user)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="System user not found")
+    
+    return {"message": "System user updated successfully"}
+
+@app.delete("/system/users/{user_id}", response_model=dict)
+async def delete_system_user_endpoint(user_id: str, db: Session = Depends(get_db)):
+    deleted_user = delete_system_user(db, user_id)
+    if not deleted_user:
+        raise HTTPException(status_code=404, detail="System user not found")
+    
+    return {"message": "System user deleted successfully"}
+
+# Packages
+@app.get("/system/packages", response_model=List[PackageSchema])
+async def get_packages_endpoint(db: Session = Depends(get_db)):
+    packages = get_packages(db)
+    
+    # Convert JSON strings back to lists
+    result = []
+    for package in packages:
+        package_dict = {
+            "id": package.id,
+            "name": package.name,
+            "billing": package.billing,
+            "price": package.price,
+            "currency": package.currency,
+            "coin_cost": package.coin_cost,
+            "max_users": package.max_users,
+            "max_visitors_per_day": package.max_visitors_per_day,
+            "features": json.loads(package.features) if package.features else [],
+            "is_popular": package.is_popular,
+            "is_active": package.is_active,
+            "created_at": package.created_at
+        }
+        result.append(package_dict)
+    
+    return result
+
+@app.post("/system/packages", response_model=dict)
+async def create_package_endpoint(package: PackageCreate, db: Session = Depends(get_db)):
+    new_package = create_package(db, package)
+    return {"message": "Package created successfully", "id": new_package.id}
+
+@app.put("/system/packages/{package_id}", response_model=dict)
+async def update_package_endpoint(package_id: str, package: PackageUpdate, db: Session = Depends(get_db)):
+    updated_package = update_package(db, package_id, package)
+    if not updated_package:
+        raise HTTPException(status_code=404, detail="Package not found")
+    
+    return {"message": "Package updated successfully"}
+
+@app.delete("/system/packages/{package_id}", response_model=dict)
+async def delete_package_endpoint(package_id: str, db: Session = Depends(get_db)):
+    deleted_package = delete_package(db, package_id)
+    if not deleted_package:
+        raise HTTPException(status_code=404, detail="Package not found")
+    
+    return {"message": "Package deleted successfully"}
+
+# Subscriptions
+@app.get("/system/subscriptions", response_model=List[SubscriptionSchema])
+async def get_subscriptions_endpoint(db: Session = Depends(get_db)):
+    subscriptions = get_subscriptions(db)
+    return subscriptions
+
+@app.post("/system/subscriptions", response_model=dict)
+async def create_subscription_endpoint(subscription: SubscriptionCreate, db: Session = Depends(get_db)):
+    new_subscription = create_subscription(db, subscription)
+    return {"message": "Subscription created successfully", "id": new_subscription.id}
+
+@app.put("/system/subscriptions/{subscription_id}", response_model=dict)
+async def update_subscription_endpoint(subscription_id: str, subscription: SubscriptionUpdate, db: Session = Depends(get_db)):
+    updated_subscription = update_subscription(db, subscription_id, subscription)
+    if not updated_subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    return {"message": "Subscription updated successfully"}
+
+@app.put("/system/subscriptions/{subscription_id}/extend", response_model=dict)
+async def extend_subscription_endpoint(subscription_id: str, days: int, db: Session = Depends(get_db)):
+    extended_subscription = extend_subscription(db, subscription_id, days)
+    if not extended_subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    return {"message": "Subscription extended successfully"}
+
+@app.put("/system/subscriptions/{subscription_id}/cancel", response_model=dict)
+async def cancel_subscription_endpoint(subscription_id: str, db: Session = Depends(get_db)):
+    cancelled_subscription = cancel_subscription(db, subscription_id)
+    if not cancelled_subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    return {"message": "Subscription cancelled successfully"}
+
+@app.delete("/system/subscriptions/{subscription_id}", response_model=dict)
+async def delete_subscription_endpoint(subscription_id: str, db: Session = Depends(get_db)):
+    deleted_subscription = delete_subscription(db, subscription_id)
+    if not deleted_subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    return {"message": "Subscription deleted successfully"}
+
+# Coin Packages
+@app.get("/system/coin-packages", response_model=List[CoinPackageSchema])
+async def get_coin_packages_endpoint(db: Session = Depends(get_db)):
+    coin_packages = get_coin_packages(db)
+    return coin_packages
+
+@app.post("/system/coin-packages", response_model=dict)
+async def create_coin_package_endpoint(coin_package: CoinPackageCreate, db: Session = Depends(get_db)):
+    new_coin_package = create_coin_package(db, coin_package)
+    return {"message": "Coin package created successfully", "id": new_coin_package.id}
+
+@app.put("/system/coin-packages/{coin_package_id}", response_model=dict)
+async def update_coin_package_endpoint(coin_package_id: str, coin_package: CoinPackageUpdate, db: Session = Depends(get_db)):
+    updated_coin_package = update_coin_package(db, coin_package_id, coin_package)
+    if not updated_coin_package:
+        raise HTTPException(status_code=404, detail="Coin package not found")
+    
+    return {"message": "Coin package updated successfully"}
+
+@app.delete("/system/coin-packages/{coin_package_id}", response_model=dict)
+async def delete_coin_package_endpoint(coin_package_id: str, db: Session = Depends(get_db)):
+    deleted_coin_package = delete_coin_package(db, coin_package_id)
+    if not deleted_coin_package:
+        raise HTTPException(status_code=404, detail="Coin package not found")
+    
+    return {"message": "Coin package deleted successfully"}
+
+# Coin Transactions
+@app.get("/system/coin-transactions", response_model=List[CoinTransactionSchema])
+async def get_coin_transactions_endpoint(db: Session = Depends(get_db)):
+    transactions = get_coin_transactions(db)
+    return transactions
+
+@app.get("/system/users/{user_id}/coin-transactions", response_model=List[CoinTransactionSchema])
+async def get_user_coin_transactions_endpoint(user_id: str, db: Session = Depends(get_db)):
+    transactions = get_user_coin_transactions(db, user_id)
+    return transactions
+
+@app.post("/system/coin-transactions", response_model=dict)
+async def create_coin_transaction_endpoint(transaction: CoinTransactionCreate, db: Session = Depends(get_db)):
+    new_transaction = create_coin_transaction(db, transaction)
+    return {"message": "Coin transaction created successfully", "id": new_transaction.id}
+
+# Subscription Reminders
+@app.get("/system/reminders", response_model=List[SubscriptionReminderSchema])
+async def get_reminders_endpoint(db: Session = Depends(get_db)):
+    reminders = get_subscription_reminders(db)
+    return reminders
+
+@app.get("/system/reminders/unread", response_model=List[SubscriptionReminderSchema])
+async def get_unread_reminders_endpoint(db: Session = Depends(get_db)):
+    reminders = get_unread_reminders(db)
+    return reminders
+
+@app.post("/system/reminders", response_model=dict)
+async def create_reminder_endpoint(reminder: SubscriptionReminderCreate, db: Session = Depends(get_db)):
+    new_reminder = create_subscription_reminder(db, reminder)
+    return {"message": "Reminder created successfully", "id": new_reminder.id}
+
+@app.put("/system/reminders/{reminder_id}/read", response_model=dict)
+async def mark_reminder_read_endpoint(reminder_id: str, db: Session = Depends(get_db)):
+    marked_reminder = mark_reminder_read(db, reminder_id)
+    if not marked_reminder:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    
+    return {"message": "Reminder marked as read"}
+
+@app.delete("/system/reminders/{reminder_id}", response_model=dict)
+async def delete_reminder_endpoint(reminder_id: str, db: Session = Depends(get_db)):
+    deleted_reminder = delete_subscription_reminder(db, reminder_id)
+    if not deleted_reminder:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    
+    return {"message": "Reminder deleted successfully"}
+
+# System Stats
+@app.get("/system/stats", response_model=SystemStats)
+async def get_system_stats_endpoint(db: Session = Depends(get_db)):
+    stats = get_system_stats(db)
+    return SystemStats(**stats)
+
+@app.get("/system/expiring-subscriptions", response_model=List[SubscriptionSchema])
+async def get_expiring_subscriptions_endpoint(days: int = 7, db: Session = Depends(get_db)):
+    expiring_subscriptions = get_expiring_subscriptions(db, days)
+    return expiring_subscriptions
 
 if __name__ == "__main__":
     import uvicorn

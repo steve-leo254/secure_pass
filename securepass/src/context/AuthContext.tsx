@@ -139,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'security_desk'>('security_desk');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -153,6 +154,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(user);
       setUserRole(user.role === 'property_manager' ? 'admin' : 'security_desk');
       setIsAuthenticated(true);
+      setAccessToken(response.access_token);
+      
+      // Store token in localStorage for API service
+      localStorage.setItem('access_token', response.access_token);
+      
       return true;
     } catch (error) {
       console.error('Login failed:', error);
@@ -173,6 +179,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setUserRole('security_desk');
     setIsAuthenticated(false);
+    setAccessToken(null);
+    
+    // Remove token from localStorage
+    localStorage.removeItem('access_token');
   };
 
   const updateProfile = (updates: Partial<User>) => {

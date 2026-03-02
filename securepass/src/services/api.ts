@@ -50,6 +50,216 @@ export interface AuditLog {
   category?: string;
 }
 
+// System Admin Interfaces
+export interface SystemUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  status: string;
+  company?: string;
+  property?: string;
+  total_visitors: number;
+  coin_balance: number;
+  total_coins_purchased: number;
+  total_coins_redeemed: number;
+  created_at: string;
+}
+
+export interface SystemUserCreate {
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  status?: string;
+  company?: string;
+  property?: string;
+  total_visitors?: number;
+  coin_balance?: number;
+  total_coins_purchased?: number;
+  total_coins_redeemed?: number;
+}
+
+export interface SystemUserUpdate {
+  name?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  status?: string;
+  company?: string;
+  property?: string;
+  total_visitors?: number;
+  coin_balance?: number;
+  total_coins_purchased?: number;
+  total_coins_redeemed?: number;
+}
+
+export interface Package {
+  id: string;
+  name: string;
+  billing: string;
+  price: number;
+  currency: string;
+  coin_cost: number;
+  max_users: number;
+  max_visitors_per_day: number;
+  features: string[];
+  is_popular: boolean;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface PackageCreate {
+  name: string;
+  billing: string;
+  price: number;
+  currency?: string;
+  coin_cost?: number;
+  max_users?: number;
+  max_visitors_per_day?: number;
+  features?: string[];
+  is_popular?: boolean;
+  is_active?: boolean;
+}
+
+export interface PackageUpdate {
+  name?: string;
+  billing?: string;
+  price?: number;
+  currency?: string;
+  coin_cost?: number;
+  max_users?: number;
+  max_visitors_per_day?: number;
+  features?: string[];
+  is_popular?: boolean;
+  is_active?: boolean;
+}
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  package_id: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  auto_renew: boolean;
+  amount: number;
+  created_at: string;
+  user?: SystemUser;
+  package?: Package;
+}
+
+export interface SubscriptionCreate {
+  user_id: string;
+  package_id: string;
+  start_date: string;
+  end_date: string;
+  status?: string;
+  auto_renew?: boolean;
+  amount: number;
+}
+
+export interface SubscriptionUpdate {
+  user_id?: string;
+  package_id?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+  auto_renew?: boolean;
+  amount?: number;
+}
+
+export interface CoinPackage {
+  id: string;
+  name: string;
+  coins: number;
+  price: number;
+  currency: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface CoinPackageCreate {
+  name: string;
+  coins: number;
+  price: number;
+  currency?: string;
+  is_active?: boolean;
+}
+
+export interface CoinPackageUpdate {
+  name?: string;
+  coins?: number;
+  price?: number;
+  currency?: string;
+  is_active?: boolean;
+}
+
+export interface CoinTransaction {
+  id: string;
+  user_id: string;
+  coin_package_id: string;
+  transaction_type: string;
+  coins: number;
+  amount: number;
+  created_at: string;
+  user?: SystemUser;
+  coin_package?: CoinPackage;
+}
+
+export interface CoinTransactionCreate {
+  user_id: string;
+  coin_package_id: string;
+  transaction_type: string;
+  coins: number;
+  amount: number;
+}
+
+export interface SubscriptionReminder {
+  id: string;
+  user_id: string;
+  subscription_id: string;
+  type: string;
+  message: string;
+  read: boolean;
+  sent: boolean;
+  created_at: string;
+  user?: SystemUser;
+  subscription?: Subscription;
+}
+
+export interface SubscriptionReminderCreate {
+  user_id: string;
+  subscription_id: string;
+  type: string;
+  message: string;
+  read?: boolean;
+  sent?: boolean;
+}
+
+export interface SubscriptionReminderUpdate {
+  user_id?: string;
+  subscription_id?: string;
+  type?: string;
+  message?: string;
+  read?: boolean;
+  sent?: boolean;
+}
+
+export interface SystemStats {
+  total_users: number;
+  active_users: number;
+  active_subscriptions: number;
+  expiring_subscriptions: number;
+  expired_subscriptions: number;
+  total_revenue: number;
+  monthly_revenue: number;
+  total_packages: number;
+  total_coins_in_system: number;
+  total_coins_redeemed: number;
+}
+
 export interface AuditLogCreate {
   action: string;
   performed_by: string;
@@ -89,11 +299,21 @@ class ApiService {
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    // Get token from localStorage (where it's stored by AuthContext)
+    const token = localStorage.getItem('access_token');
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options.headers as Record<string, string>,
+    };
+    
+    // Add authorization header if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       ...options,
     });
 
@@ -231,6 +451,219 @@ class ApiService {
       method: 'DELETE',
     });
 
+    return response.json();
+  }
+
+  // ===== SYSTEM ADMIN ENDPOINTS =====
+
+  // System Users
+  async getSystemUsers(): Promise<SystemUser[]> {
+    const response = await this.request('/system/users');
+    return response.json();
+  }
+
+  async createSystemUser(userData: SystemUserCreate): Promise<{ message: string; id: string }> {
+    const response = await this.request('/system/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+
+    return response.json();
+  }
+
+  async updateSystemUser(userId: string, userData: SystemUserUpdate): Promise<{ message: string }> {
+    const response = await this.request(`/system/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+
+    return response.json();
+  }
+
+  async deleteSystemUser(userId: string): Promise<{ message: string }> {
+    const response = await this.request(`/system/users/${userId}`, {
+      method: 'DELETE',
+    });
+
+    return response.json();
+  }
+
+  // Packages
+  async getPackages(): Promise<Package[]> {
+    const response = await this.request('/system/packages');
+    return response.json();
+  }
+
+  async createPackage(packageData: PackageCreate): Promise<{ message: string; id: string }> {
+    const response = await this.request('/system/packages', {
+      method: 'POST',
+      body: JSON.stringify(packageData),
+    });
+
+    return response.json();
+  }
+
+  async updatePackage(packageId: string, packageData: PackageUpdate): Promise<{ message: string }> {
+    const response = await this.request(`/system/packages/${packageId}`, {
+      method: 'PUT',
+      body: JSON.stringify(packageData),
+    });
+
+    return response.json();
+  }
+
+  async deletePackage(packageId: string): Promise<{ message: string }> {
+    const response = await this.request(`/system/packages/${packageId}`, {
+      method: 'DELETE',
+    });
+
+    return response.json();
+  }
+
+  // Subscriptions
+  async getSubscriptions(): Promise<Subscription[]> {
+    const response = await this.request('/system/subscriptions');
+    return response.json();
+  }
+
+  async createSubscription(subscriptionData: SubscriptionCreate): Promise<{ message: string; id: string }> {
+    const response = await this.request('/system/subscriptions', {
+      method: 'POST',
+      body: JSON.stringify(subscriptionData),
+    });
+
+    return response.json();
+  }
+
+  async updateSubscription(subscriptionId: string, subscriptionData: SubscriptionUpdate): Promise<{ message: string }> {
+    const response = await this.request(`/system/subscriptions/${subscriptionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(subscriptionData),
+    });
+
+    return response.json();
+  }
+
+  async extendSubscription(subscriptionId: string, days: number): Promise<{ message: string }> {
+    const response = await this.request(`/system/subscriptions/${subscriptionId}/extend?days=${days}`, {
+      method: 'PUT',
+    });
+
+    return response.json();
+  }
+
+  async cancelSubscription(subscriptionId: string): Promise<{ message: string }> {
+    const response = await this.request(`/system/subscriptions/${subscriptionId}/cancel`, {
+      method: 'PUT',
+    });
+
+    return response.json();
+  }
+
+  async deleteSubscription(subscriptionId: string): Promise<{ message: string }> {
+    const response = await this.request(`/system/subscriptions/${subscriptionId}`, {
+      method: 'DELETE',
+    });
+
+    return response.json();
+  }
+
+  // Coin Packages
+  async getCoinPackages(): Promise<CoinPackage[]> {
+    const response = await this.request('/system/coin-packages');
+    return response.json();
+  }
+
+  async createCoinPackage(coinPackageData: CoinPackageCreate): Promise<{ message: string; id: string }> {
+    const response = await this.request('/system/coin-packages', {
+      method: 'POST',
+      body: JSON.stringify(coinPackageData),
+    });
+
+    return response.json();
+  }
+
+  async updateCoinPackage(coinPackageId: string, coinPackageData: CoinPackageUpdate): Promise<{ message: string }> {
+    const response = await this.request(`/system/coin-packages/${coinPackageId}`, {
+      method: 'PUT',
+      body: JSON.stringify(coinPackageData),
+    });
+
+    return response.json();
+  }
+
+  async deleteCoinPackage(coinPackageId: string): Promise<{ message: string }> {
+    const response = await this.request(`/system/coin-packages/${coinPackageId}`, {
+      method: 'DELETE',
+    });
+
+    return response.json();
+  }
+
+  // Coin Transactions
+  async getCoinTransactions(): Promise<CoinTransaction[]> {
+    const response = await this.request('/system/coin-transactions');
+    return response.json();
+  }
+
+  async getUserCoinTransactions(userId: string): Promise<CoinTransaction[]> {
+    const response = await this.request(`/system/users/${userId}/coin-transactions`);
+    return response.json();
+  }
+
+  async createCoinTransaction(transactionData: CoinTransactionCreate): Promise<{ message: string; id: string }> {
+    const response = await this.request('/system/coin-transactions', {
+      method: 'POST',
+      body: JSON.stringify(transactionData),
+    });
+
+    return response.json();
+  }
+
+  // Subscription Reminders
+  async getReminders(): Promise<SubscriptionReminder[]> {
+    const response = await this.request('/system/reminders');
+    return response.json();
+  }
+
+  async getUnreadReminders(): Promise<SubscriptionReminder[]> {
+    const response = await this.request('/system/reminders/unread');
+    return response.json();
+  }
+
+  async createReminder(reminderData: SubscriptionReminderCreate): Promise<{ message: string; id: string }> {
+    const response = await this.request('/system/reminders', {
+      method: 'POST',
+      body: JSON.stringify(reminderData),
+    });
+
+    return response.json();
+  }
+
+  async markReminderRead(reminderId: string): Promise<{ message: string }> {
+    const response = await this.request(`/system/reminders/${reminderId}/read`, {
+      method: 'PUT',
+    });
+
+    return response.json();
+  }
+
+  async deleteReminder(reminderId: string): Promise<{ message: string }> {
+    const response = await this.request(`/system/reminders/${reminderId}`, {
+      method: 'DELETE',
+    });
+
+    return response.json();
+  }
+
+  // System Stats
+  async getSystemStats(): Promise<SystemStats> {
+    const response = await this.request('/system/stats');
+    return response.json();
+  }
+
+  async getExpiringSubscriptions(days: number = 7): Promise<Subscription[]> {
+    const response = await this.request(`/system/expiring-subscriptions?days=${days}`);
     return response.json();
   }
 }
