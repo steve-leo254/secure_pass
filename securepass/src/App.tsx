@@ -24,7 +24,7 @@ import Management from "./pages/Management";
 import PublicCheckout from './pages/PublicCheckout';
 import SystemAdmin from './pages/SystemAdmin';
 import SystemAdminDashboard from './pages/SystemAdminDashboard';
-import SuperAdminLogin from './pages/SuperAdminLogin';
+import SuperAdminRegistration from './pages/SuperAdminRegistration';
 import type { ReactNode } from "react";
 
 const Protected = ({
@@ -42,8 +42,15 @@ const Protected = ({
 };
 
 const LoginGuard = () => {
-  const { isAuthenticated } = useAuth();
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  const { isAuthenticated, user } = useAuth();
+  if (isAuthenticated) {
+    // Redirect based on role
+    if (user?.role === 'superadmin') {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
   return <Login />;
 };
 
@@ -62,7 +69,7 @@ export default function App() {
               <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginGuard />} />
-            <Route path="/super-admin-login" element={<SuperAdminLogin />} />
+            <Route path="/super-admin-login" element={<SuperAdminRegistration />} />
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/system-admin" element={<Protected roles={["superadmin"]}><SystemAdmin /></Protected>} />

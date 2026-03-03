@@ -67,6 +67,13 @@ export interface SystemUser {
   created_at: string;
 }
 
+export interface UserCreate {
+  username: string;
+  password: string;
+  name: string;
+  role: string;
+}
+
 export interface SystemUserCreate {
   name: string;
   email: string;
@@ -328,6 +335,15 @@ class ApiService {
     const response = await this.request('/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
+    });
+
+    return response.json();
+  }
+
+  async createUser(userData: UserCreate): Promise<{ message: string; id: string }> {
+    const response = await this.request('/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
     });
 
     return response.json();

@@ -1,57 +1,64 @@
 import React, { useState } from 'react';
 import { useSystemAdmin } from '../context/SystemAdminContext';
 import { useAuth } from '../context/AuthContext';
-import { AlertTriangle, TrendingUp, Plus, X, Crown } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Calendar, RefreshCw, X } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
+import { BILLING_LABELS } from '../types';
 
 const UsageCounter: React.FC = () => {
   const { user } = useAuth();
   const { 
     systemUsers, 
-    coinPackages, 
-    purchaseCoins,
-    getUserCoinTransactions 
+    getUserSubscription,
+    getUserPackage,
+    extendSubscription,
   } = useSystemAdmin();
 
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [selectedCoinPackage, setSelectedCoinPackage] = useState('');
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [extendDays, setExtendDays] = useState(30);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Get current user's data
+  // Get current user's subscription and package
   const currentUser = systemUsers.find(u => u.id === user?.id);
-  const userTransactions = getUserCoinTransactions(user?.id || '');
+  const userSubscription = getUserSubscription(user?.id || '');
+  const userPackage = getUserPackage(user?.id || '');
   
-  // Conversion rate: 1 coin = 10 records
-  const COINS_TO_RECORDS_RATIO = 10;
+  // Calculate subscription usage
+  const totalRecordsAllowed = userPackage?.maxUsers || 0;
+  const recordsUsed = currentUser?.totalVisitors || 0;
+  const remainingRecords = Math.max(0, totalRecordsAllowed - recordsUsed);
+  const usagePercentage = totalRecordsAllowed > 0 ? (recordsUsed / totalRecordsAllowed) * 100 : 0;
   
-  // Calculate usage based on coins
-  const recordsUsed = (currentUser?.totalCoinsRedeemed || 0) * COINS_TO_RECORDS_RATIO;
-  const totalRecordsAllowed = (currentUser?.coinBalance || 0) * COINS_TO_RECORDS_RATIO;
-  const remainingRecords = (currentUser?.coinBalance || 0) * COINS_TO_RECORDS_RATIO;
-  const usagePercentage = (recordsUsed + remainingRecords) > 0 ? (recordsUsed / (recordsUsed + remainingRecords)) * 100 : 0;
+  // Calculate days remaining
+  const daysRemaining = userSubscription ? differenceInDays(new Date(userSubscription.endDate), new Date()) : 0;
+  const isExpiringSoon = daysRemaining <= 7 && daysRemaining > 0;
+  const isExpired = daysRemaining <= 0;
   
   // Status determination
   const getStatusColor = () => {
     if (!currentUser || currentUser.status === 'inactive') return 'bg-red-500';
-    if (remainingRecords <= 0) return 'bg-amber-500';
+    if (isExpired) return 'bg-red-500';
+    if (isExpiringSoon) return 'bg-amber-500';
     return 'bg-emerald-500';
   };
 
   const getStatusText = () => {
     if (!currentUser || currentUser.status === 'inactive') return 'Inactive';
-    if (remainingRecords <= 0) return 'Low Balance';
+    if (isExpired) return 'Expired';
+    if (isExpiringSoon) return 'Expiring Soon';
     return 'Active';
   };
 
-  const handlePurchase = async () => {
-    if (!user || !selectedCoinPackage) return;
+  const handleExtendSubscription = async () => {
+    if (!userSubscription) return;
     
     setIsProcessing(true);
     try {
-      purchaseCoins(user.id, selectedCoinPackage);
-      setShowPurchaseModal(false);
-      setSelectedCoinPackage('');
+      await extendSubscription(userSubscription.id, extendDays);
+      setShowExtendModal(false);
+      setExtendDays(30);
     } catch (error) {
-      console.error('Purchase failed:', error);
+      console.error('Extension failed:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -63,6 +70,12 @@ const UsageCounter: React.FC = () => {
     return 'bg-emerald-500';
   };
 
+  const getDaysColor = () => {
+    if (daysRemaining <= 0) return 'text-red-600';
+    if (daysRemaining <= 7) return 'text-amber-600';
+    return 'text-emerald-600';
+  };
+
   return (
     <>
       <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
@@ -70,7 +83,7 @@ const UsageCounter: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 ${getStatusColor()} rounded-xl flex items-center justify-center`}>
-              {remainingRecords <= 0 ? (
+              {isExpired || isExpiringSoon ? (
                 <AlertTriangle className="w-5 h-5 text-white" />
               ) : (
                 <TrendingUp className="w-5 h-5 text-white" />
@@ -82,11 +95,11 @@ const UsageCounter: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setShowPurchaseModal(true)}
+            onClick={() => setShowExtendModal(true)}
             className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" />
-            Purchase
+            <RefreshCw className="w-4 h-4" />
+            Extend
           </button>
         </div>
 
@@ -110,47 +123,67 @@ const UsageCounter: React.FC = () => {
           </div>
         </div>
 
-        {/* Coin Balance Info */}
+        {/* Subscription Info */}
         <div className="pt-4 border-t border-slate-100">
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-sm mb-3">
             <div className="flex items-center gap-2">
-              <Crown className="w-4 h-4 text-slate-400" />
-              <span className="text-slate-600">Balance</span>
+              <Calendar className="w-4 h-4 text-slate-400" />
+              <span className="text-slate-600">Subscription</span>
             </div>
             <span className="font-semibold text-slate-800">
-              {currentUser?.coinBalance || 0} coins
+              {userPackage?.name || 'No Package'}
             </span>
           </div>
-          <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
-            <span>Based on {recordsUsed} registered records</span>
-            <span>{currentUser?.totalCoinsRedeemed || 0} coins × {COINS_TO_RECORDS_RATIO} = {recordsUsed} records</span>
-          </div>
+          
+          {userSubscription && (
+            <>
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-slate-600">Billing Cycle</span>
+                <span className="font-semibold text-slate-800">
+                  {BILLING_LABELS[userPackage?.billing || 'monthly']}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-slate-600">Days Remaining</span>
+                <span className={`font-semibold ${getDaysColor()}`}>
+                  {daysRemaining} days
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Ends on {userSubscription ? format(new Date(userSubscription.endDate), 'MMM d, yyyy') : 'N/A'}</span>
+                <span>Started {userSubscription ? format(new Date(userSubscription.startDate), 'MMM d, yyyy') : 'N/A'}</span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Warning */}
-        {remainingRecords <= 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+        {(isExpired || isExpiringSoon) && (
+          <div className={`${isExpired ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'} border rounded-xl p-3`}>
             <div className="flex items-center gap-2 text-red-700">
               <AlertTriangle className="w-4 h-4" />
               <span className="text-sm font-medium">
-                Low Balance
+                {isExpired ? 'Subscription Expired' : 'Expiring Soon'}
               </span>
             </div>
             <p className="text-xs text-red-600 mt-1">
-              Purchase more coins to continue using the system
+              {isExpired 
+                ? 'Your subscription has expired. Please extend it to continue using the system.'
+                : `Your subscription expires in ${daysRemaining} days. Extend now to avoid interruption.`
+              }
             </p>
           </div>
         )}
       </div>
 
-      {/* Purchase Modal */}
-      {showPurchaseModal && (
+      {/* Extension Modal */}
+      {showExtendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Purchase Coins</h3>
+              <h3 className="text-lg font-bold text-slate-800">Extend Subscription</h3>
               <button
-                onClick={() => setShowPurchaseModal(false)}
+                onClick={() => setShowExtendModal(false)}
                 className="p-2 rounded-xl hover:bg-slate-100 transition"
               >
                 <X className="w-5 h-5 text-slate-400" />
@@ -160,74 +193,65 @@ const UsageCounter: React.FC = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Select Coin Package
+                  Extension Period
                 </label>
                 <select
-                  value={selectedCoinPackage}
-                  onChange={(e) => setSelectedCoinPackage(e.target.value)}
+                  value={extendDays}
+                  onChange={(e) => setExtendDays(Number(e.target.value))}
                   className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 >
-                  <option value="">Choose a package...</option>
-                  {coinPackages.map((pkg) => (
-                    <option key={pkg.id} value={pkg.id}>
-                      {pkg.name} - KES {pkg.price.toLocaleString()} ({pkg.coins} coins + {pkg.bonusCoins || 0} bonus)
-                    </option>
-                  ))}
+                  <option value={7}>7 days</option>
+                  <option value={30}>30 days</option>
+                  <option value={90}>90 days</option>
+                  <option value={365}>1 year</option>
                 </select>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-600">Package:</span>
+                  <span className="text-slate-600">Current Package:</span>
                   <span className="font-semibold text-slate-800">
-                    {coinPackages.find(p => p.id === selectedCoinPackage)?.name || 'Not selected'}
+                    {userPackage?.name || 'No Package'}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-600">Price:</span>
+                  <span className="text-slate-600">Billing Cycle:</span>
                   <span className="font-semibold text-slate-800">
-                    KES {coinPackages.find(p => p.id === selectedCoinPackage)?.price?.toLocaleString() || 0}
+                    {BILLING_LABELS[userPackage?.billing || 'monthly']}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-600">Total Coins:</span>
+                  <span className="text-slate-600">Extension Period:</span>
                   <span className="font-semibold text-slate-800">
-                    {(() => {
-                      const pkg = coinPackages.find(p => p.id === selectedCoinPackage);
-                      return pkg ? (pkg.coins + (pkg.bonusCoins || 0)) : 0;
-                    })()} coins
+                    {extendDays} days
                   </span>
                 </div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-600">Records Equivalent:</span>
+                  <span className="text-slate-600">New End Date:</span>
                   <span className="font-semibold text-slate-800">
-                    {(() => {
-                      const pkg = coinPackages.find(p => p.id === selectedCoinPackage);
-                      const totalCoins = pkg ? (pkg.coins + (pkg.bonusCoins || 0)) : 0;
-                      return totalCoins * COINS_TO_RECORDS_RATIO;
-                    })()} records
+                    {userSubscription ? format(new Date(new Date(userSubscription.endDate).getTime() + extendDays * 24 * 60 * 60 * 1000), 'MMM d, yyyy') : 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-200">
-                  <span>Current balance:</span>
-                  <span>{currentUser?.coinBalance || 0} coins ({(currentUser?.coinBalance || 0) * COINS_TO_RECORDS_RATIO} records)</span>
+                  <span>Current end date:</span>
+                  <span>{userSubscription ? format(new Date(userSubscription.endDate), 'MMM d, yyyy') : 'N/A'}</span>
                 </div>
               </div>
             </div>
 
             <div className="p-6 border-t border-slate-100 flex gap-3">
               <button
-                onClick={() => setShowPurchaseModal(false)}
+                onClick={() => setShowExtendModal(false)}
                 className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition"
               >
                 Cancel
               </button>
               <button
-                onClick={handlePurchase}
-                disabled={isProcessing || !selectedCoinPackage}
+                onClick={handleExtendSubscription}
+                disabled={isProcessing || !userSubscription}
                 className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-40"
               >
-                {isProcessing ? 'Processing...' : 'Complete Purchase'}
+                {isProcessing ? 'Processing...' : 'Extend Subscription'}
               </button>
             </div>
           </div>

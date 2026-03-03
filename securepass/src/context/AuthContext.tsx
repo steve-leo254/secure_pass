@@ -129,6 +129,8 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<boolean>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isSecurity: boolean;
   updateProfile: (updates: Partial<User>) => void;
   updateAvatar: (avatar: string) => void;
   removeAvatar: () => void;
@@ -159,7 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserRole('superadmin');
       } else if (user.role === 'property_manager') {
         setUserRole('admin');
-      } else {
+      } else if (user.role === 'security') {
         setUserRole('security_desk');
       }
       setIsAuthenticated(true);
@@ -219,7 +221,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-
     <AuthContext.Provider
       value={{
         loginAs,
@@ -229,6 +230,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         isAuthenticated,
         isAdmin: userRole === 'admin',
+        isSuperAdmin: userRole === 'superadmin',
+        isSecurity: userRole === 'security_desk',
         updateProfile,
         updateAvatar,
         removeAvatar,

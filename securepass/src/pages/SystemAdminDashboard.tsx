@@ -830,6 +830,7 @@ const SystemAdminDashboard: React.FC = () => {
                     property: newUserProperty,
                     status: 'active',
                     coinBalance: 0,
+                    totalCoinsPurchased: 0,
                     totalCoinsRedeemed: 0,
                   });
                   setShowAddUser(false);
@@ -943,6 +944,7 @@ const SystemAdminDashboard: React.FC = () => {
                     name: pkgName,
                     billing: pkgBilling,
                     price: parseFloat(pkgPrice),
+                    currency: 'KES',
                     maxUsers: parseInt(pkgMaxUsers),
                     maxVisitorsPerDay: parseInt(pkgMaxVisitors),
                     features: pkgFeatures.split(',').map(f => f.trim()).filter(f => f),

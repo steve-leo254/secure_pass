@@ -28,7 +28,7 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -39,7 +39,16 @@ export default function Login() {
     try {
       const success = await login(username, password);
       if (success) {
-        navigate("/dashboard");
+        // Redirect based on user role
+        if (user?.role === 'superadmin') {
+          navigate("/admin");
+        } else if (user?.role === 'property_manager') {
+          navigate("/dashboard");
+        } else if (user?.role === 'security') {
+          navigate("/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         setError("Invalid credentials. Please try again.");
       }
@@ -338,72 +347,6 @@ export default function Login() {
           line-height: 1;
         }
 
-        .demo-section {
-          background: #f5f0e8;
-          border-top: 1px solid #e4ddd0;
-          padding: 22px 36px;
-        }
-
-        .demo-label {
-          text-align: center;
-          font-size: 9.5px;
-          font-weight: 500;
-          color: #9e8f7a;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          margin-bottom: 14px;
-          font-family: 'DM Sans', sans-serif;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .demo-label::before, .demo-label::after {
-          content: '';
-          flex: 1;
-          height: 1px;
-          background: #d4c9b8;
-        }
-
-        .demo-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-        }
-
-        .demo-btn {
-          background: #fefcf8;
-          border: 1px solid #d4c9b8;
-          border-radius: 3px;
-          padding: 11px 14px;
-          text-align: left;
-          cursor: pointer;
-          transition: background 0.15s, border-color 0.15s, transform 0.1s;
-        }
-
-        .demo-btn:hover {
-          background: #fff;
-          border-color: #1e3a6e;
-        }
-
-        .demo-btn:active { transform: translateY(1px); }
-
-        .demo-role {
-          font-family: 'Playfair Display', serif;
-          font-size: 13px;
-          color: #2a1f0e;
-          font-weight: 500;
-          display: block;
-          margin-bottom: 2px;
-        }
-
-        .demo-creds {
-          font-family: 'EB Garamond', serif;
-          font-style: italic;
-          font-size: 11.5px;
-          color: #9e8f7a;
-          display: block;
-        }
-
         .footer {
           text-align: center;
           font-size: 11px;
@@ -501,32 +444,9 @@ export default function Login() {
               </form>
             </div>
 
-            {/* Demo credentials */}
-            <div className="demo-section">
-              <div className="demo-label">Demo Access</div>
-              <div className="demo-grid">
-                <button
-                  type="button"
-                  className="demo-btn"
-                  onClick={() => { setUsername("admin"); setPassword("admin123"); }}
-                >
-                  <span className="demo-role">Administrator</span>
-                  <span className="demo-creds">admin / admin123</span>
-                </button>
-                <button
-                  type="button"
-                  className="demo-btn"
-                  onClick={() => { setUsername("security"); setPassword("security123"); }}
-                >
-                  <span className="demo-role">Security</span>
-                  <span className="demo-creds">security / security123</span>
-                </button>
-              </div>
-            </div>
-
           </div>
 
-          <p className="footer">© {new Date().getFullYear()} SecurePass — All rights reserved</p>
+          <p className="footer"> {new Date().getFullYear()} SecurePass — All rights reserved</p>
         </div>
       </div>
     </>

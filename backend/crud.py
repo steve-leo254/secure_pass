@@ -5,14 +5,15 @@ from models import (
     SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder
 )
 from schemas import (
-    User as UserSchema, UserResponse, LoginRequest, LoginResponse,
+    User as UserSchema, UserCreate, UserResponse, LoginRequest, LoginResponse,
+    Visitor as VisitorSchema, VisitorCreate, VisitorUpdate,
     SystemUser as SystemUserSchema, SystemUserCreate, SystemUserUpdate,
     Package as PackageSchema, PackageCreate, PackageUpdate,
     Subscription as SubscriptionSchema, SubscriptionCreate, SubscriptionUpdate,
     CoinPackage as CoinPackageSchema, CoinPackageCreate, CoinPackageUpdate,
     CoinTransaction as CoinTransactionSchema, CoinTransactionCreate,
-    SubscriptionReminder as SubscriptionReminderSchema, SubscriptionReminderCreate,
-    SystemStats
+    SubscriptionReminder as SubscriptionReminderSchema, SubscriptionReminderCreate, SubscriptionReminderUpdate,
+    AuditLogCreate, ToolCreate, CategoryCreate, CategoryUpdate, SystemStats
 )
 from datetime import datetime, timedelta
 import json

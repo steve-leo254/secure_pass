@@ -18,18 +18,14 @@ import {
   Bell,
   Search,
   ChevronDown,
-  Moon,
-  Sun,
   BarChart3,
   Clock,
   Home,
   PanelLeftClose,
   PanelLeft,
-  CheckCircle2,
   ArrowUpRight,
   ArrowDownRight,
   User,
-  Crown,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -111,12 +107,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           path: '/tools',
           label: 'Tools Management',
           icon: Wrench,
-          badge: null,
-        },
-        {
-          path: '/system-admin',
-          label: 'System Admin',
-          icon: Crown,
           badge: null,
         },
       ]

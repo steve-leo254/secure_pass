@@ -127,7 +127,7 @@ const SuperAdminLogin: React.FC = () => {
             <div className="w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg flex items-center justify-center mx-auto mb-2">
               <Building2 className="w-6 h-6 text-emerald-300" />
             </div>
-            <p className="text-emerald-100 text-xs">Multi-Tenant</p>
+            <p className="text-emerald-100  text-xs">Multi-Tenant</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg flex items-center justify-center mx-auto mb-2">
