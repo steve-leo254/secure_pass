@@ -1,4 +1,4 @@
-export type UserRole = 'property_manager' | 'security';
+export type UserRole = 'property_manager' | 'security' | 'superadmin' | 'admin';
 
 export type VisitorCategory =
   | 'contractor'

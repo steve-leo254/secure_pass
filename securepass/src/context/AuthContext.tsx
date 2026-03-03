@@ -12,7 +12,7 @@ interface LoginResponse {
   };
 }
 
-export type UserRole = 'property_manager' | 'security' | 'superadmin';
+export type UserRole = 'property_manager' | 'security' | 'superadmin' | 'admin';
 
 export type VisitorCategory =
   | 'contractor'
@@ -159,7 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Handle different roles properly
       if (user.role === 'superadmin') {
         setUserRole('superadmin');
-      } else if (user.role === 'property_manager') {
+      } else if (user.role === 'admin') {
         setUserRole('admin');
       } else if (user.role === 'security') {
         setUserRole('security_desk');

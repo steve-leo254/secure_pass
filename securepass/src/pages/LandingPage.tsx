@@ -2,8 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import {
   Shield,
-  Users,
-  DoorOpen,
   ArrowRight,
   Building,
   Clock,
@@ -85,73 +83,9 @@ const LandingPage: React.FC = () => {
               </div> */}
               </div>
             </div>
-
-            {/* Visitor Access */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-10 hover:shadow-xl transition-shadow duration-300">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                  <Users className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-slate-800">
-                    Visitor Access
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    For guests and contractors
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-slate-600 mb-8 text-base leading-relaxed">
-                Check In or Out, Download visitor passes, Manage your information,
-                and Access Visitor Services.
-              </p>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3 text-sm text-slate-600">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Quick check-In & check-Out</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-slate-600">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Digital visitor pass</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-slate-600">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Download visitor information</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Link
-                  to="/visitor-registration"
-                  className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] transition-all duration-200"
-                >
-                  <DoorOpen className="w-5 h-5" />
-                  Check In
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-
-                <Link
-                  to="/visitor-checkout"
-                  className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] transition-all duration-200"
-                >
-                  <Clock className="w-5 h-5" />
-                  Check Out
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-
-              <div className="mt-4 p-3 bg-emerald-50 rounded-lg">
-                <p className="text-xs text-emerald-700 font-medium">
-                  💡 No login required! Just click Check In or Check Out to get
-                  started.
-                </p>
-              </div>
-            </div>
           </div>
 
-          {/* Features Section */}
+              {/* Features Section */}
           <div className="mt-24 text-center max-w-6xl mx-auto">
             <h3 className="text-3xl md:text-4xl font-bold text-slate-800 mb-16">
               Key Features

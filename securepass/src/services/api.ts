@@ -349,6 +349,14 @@ class ApiService {
     return response.json();
   }
 
+  async registerSuperAdmin(userData: { name: string; email: string; password?: string }): Promise<{ message: string; id: string }> {
+    const response = await this.request('/superadmin/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+    return response.json();
+  }
+
   async getVisitors(): Promise<Visitor[]> {
     const response = await this.request('/visitors');
     return response.json();

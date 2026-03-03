@@ -69,7 +69,7 @@ export default function App() {
               <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginGuard />} />
-            <Route path="/super-admin-login" element={<SuperAdminRegistration />} />
+            <Route path="/super-admin-register" element={<SuperAdminRegistration />} />
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/system-admin" element={<Protected roles={["superadmin"]}><SystemAdmin /></Protected>} />

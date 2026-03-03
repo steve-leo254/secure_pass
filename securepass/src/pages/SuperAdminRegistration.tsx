@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Shield, Building2, Eye, EyeOff, UserPlus, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { apiService, type UserCreate } from '../services/api';
+import { apiService } from '../services/api';
 
 const SuperAdminRegistration: React.FC = () => {
   const [credentials, setCredentials] = useState({
@@ -20,7 +20,7 @@ const SuperAdminRegistration: React.FC = () => {
   const navigate = useNavigate();
 
   // Redirect to admin dashboard if already authenticated as superadmin
-  const { user, isAuthenticated, isSuperAdmin } = useAuth();
+  const { isAuthenticated, isSuperAdmin } = useAuth();
   if (isAuthenticated && isSuperAdmin) {
     navigate('/admin');
     return null;
@@ -95,28 +95,21 @@ const SuperAdminRegistration: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Check if superadmin already exists
-      try {
-        await apiService.login('superadmin', 'temp');
-        setError('A super admin account already exists!');
-        setIsLoading(false);
-        return;
-      } catch (loginError) {
-        // Superadmin doesn't exist, proceed with registration
-      }
-
-      // Register the superadmin
-      await apiService.createUser({
-        username: credentials.username,
-        password: credentials.password,
+      // Try to register the superadmin directly
+      await apiService.registerSuperAdmin({
         name: credentials.name,
-        role: 'superadmin'
+        email: credentials.email || `${credentials.username}@admin.com`,
+        password: credentials.password
       });
 
       setRegistrationSuccess(true);
     } catch (error: any) {
       console.error('Registration failed:', error);
-      setError(error.message || 'Registration failed. Please try again.');
+      if (error.message.includes('Super admin already exists')) {
+        setError('A super admin account already exists! Please use the login page with credentials: fresh / admin123');
+      } else {
+        setError(error.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -138,6 +131,13 @@ const SuperAdminRegistration: React.FC = () => {
 
         {/* Registration Form */}
         <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+            <p className="text-blue-700 text-sm">
+              💡 <strong>Note:</strong> If a super admin already exists, you'll see an error. 
+              Use the existing credentials: <strong>fresh / admin123</strong>
+            </p>
+          </div>
+          
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">

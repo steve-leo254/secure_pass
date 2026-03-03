@@ -8,7 +8,7 @@ from datetime import datetime
 # Import models, schemas, CRUD operations, and database
 from models import User, Visitor, AuditLog, Tool, Category, SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder
 from schemas import (
-    User as UserSchema, UserResponse, LoginRequest, LoginResponse,
+    User as UserSchema, UserCreate, UserResponse, LoginRequest, LoginResponse,
     Visitor as VisitorSchema, VisitorCreate, VisitorUpdate,
     AuditLog as AuditLogSchema, AuditLogCreate,
     Tool as ToolSchema, ToolCreate,
@@ -113,6 +113,62 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         ),
         message=f"Login successful for {user.name} ({user.role})"
     )
+
+@app.post("/superadmin/register", response_model=dict)
+async def register_superadmin(userData: dict, db: Session = Depends(get_db)):
+    """Register a super admin account"""
+    try:
+        # Check if superadmin already exists
+        existing_superadmin = db.query(SystemUser).filter(SystemUser.role == 'superadmin').first()
+        if existing_superadmin:
+            raise HTTPException(status_code=400, detail="Super admin already exists")
+        
+        # Create super admin with password
+        password = userData.get('password', 'admin123')  # Default or provided password
+        superadmin_data = SystemUserCreate(
+            name=userData.get('name'),
+            email=userData.get('email'),
+            role='superadmin',
+            status='active'
+        )
+        
+        new_superadmin = create_system_user(db, superadmin_data)
+        
+        # Store password separately or update system user model to include password
+        # For now, create a corresponding user record for login
+        user_data = UserCreate(
+            username=userData.get('email', userData.get('name')).split('@')[0],  # Use email prefix as username
+            password=password,
+            name=userData.get('name'),
+            role='superadmin'
+        )
+        login_user = create_user(db, user_data)
+        
+        return {"message": "Super admin registered successfully", "id": new_superadmin.id, "login_id": login_user.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+
+@app.post("/users", response_model=dict)
+async def create_user_endpoint(user: UserCreate, db: Session = Depends(get_db)):
+    # Check if username already exists
+    existing_user = get_user_by_username(db, user.username)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Create new user
+    new_user = create_user(db, user)
+    return {"message": "User created successfully", "id": new_user.id}
+
+@app.get("/staff", response_model=List[UserSchema])
+async def get_staff_endpoint(db: Session = Depends(get_db)):
+    """Get all staff users (excluding regular users)"""
+    users = get_users(db)
+    # Filter for staff roles (you may need to adjust based on your role definitions)
+    staff_users = [user for user in users if user.role in ['admin', 'security', 'superadmin']]
+    return staff_users
 
 @app.get("/users/me", response_model=UserResponse)
 async def get_current_user(db: Session = Depends(get_db)):

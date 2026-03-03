@@ -77,15 +77,14 @@ def init_database():
     
     for user in default_users:
         cursor.execute("""
-            INSERT OR IGNORE INTO users (id, username, hashed_password, name, role, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT OR IGNORE INTO users (id, username, hashed_password, name, role)
+            VALUES (?, ?, ?, ?, ?)
         """, (
             user['id'],
             user['username'],
             hash_password(user['username'] + '123'),  # username123
             user['name'],
-            user['role'],
-            datetime.utcnow().isoformat()
+            user['role']
         ))
     
     # Insert default settings

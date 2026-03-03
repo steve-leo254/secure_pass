@@ -42,7 +42,7 @@ export default function Login() {
         // Redirect based on user role
         if (user?.role === 'superadmin') {
           navigate("/admin");
-        } else if (user?.role === 'property_manager') {
+        } else if (user?.role === 'admin') {
           navigate("/dashboard");
         } else if (user?.role === 'security') {
           navigate("/dashboard");
