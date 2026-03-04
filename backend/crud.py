@@ -346,7 +346,10 @@ def update_subscription(db: Session, subscription_id: str, subscription: Subscri
 def extend_subscription(db: Session, subscription_id: str, days: int):
     db_subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
     if db_subscription:
-        db_subscription.end_date = db_subscription.end_date + timedelta(days=days)
+        # Add days to current date, not existing end date
+        from datetime import datetime, timedelta
+        new_end_date = datetime.utcnow() + timedelta(days=days)
+        db_subscription.end_date = new_end_date
         db_subscription.status = "active"
         db.commit()
         db.refresh(db_subscription)

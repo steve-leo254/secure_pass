@@ -20,6 +20,7 @@ import Members from "./pages/Members";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import ProfilePage from "./pages/ProfilePage";
 import Management from "./pages/Management";
+import CheckoutPage from "./pages/CheckoutPage";
 import PublicCheckout from './pages/PublicCheckout';
 import SystemAdmin from './pages/SystemAdmin';
 import SystemAdminDashboard from './pages/SystemAdminDashboard';
@@ -116,6 +117,14 @@ export default function App() {
               element={
                 <Protected roles={["property_manager"]}>
                   <AdminAnalytics />
+                </Protected>
+              }
+            />
+            <Route
+              path="/checkout"
+              element={
+                <Protected roles={["property_manager"]}>
+                  <CheckoutPage />
                 </Protected>
               }
             />

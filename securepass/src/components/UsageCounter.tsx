@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { useSystemAdmin } from '../context/SystemAdminContext';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, TrendingUp, Calendar, RefreshCw, X } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { BILLING_LABELS } from '../types';
 
 const UsageCounter: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { 
     systemUsers, 
     getUserSubscription,
     getUserPackage,
-    extendSubscription,
   } = useSystemAdmin();
 
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [extendDays, setExtendDays] = useState(30);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   // Get current user's subscription and package
   const currentUser = systemUsers.find(u => u.id === user?.id);
@@ -49,19 +49,26 @@ const UsageCounter: React.FC = () => {
     return 'Active';
   };
 
-  const handleExtendSubscription = async () => {
-    if (!userSubscription) return;
+  const handleExtendSubscription = () => {
+    console.log('handleExtendSubscription called');
+    console.log('userSubscription:', userSubscription);
     
-    setIsProcessing(true);
-    try {
-      await extendSubscription(userSubscription.id, extendDays);
-      setShowExtendModal(false);
-      setExtendDays(30);
-    } catch (error) {
-      console.error('Extension failed:', error);
-    } finally {
-      setIsProcessing(false);
+    if (!userSubscription) {
+      console.error('No user subscription found');
+      return;
     }
+    
+    // Navigate to checkout page with subscription data
+    const checkoutData = {
+      packageId: userSubscription.packageId,
+      extensionDays: extendDays,
+      billingCycle: 'monthly', // You might want to get this from the package
+      paymentMethod: 'mpesa',
+      amount: 1000, // Calculate this based on package and extension days
+    };
+    
+    console.log('Navigating to checkout with data:', checkoutData);
+    navigate('/checkout', { state: { checkoutData } });
   };
 
   const getUsageColor = () => {
@@ -247,11 +254,14 @@ const UsageCounter: React.FC = () => {
                 Cancel
               </button>
               <button
-                onClick={handleExtendSubscription}
-                disabled={isProcessing || !userSubscription}
+                onClick={() => {
+                  console.log('Extend Subscription button clicked');
+                  handleExtendSubscription();
+                }}
+                disabled={!userSubscription}
                 className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-40"
               >
-                {isProcessing ? 'Processing...' : 'Extend Subscription'}
+                Extend Subscription
               </button>
             </div>
           </div>
