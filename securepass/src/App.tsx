@@ -24,7 +24,7 @@ import Management from "./pages/Management";
 import PublicCheckout from './pages/PublicCheckout';
 import SystemAdmin from './pages/SystemAdmin';
 import SystemAdminDashboard from './pages/SystemAdminDashboard';
-import SuperAdminLogin from './pages/SuperAdminLogin';
+import SystemAdminLogin from './pages/SystemAdminLogin';
 import type { ReactNode } from "react";
 
 const Protected = ({
@@ -62,11 +62,11 @@ export default function App() {
               <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginGuard />} />
-            <Route path="/super-admin-login" element={<SuperAdminLogin />} />
+            <Route path="/system-admin-login" element={<SystemAdminLogin />} />
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-            <Route path="/system-admin" element={<Protected roles={["superadmin"]}><SystemAdmin /></Protected>} />
-            <Route path="/admin" element={<Protected roles={["superadmin"]}><SystemAdminDashboard /></Protected>} />
+            <Route path="/system-admin" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
+            <Route path="/admin" element={<Protected roles={["system_admin"]}><SystemAdminDashboard /></Protected>} />
             <Route path="/visitor-dashboard" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-registration" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-checkout" element={<PublicVisitorLayout><PublicCheckout /></PublicVisitorLayout>} />

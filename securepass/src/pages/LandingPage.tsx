@@ -19,13 +19,27 @@ const LandingPage: React.FC = () => {
         {/* Main Content */}
         <main className="flex-1 flex flex-col justify-center items-center px-6 sm:px-8 lg:px-12 py-16">
           <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-6xl font-bold text-slate-800 mb-6 leading-tight">
-              Choose Your Access Type
-            </h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Staff can log in to manage visitors, while visitors can check
-              In or Out and Manage their access.
+            <h1 className="text-5xl md:text-6xl font-bold text-slate-800 mb-6 leading-tight">
+              SecurePass Visitor Management System
+            </h1>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-8">
+              Professional visitor management solution for secure access control and real-time monitoring.
+              Manage visitors, track access, and maintain security records efficiently.
             </p>
+            
+            {/* Admin Portal Button */}
+            <div className="mb-12">
+              <Link
+                to="/system-admin-login"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] transition-all duration-200"
+              >
+                <Shield className="w-6 h-6" />
+                Admin Portal
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+            
+            <h2 className="text-3xl font-bold text-slate-700 mb-8">Choose Your Access Type</h2>
           </div>
 
           {/* Access Options */}
@@ -41,7 +55,7 @@ const LandingPage: React.FC = () => {
                     Staff Access
                   </h3>
                   <p className="text-sm text-slate-500">
-                    For Administrators and Security
+                    For Property Managers and Security
                   </p>
                 </div>
               </div>
