@@ -592,66 +592,9 @@ class ApiService {
     return response.json();
   }
 
-  // Coin Packages
-  async getCoinPackages(): Promise<CoinPackage[]> {
-    const response = await this.request('/system/coin-packages');
-    return response.json();
-  }
-
-  async createCoinPackage(coinPackageData: CoinPackageCreate): Promise<{ message: string; id: string }> {
-    const response = await this.request('/system/coin-packages', {
-      method: 'POST',
-      body: JSON.stringify(coinPackageData),
-    });
-
-    return response.json();
-  }
-
-  async updateCoinPackage(coinPackageId: string, coinPackageData: CoinPackageUpdate): Promise<{ message: string }> {
-    const response = await this.request(`/system/coin-packages/${coinPackageId}`, {
-      method: 'PUT',
-      body: JSON.stringify(coinPackageData),
-    });
-
-    return response.json();
-  }
-
-  async deleteCoinPackage(coinPackageId: string): Promise<{ message: string }> {
-    const response = await this.request(`/system/coin-packages/${coinPackageId}`, {
-      method: 'DELETE',
-    });
-
-    return response.json();
-  }
-
-  // Coin Transactions
-  async getCoinTransactions(): Promise<CoinTransaction[]> {
-    const response = await this.request('/system/coin-transactions');
-    return response.json();
-  }
-
-  async getUserCoinTransactions(userId: string): Promise<CoinTransaction[]> {
-    const response = await this.request(`/system/users/${userId}/coin-transactions`);
-    return response.json();
-  }
-
-  async createCoinTransaction(transactionData: CoinTransactionCreate): Promise<{ message: string; id: string }> {
-    const response = await this.request('/system/coin-transactions', {
-      method: 'POST',
-      body: JSON.stringify(transactionData),
-    });
-
-    return response.json();
-  }
-
-  // Subscription Reminders
+  // Reminders
   async getReminders(): Promise<SubscriptionReminder[]> {
     const response = await this.request('/system/reminders');
-    return response.json();
-  }
-
-  async getUnreadReminders(): Promise<SubscriptionReminder[]> {
-    const response = await this.request('/system/reminders/unread');
     return response.json();
   }
 
@@ -680,16 +623,11 @@ class ApiService {
     return response.json();
   }
 
-  // System Stats
   async getSystemStats(): Promise<SystemStats> {
     const response = await this.request('/system/stats');
     return response.json();
   }
-
-  async getExpiringSubscriptions(days: number = 7): Promise<Subscription[]> {
-    const response = await this.request(`/system/expiring-subscriptions?days=${days}`);
-    return response.json();
-  }
 }
 
+// Export a singleton instance of the API service
 export const apiService = new ApiService();

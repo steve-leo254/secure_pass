@@ -68,7 +68,7 @@ export default function Login() {
 
         .root {
           min-height: 100vh;
-          background: linear-gradient(135deg, #2563eb 0%, #4338ca 45%, #7c3aed 100%);
+          background: linear-gradient(135deg, #0f172a 0%, #064e3b 45%, #065f46 100%);
           display: flex;
           align-items: center;
           justify-content: center;

@@ -1,13 +1,11 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
-import { apiService, type SystemUser as ApiSystemUser, type Package as ApiPackage, type Subscription as ApiSubscription, type CoinPackage as ApiCoinPackage, type CoinTransaction as ApiCoinTransaction, type SubscriptionReminder as ApiSubscriptionReminder } from '../services/api';
+import { apiService, type SystemUser as ApiSystemUser, type Package as ApiPackage, type Subscription as ApiSubscription, type SubscriptionReminder as ApiSubscriptionReminder } from '../services/api';
 import { useAuth } from './AuthContext';
 import type {
   Package,
   Subscription,
   SystemUser,
   SubscriptionReminder,
-  CoinPackage,
-  CoinTransaction,
 } from '../types';
 import { differenceInDays } from 'date-fns';
 
@@ -16,8 +14,6 @@ interface SystemAdminContextType {
   subscriptions: Subscription[];
   systemUsers: SystemUser[];
   reminders: SubscriptionReminder[];
-  coinPackages: CoinPackage[];
-  coinTransactions: CoinTransaction[];
 
   // Package CRUD
   addPackage: (pkg: Omit<Package, 'id' | 'createdAt'>) => Promise<void>;
@@ -42,13 +38,6 @@ interface SystemAdminContextType {
   deleteReminder: (id: string) => Promise<void>;
   generateAutoReminders: () => Promise<void>;
 
-  // Coin System
-  purchaseCoins: (userId: string, coinPackageId: string) => Promise<void>;
-  redeemPackage: (userId: string, packageId: string) => Promise<void>;
-  addCoinPackage: (pkg: Omit<CoinPackage, 'id' | 'createdAt'>) => Promise<void>;
-  updateCoinPackage: (id: string, data: Partial<CoinPackage>) => Promise<void>;
-  deleteCoinPackage: (id: string) => Promise<void>;
-  getUserCoinTransactions: (userId: string) => CoinTransaction[];
 
   // Queries
   getUserSubscription: (userId: string) => Subscription | undefined;
@@ -158,35 +147,6 @@ const convertSubscriptionToApiSubscription = (sub: Omit<Subscription, 'id'>): Om
   amount: sub.amount,
 });
 
-const convertApiCoinPackageToCoinPackage = (apiPkg: ApiCoinPackage): CoinPackage => ({
-  id: apiPkg.id,
-  name: apiPkg.name,
-  coins: apiPkg.coins,
-  price: apiPkg.price,
-  currency: apiPkg.currency,
-  bonusCoins: 0,
-  isActive: apiPkg.is_active,
-  createdAt: new Date(apiPkg.created_at).toISOString(),
-});
-
-const convertCoinPackageToApiCoinPackage = (pkg: Omit<CoinPackage, 'id' | 'createdAt'>): Omit<ApiCoinPackage, 'id' | 'created_at'> => ({
-  name: pkg.name,
-  coins: pkg.coins,
-  price: pkg.price,
-  currency: pkg.currency,
-  is_active: pkg.isActive,
-});
-
-const convertApiCoinTransactionToCoinTransaction = (apiTx: ApiCoinTransaction): CoinTransaction => ({
-  id: apiTx.id,
-  userId: apiTx.user_id,
-  coinPackageId: apiTx.coin_package_id,
-  type: apiTx.transaction_type as any,
-  amount: apiTx.amount,
-  balance: 0, // Not available from API
-  description: `${apiTx.transaction_type} - ${apiTx.coins} coins`,
-  createdAt: new Date(apiTx.created_at).toISOString(),
-});
 
 const convertApiReminderToReminder = (apiReminder: ApiSubscriptionReminder): SubscriptionReminder => ({
   id: apiReminder.id,
@@ -214,8 +174,6 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
   const [reminders, setReminders] = useState<SubscriptionReminder[]>([]);
-  const [coinPackages, setCoinPackages] = useState<CoinPackage[]>([]);
-  const [coinTransactions, setCoinTransactions] = useState<CoinTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -247,20 +205,7 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
         console.error('Failed to load subscriptions:', err);
       }
 
-      try {
-        const coinPackagesRes = await apiService.getCoinPackages();
-        setCoinPackages(coinPackagesRes.map(convertApiCoinPackageToCoinPackage));
-      } catch (err) {
-        console.error('Failed to load coin packages:', err);
-      }
-
-      try {
-        const coinTransactionsRes = await apiService.getCoinTransactions();
-        setCoinTransactions(coinTransactionsRes.map(convertApiCoinTransactionToCoinTransaction));
-      } catch (err) {
-        console.error('Failed to load coin transactions:', err);
-      }
-
+      
       try {
         const remindersRes = await apiService.getReminders();
         setReminders(remindersRes.map(convertApiReminderToReminder));
@@ -285,8 +230,6 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setSubscriptions([]);
       setSystemUsers([]);
       setReminders([]);
-      setCoinPackages([]);
-      setCoinTransactions([]);
       setError(null);
       setLoading(false);
     }
@@ -518,77 +461,7 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [subscriptions, systemUsers, loadData]);
 
-  // Coin operations
-  const purchaseCoins = useCallback(async (userId: string, coinPackageId: string) => {
-    try {
-      const coinPackage = coinPackages.find(pkg => pkg.id === coinPackageId);
-      if (!coinPackage) throw new Error('Coin package not found');
-
-      await apiService.createCoinTransaction({
-        user_id: userId,
-        coin_package_id: coinPackageId,
-        transaction_type: 'purchase',
-        coins: coinPackage.coins,
-        amount: coinPackage.price,
-      });
-
-      await loadData(); // Refresh data
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to purchase coins');
-      throw err;
-    }
-  }, [coinPackages, loadData]);
-
-  const redeemPackage = useCallback(async (userId: string, packageId: string) => {
-    try {
-      const pkg = packages.find(p => p.id === packageId);
-      if (!pkg) throw new Error('Package not found');
-
-      await apiService.createCoinTransaction({
-        user_id: userId,
-        coin_package_id: '', // This would be a special system package
-        transaction_type: 'redeem',
-        coins: -pkg.coinCost,
-        amount: 0,
-      });
-
-      await loadData(); // Refresh data
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to redeem package');
-      throw err;
-    }
-  }, [packages, loadData]);
-
-  const addCoinPackage = useCallback(async (pkg: Omit<CoinPackage, 'id' | 'createdAt'>) => {
-    try {
-      await apiService.createCoinPackage(convertCoinPackageToApiCoinPackage(pkg));
-      await loadData(); // Refresh data
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add coin package');
-      throw err;
-    }
-  }, [loadData]);
-
-  const updateCoinPackage = useCallback(async (id: string, data: Partial<CoinPackage>) => {
-    try {
-      await apiService.updateCoinPackage(id, convertCoinPackageToApiCoinPackage(data as Omit<CoinPackage, 'id' | 'createdAt'>));
-      await loadData(); // Refresh data
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update coin package');
-      throw err;
-    }
-  }, [loadData]);
-
-  const deleteCoinPackage = useCallback(async (id: string) => {
-    try {
-      await apiService.deleteCoinPackage(id);
-      await loadData(); // Refresh data
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete coin package');
-      throw err;
-    }
-  }, [loadData]);
-
+  
   // Queries
   const getUserSubscription = useCallback((userId: string) => {
     return subscriptions.find(sub => sub.userId === userId);
@@ -663,10 +536,6 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, [systemUsers, subscriptions, packages, getExpiringSubscriptions, getExpiredSubscriptions]);
 
-  const getUserCoinTransactions = useCallback((userId: string) => {
-    return coinTransactions.filter(tx => tx.userId === userId);
-  }, [coinTransactions]);
-
   const resetToDefaults = useCallback(() => {
     // In API-based version, this would reset to default data via API
     // For now, just reload data
@@ -679,8 +548,6 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       subscriptions,
       systemUsers,
       reminders,
-      coinPackages,
-      coinTransactions,
       addPackage,
       updatePackage,
       deletePackage,
@@ -696,12 +563,6 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       sendReminder,
       deleteReminder,
       generateAutoReminders,
-      purchaseCoins,
-      redeemPackage,
-      addCoinPackage,
-      updateCoinPackage,
-      deleteCoinPackage,
-      getUserCoinTransactions,
       getUserSubscription,
       getUserPackage,
       getExpiringSubscriptions,
@@ -718,8 +579,6 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       subscriptions,
       systemUsers,
       reminders,
-      coinPackages,
-      coinTransactions,
       addPackage,
       updatePackage,
       deletePackage,
@@ -735,12 +594,6 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       sendReminder,
       deleteReminder,
       generateAutoReminders,
-      purchaseCoins,
-      redeemPackage,
-      addCoinPackage,
-      updateCoinPackage,
-      deleteCoinPackage,
-      getUserCoinTransactions,
       getUserSubscription,
       getUserPackage,
       getExpiringSubscriptions,
