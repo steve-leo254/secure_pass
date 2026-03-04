@@ -307,3 +307,35 @@ class SystemStats(BaseModel):
     total_packages: int
     total_coins_in_system: int
     total_coins_redeemed: int
+
+# Security Staff schemas
+class SecurityStaffBase(BaseModel):
+    name: str
+    email: str
+    phone: str
+    employee_id: str
+    department: str
+    shift: str
+    username: str
+    status: str = "active"
+
+class SecurityStaffCreate(SecurityStaffBase):
+    password: str
+    property_id: str
+
+class SecurityStaffUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    employee_id: Optional[str] = None
+    department: Optional[str] = None
+    shift: Optional[str] = None
+    username: Optional[str] = None
+    status: Optional[str] = None
+
+class SecurityStaff(SecurityStaffBase):
+    id: str
+    property_id: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

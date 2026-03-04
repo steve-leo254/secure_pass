@@ -8,8 +8,7 @@ import {
   UserPlus,
   Users,
   ClipboardCheck,
-  Wrench,
-    Settings,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -103,12 +102,6 @@ const propertyManagerNav = [
       icon: BarChart3,
       badge: null,
     },
-    {
-      path: '/tools',
-      label: 'Tools Management',
-      icon: Wrench,
-      badge: null,
-    },
   ];
 
   const systemAdminNav = [
@@ -128,17 +121,6 @@ const propertyManagerNav = [
 
   const utilityNav = [
     { path: '/profile', label: 'My Profile', icon: User, badge: null },
-
-    ...(isAdmin
-      ? [
-          {
-            path: '/settings',
-            label: 'Settings',
-            icon: Settings,
-            badge: null,
-          },
-        ]
-      : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -550,16 +532,12 @@ const propertyManagerNav = [
                         ))
                       )}
                     </div>
-                    {recentActivity.length > 0 && isAdmin && (
+                    {recentActivity.length > 0 && (
                       <div className="p-3 border-t border-slate-100">
-                        <Link
-                          to="/settings"
-                          onClick={() => setNotifOpen(false)}
-                          className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center justify-center gap-1"
-                        >
+                        <div className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center justify-center gap-1">
                           View all activity{' '}
                           <ArrowUpRight className="w-3 h-3" />
-                        </Link>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -614,23 +592,13 @@ const propertyManagerNav = [
                     </div>
                     <div className="p-2">
                       <Link
-                        to="/settings"
+                        to="/profile"
                         onClick={() => setProfileOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
                       >
                         <User className="w-4 h-4" />
                         Profile
                       </Link>
-                      {isAdmin && (
-                        <Link
-                          to="/settings"
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
-                        >
-                          <Settings className="w-4 h-4" />
-                          Settings
-                        </Link>
-                      )}
                     </div>
                     <div className="p-2 border-t border-slate-100">
                       <button

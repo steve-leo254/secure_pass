@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import { apiService } from '../services/api';
 
-export type UserRole = 'system_admin' | 'property_manager' | 'security';
+export type UserRole = 'system_admin' | 'property_manager' | 'security' | 'superadmin';
 
 export type VisitorCategory =
   | 'contractor'

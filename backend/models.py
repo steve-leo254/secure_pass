@@ -187,6 +187,25 @@ class SubscriptionReminder(Base):
     user = relationship("SystemUser", back_populates="reminders")
     subscription = relationship("Subscription")
 
+class SecurityStaff(Base):
+    __tablename__ = "security_staff"
+    
+    id = Column(String, primary_key=True, default=lambda: f"sec-{uuid.uuid4().hex[:8]}")
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    phone = Column(String, nullable=False)
+    employee_id = Column(String, unique=True, nullable=False)
+    department = Column(String, nullable=False)
+    shift = Column(String, nullable=False)  # day, night, mixed
+    property_id = Column(String, ForeignKey("system_users.id"))  # Link to property manager
+    username = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    status = Column(String, default="active")  # active, inactive, suspended
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    property_manager = relationship("SystemUser", backref="security_staff")
+
 # Database configuration
 DATABASE_URL = "sqlite:///./securepass.db"
 

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useVisitors } from "../context/VistorContext";
 import {
-  Settings,
   Plus,
   Edit3,
   Trash2,
@@ -14,6 +13,8 @@ import {
   Package,
   Briefcase,
 } from "lucide-react";
+import SecurityStaffManagement from "./SecurityStaffManagement";
+import ToolsManagementComponent from "./ToolsManagement";
 
 const DEFAULT_ICONS = [
   { name: "Users", icon: "👤", component: Users },
@@ -119,11 +120,11 @@ export default function Management() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
-          <Settings className="w-5 h-5 text-white" />
+          <Wrench className="w-5 h-5 text-white" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Management</h1>
-          <p className="text-sm text-slate-500">Manage categories and system settings</p>
+          <p className="text-sm text-slate-500">Manage categories, tools, and security staff</p>
         </div>
       </div>
 
@@ -141,14 +142,24 @@ export default function Management() {
             Categories
           </button>
           <button
-            onClick={() => setActiveTab("settings")}
+            onClick={() => setActiveTab("tools")}
             className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === "settings"
+              activeTab === "tools"
                 ? "bg-violet-100 text-violet-700"
                 : "text-slate-600 hover:bg-slate-50"
             }`}
           >
-            Settings
+            Tools
+          </button>
+          <button
+            onClick={() => setActiveTab("security-staff")}
+            className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === "security-staff"
+                ? "bg-violet-100 text-violet-700"
+                : "text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            Security Staff
           </button>
         </div>
       </div>
@@ -271,16 +282,11 @@ export default function Management() {
         </div>
       )}
 
-      {/* Settings Tab */}
-      {activeTab === "settings" && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">System Settings</h3>
-          <div className="text-center py-12 text-slate-400">
-            <Settings className="w-10 h-10 mx-auto mb-2 opacity-40" />
-            <p>Settings panel coming soon...</p>
-          </div>
-        </div>
-      )}
+      {/* Tools Tab */}
+      {activeTab === "tools" && <ToolsManagementComponent />}
+
+      {/* Security Staff Tab */}
+      {activeTab === "security-staff" && <SecurityStaffManagement />}
 
       {/* Edit Modal */}
       {editingCategory && (

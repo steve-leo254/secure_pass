@@ -15,7 +15,6 @@ import ActiveVisitors from "./pages/ActiveVisitors";
 import AllRecords from "./pages/AllRecords";
 import Settings from "./pages/Settings";
 import AdminAnalytics from "./pages/AdminAnalytics";
-import ToolsManagement from "./pages/ToolsManagement";
 import MemberRegister from "./pages/MemberRegister";
 import Members from "./pages/Members";
 import TermsAndConditions from "./pages/TermsAndConditions";
@@ -124,12 +123,20 @@ export default function App() {
               path="/tools"
               element={
                 <Protected roles={["property_manager"]}>
-                  <ToolsManagement />
+                  <Management />
                 </Protected>
               }
             />
             <Route
               path="/management"
+              element={
+                <Protected roles={["property_manager"]}>
+                  <Management />
+                </Protected>
+              }
+            />
+            <Route
+              path="/security-staff"
               element={
                 <Protected roles={["property_manager"]}>
                   <Management />

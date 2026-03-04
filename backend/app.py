@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 
 # Import models, schemas, CRUD operations, and database
-from models import User, Visitor, AuditLog, Tool, Category, SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder
+from models import User, Visitor, AuditLog, Tool, Category, SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder, SecurityStaff
 from schemas import (
     User as UserSchema, UserCreate, UserResponse, LoginRequest, LoginResponse,
     Visitor as VisitorSchema, VisitorCreate, VisitorUpdate,
@@ -19,7 +19,8 @@ from schemas import (
     CoinPackage as CoinPackageSchema, CoinPackageCreate, CoinPackageUpdate,
     CoinTransaction as CoinTransactionSchema, CoinTransactionCreate,
     SubscriptionReminder as SubscriptionReminderSchema, SubscriptionReminderCreate, SubscriptionReminderUpdate,
-    SystemSettings, SystemStats
+    SystemSettings, SystemStats,
+    SecurityStaff as SecurityStaffSchema, SecurityStaffCreate, SecurityStaffUpdate
 )
 from crud import (
     get_user_by_username, get_users, create_user,
@@ -35,7 +36,10 @@ from crud import (
     get_coin_transactions, get_user_coin_transactions, create_coin_transaction,
     get_subscription_reminders, get_unread_reminders, create_subscription_reminder, update_subscription_reminder, mark_reminder_read, delete_subscription_reminder,
     get_system_stats, get_expiring_subscriptions,
-    hash_password
+    hash_password,
+    # Security Staff CRUD
+    get_security_staff, get_security_staff_by_id, get_security_staff_by_property, get_security_staff_by_username, get_security_staff_by_email, get_security_staff_by_employee_id,
+    create_security_staff, update_security_staff, delete_security_staff
 )
 from database import get_db, create_tables
 
@@ -579,6 +583,68 @@ async def get_system_stats_endpoint(db: Session = Depends(get_db)):
 async def get_expiring_subscriptions_endpoint(days: int = 7, db: Session = Depends(get_db)):
     expiring_subscriptions = get_expiring_subscriptions(db, days)
     return expiring_subscriptions
+
+# ============ SECURITY STAFF ENDPOINTS ============
+
+@app.get("/security-staff", response_model=List[SecurityStaffSchema])
+async def get_security_staff_endpoint(db: Session = Depends(get_db)):
+    """Get all security staff"""
+    staff = get_security_staff(db)
+    return staff
+
+@app.get("/security-staff/property/{property_id}", response_model=List[SecurityStaffSchema])
+async def get_security_staff_by_property_endpoint(property_id: str, db: Session = Depends(get_db)):
+    """Get security staff by property"""
+    staff = get_security_staff_by_property(db, property_id)
+    return staff
+
+@app.get("/security-staff/{staff_id}", response_model=SecurityStaffSchema)
+async def get_security_staff_by_id_endpoint(staff_id: str, db: Session = Depends(get_db)):
+    """Get security staff by ID"""
+    staff = get_security_staff_by_id(db, staff_id)
+    if not staff:
+        raise HTTPException(status_code=404, detail="Security staff not found")
+    return staff
+
+@app.post("/security-staff", response_model=dict)
+async def create_security_staff_endpoint(staff_data: SecurityStaffCreate, db: Session = Depends(get_db)):
+    """Register new security staff"""
+    # Check if username already exists
+    existing_username = get_security_staff_by_username(db, staff_data.username)
+    if existing_username:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Check if email already exists
+    existing_email = get_security_staff_by_email(db, staff_data.email)
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    # Check if employee ID already exists
+    existing_employee_id = get_security_staff_by_employee_id(db, staff_data.employee_id)
+    if existing_employee_id:
+        raise HTTPException(status_code=400, detail="Employee ID already exists")
+    
+    # Create security staff
+    new_staff = create_security_staff(db, staff_data)
+    return {"message": "Security staff registered successfully", "id": new_staff.id}
+
+@app.put("/security-staff/{staff_id}", response_model=dict)
+async def update_security_staff_endpoint(staff_id: str, staff_data: SecurityStaffUpdate, db: Session = Depends(get_db)):
+    """Update security staff"""
+    updated_staff = update_security_staff(db, staff_id, staff_data)
+    if not updated_staff:
+        raise HTTPException(status_code=404, detail="Security staff not found")
+    
+    return {"message": "Security staff updated successfully"}
+
+@app.delete("/security-staff/{staff_id}", response_model=dict)
+async def delete_security_staff_endpoint(staff_id: str, db: Session = Depends(get_db)):
+    """Delete security staff"""
+    deleted_staff = delete_security_staff(db, staff_id)
+    if not deleted_staff:
+        raise HTTPException(status_code=404, detail="Security staff not found")
+    
+    return {"message": "Security staff deleted successfully"}
 
 if __name__ == "__main__":
     import uvicorn

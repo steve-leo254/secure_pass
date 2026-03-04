@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from models import (
     User, Visitor, AuditLog, Tool, Category,
-    SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder
+    SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder, SecurityStaff
 )
 from schemas import (
     User as UserSchema, UserCreate, UserResponse, LoginRequest, LoginResponse,
@@ -13,7 +13,8 @@ from schemas import (
     CoinPackage as CoinPackageSchema, CoinPackageCreate, CoinPackageUpdate,
     CoinTransaction as CoinTransactionSchema, CoinTransactionCreate,
     SubscriptionReminder as SubscriptionReminderSchema, SubscriptionReminderCreate, SubscriptionReminderUpdate,
-    AuditLogCreate, ToolCreate, CategoryCreate, CategoryUpdate, SystemStats
+    AuditLogCreate, ToolCreate, CategoryCreate, CategoryUpdate, SystemStats,
+    SecurityStaff as SecurityStaffSchema, SecurityStaffCreate, SecurityStaffUpdate
 )
 from datetime import datetime, timedelta
 import json
@@ -562,3 +563,63 @@ def get_expiring_subscriptions(db: Session, days: int = 7):
             Subscription.status == "active"
         )
     ).all()
+
+# Security Staff CRUD
+def get_security_staff(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(SecurityStaff).offset(skip).limit(limit).all()
+
+def get_security_staff_by_id(db: Session, staff_id: str):
+    return db.query(SecurityStaff).filter(SecurityStaff.id == staff_id).first()
+
+def get_security_staff_by_property(db: Session, property_id: str):
+    return db.query(SecurityStaff).filter(SecurityStaff.property_id == property_id).all()
+
+def get_security_staff_by_username(db: Session, username: str):
+    return db.query(SecurityStaff).filter(SecurityStaff.username == username).first()
+
+def get_security_staff_by_email(db: Session, email: str):
+    return db.query(SecurityStaff).filter(SecurityStaff.email == email).first()
+
+def get_security_staff_by_employee_id(db: Session, employee_id: str):
+    return db.query(SecurityStaff).filter(SecurityStaff.employee_id == employee_id).first()
+
+def create_security_staff(db: Session, staff: SecurityStaffCreate):
+    hashed_password = hash_password(staff.password)
+    db_staff = SecurityStaff(
+        name=staff.name,
+        email=staff.email,
+        phone=staff.phone,
+        employee_id=staff.employee_id,
+        department=staff.department,
+        shift=staff.shift,
+        property_id=staff.property_id,
+        username=staff.username,
+        hashed_password=hashed_password,
+        status=staff.status
+    )
+    db.add(db_staff)
+    db.commit()
+    db.refresh(db_staff)
+    return db_staff
+
+def update_security_staff(db: Session, staff_id: str, staff: SecurityStaffUpdate):
+    db_staff = get_security_staff_by_id(db, staff_id)
+    if not db_staff:
+        return None
+    
+    update_data = staff.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_staff, field, value)
+    
+    db.commit()
+    db.refresh(db_staff)
+    return db_staff
+
+def delete_security_staff(db: Session, staff_id: str):
+    db_staff = get_security_staff_by_id(db, staff_id)
+    if not db_staff:
+        return None
+    
+    db.delete(db_staff)
+    db.commit()
+    return db_staff
