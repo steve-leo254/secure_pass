@@ -26,6 +26,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   User,
+  Crown,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -34,7 +35,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, userRole } = useAuth();
   const { getActiveVisitors, getRecentActivity, getStats } = useVisitors();
   const location = useLocation();
   const navigate = useNavigate();
@@ -93,23 +94,36 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     },
   ];
 
-  const adminNav = isAdmin
-    ? [
-        { path: '/records', label: 'All Records', icon: Users, badge: null },
-        { path: '/management', label: 'Management', icon: Settings, badge: null },
-        {
-          path: '/analytics',
-          label: 'Analytics',
-          icon: BarChart3,
-          badge: null,
-        },
-        {
-          path: '/tools',
-          label: 'Tools Management',
-          icon: Wrench,
-          badge: null,
-        },
-      ]
+const propertyManagerNav = [
+    { path: '/records', label: 'All Records', icon: Users, badge: null },
+    { path: '/management', label: 'Management', icon: Settings, badge: null },
+    {
+      path: '/analytics',
+      label: 'Analytics',
+      icon: BarChart3,
+      badge: null,
+    },
+    {
+      path: '/tools',
+      label: 'Tools Management',
+      icon: Wrench,
+      badge: null,
+    },
+  ];
+
+  const systemAdminNav = [
+    {
+      path: '/system-admin',
+      label: 'System Admin',
+      icon: Crown,
+      badge: null,
+    },
+  ];
+
+  const adminNav = userRole === 'system_admin'
+    ? systemAdminNav
+    : userRole === 'property_manager'
+    ? propertyManagerNav
     : [];
 
   const utilityNav = [
@@ -316,7 +330,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div>
                 {!sidebarCollapsed && (
                   <p className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-semibold px-3 mb-2">
-                    Administration
+                    {userRole === 'system_admin' ? 'System Administration' : 'Property Management'}
                   </p>
                 )}
                 <div className="space-y-0.5">

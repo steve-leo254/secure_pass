@@ -143,7 +143,7 @@ const Dashboard: React.FC = () => {
                 <UserPlus className="w-4 h-4" />
                 Register Visitor
               </Link>
-              {userRole === "admin" && (
+              {(userRole === "property_manager" || userRole === "system_admin") && (
                 <Link
                   to="/analytics"
                   className="inline-flex items-center gap-2 px-5 py-3 bg-indigo-50/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-200 text-sm"
@@ -192,7 +192,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-100 p-6 animate-fade-in shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-slate-800">7-Day Trend</h3>
-            {userRole === "admin" && (
+            {(userRole === "property_manager" || userRole === "system_admin") && (
               <Link
                 to="/analytics"
                 className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
