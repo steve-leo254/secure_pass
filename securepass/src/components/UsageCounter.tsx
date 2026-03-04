@@ -52,23 +52,30 @@ const UsageCounter: React.FC = () => {
   const handleExtendSubscription = () => {
     console.log('handleExtendSubscription called');
     console.log('userSubscription:', userSubscription);
+    console.log('user:', user);
+    console.log('user role:', user?.role);
+    console.log('systemUsers:', systemUsers);
     
-    if (!userSubscription) {
-      console.error('No user subscription found');
-      return;
-    }
-    
-    // Navigate to checkout page with subscription data
+    // For testing: always navigate even if no subscription
     const checkoutData = {
-      packageId: userSubscription.packageId,
+      packageId: userSubscription?.packageId || 'default-package',
       extensionDays: extendDays,
-      billingCycle: 'monthly', // You might want to get this from the package
+      billingCycle: 'monthly',
       paymentMethod: 'mpesa',
-      amount: 1000, // Calculate this based on package and extension days
+      amount: 1000,
     };
     
     console.log('Navigating to checkout with data:', checkoutData);
+    console.log('Current URL before navigation:', window.location.href);
+    
+    // Try direct navigation
     navigate('/checkout', { state: { checkoutData } });
+    
+    // Also try window.location as fallback
+    setTimeout(() => {
+      console.log('Fallback navigation attempt');
+      window.location.href = '/checkout';
+    }, 1000);
   };
 
   const getUsageColor = () => {
@@ -183,18 +190,34 @@ const UsageCounter: React.FC = () => {
         )}
       </div>
 
+      {/* Test Button - Remove this later */}
+      <div className="mb-4">
+        <button
+          onClick={() => {
+            console.log('Test navigation to checkout');
+            navigate('/checkout');
+          }}
+          className="w-full py-2 bg-red-500 text-white rounded-lg"
+        >
+          Test Navigate to Checkout
+        </button>
+      </div>
+
       {/* Extension Modal */}
       {showExtendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Extend Subscription</h3>
-              <button
-                onClick={() => setShowExtendModal(false)}
-                className="p-2 rounded-xl hover:bg-slate-100 transition"
-              >
-                <X className="w-5 h-5 text-slate-400" />
-              </button>
+            <div className="p-6 border-b border-slate-100">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-bold text-slate-800">Extend Subscription</h3>
+                <button
+                  onClick={() => setShowExtendModal(false)}
+                  className="p-2 rounded-xl hover:bg-slate-100 transition"
+                >
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+              <p className="text-sm text-slate-600">Choose extension period and proceed to payment</p>
             </div>
             
             <div className="p-6 space-y-4">
@@ -255,13 +278,12 @@ const UsageCounter: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  console.log('Extend Subscription button clicked');
+                  console.log('Navigate to checkout page with subscription data');
                   handleExtendSubscription();
                 }}
-                disabled={!userSubscription}
-                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-40"
+                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all"
               >
-                Extend Subscription
+                Proceed to Payment
               </button>
             </div>
           </div>

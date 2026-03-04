@@ -409,26 +409,8 @@ async def delete_system_user_endpoint(user_id: str, db: Session = Depends(get_db
 async def get_packages_endpoint(db: Session = Depends(get_db)):
     packages = get_packages(db)
     
-    # Convert JSON strings back to lists
-    result = []
-    for package in packages:
-        package_dict = {
-            "id": package.id,
-            "name": package.name,
-            "billing": package.billing,
-            "price": package.price,
-            "currency": package.currency,
-            "coin_cost": package.coin_cost,
-            "max_users": package.max_users,
-            "max_visitors_per_day": package.max_visitors_per_day,
-            "features": json.loads(package.features) if package.features else [],
-            "is_popular": package.is_popular,
-            "is_active": package.is_active,
-            "created_at": package.created_at
-        }
-        result.append(package_dict)
-    
-    return result
+    # The packages are already dictionaries from CRUD, so just return them
+    return packages
 
 @app.post("/system/packages", response_model=dict)
 async def create_package_endpoint(package: PackageCreate, db: Session = Depends(get_db)):

@@ -337,8 +337,8 @@ const propertyManagerNav = [
               </div>
             </div>
 
-            {/* Usage Counter - Admin Only */}
-            {isAdmin && !sidebarCollapsed && (
+            {/* Usage Counter - Property Manager Only (not for system admin) */}
+            {isAdmin && user?.role !== 'system_admin' && !sidebarCollapsed && (
               <div className="px-3">
                 <UsageCounter />
               </div>

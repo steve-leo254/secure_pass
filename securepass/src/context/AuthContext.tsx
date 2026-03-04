@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 
 export type UserRole = 'system_admin' | 'property_manager' | 'security' | 'superadmin';
@@ -130,6 +130,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<'system_admin' | 'property_manager' | 'security'>('security');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Add debugging for authentication state changes
+  useEffect(() => {
+    console.log('Auth state changed:', { user, isAuthenticated, userRole });
+  }, [user, isAuthenticated, userRole]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
