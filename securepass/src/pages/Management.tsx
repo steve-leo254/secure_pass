@@ -44,7 +44,7 @@ interface Category {
 }
 
 export default function Management() {
-  const { user } = useAuth();
+  const {} = useAuth();
   const { categories, addCategory, updateCategory, deleteCategory } = useVisitors();
   const [activeTab, setActiveTab] = useState("categories");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
