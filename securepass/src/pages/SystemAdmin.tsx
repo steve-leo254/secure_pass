@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSystemAdmin } from '../context/SystemAdminContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -8,7 +9,7 @@ import {
 } from '../types';
 import type {
   PackageBilling,
-  SystemUserRole,
+  UserRole,
 } from '../types';
 import { format, differenceInDays, formatDistanceToNow } from 'date-fns';
 import {
@@ -18,7 +19,6 @@ import {
   Package,
   Bell,
   UserPlus,
-  DollarSign,
   AlertTriangle,
   CheckCircle2,
   Clock,
@@ -45,17 +45,16 @@ import {
   Timer,
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'subscriptions' | 'packages' | 'reminders';
+type Tab = 'overview' | 'users' | 'subscriptions' | 'packages' | 'reminders' | 'property-managers';
 
 const SystemAdmin: React.FC = () => {
+  const location = useLocation();
   const { user } = useAuth();
   const {
     packages,
     subscriptions,
     systemUsers,
     reminders,
-    coinPackages,
-    coinTransactions,
     addPackage,
     updatePackage,
     deletePackage,
@@ -75,8 +74,6 @@ const SystemAdmin: React.FC = () => {
     getUnreadReminders,
     getSystemStats,
     resetToDefaults,
-    deleteCoinPackage,
-    getUserCoinTransactions,
     loadData,
     loading,
     error,
@@ -85,9 +82,29 @@ const SystemAdmin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Set active tab based on URL path
+  useEffect(() => {
+    const path = location.pathname;
+    let newTab: Tab = 'overview';
+    
+    if (path.includes('/users')) {
+      newTab = 'users';
+    } else if (path.includes('/subscriptions')) {
+      newTab = 'subscriptions';
+    } else if (path.includes('/packages')) {
+      newTab = 'packages';
+    } else if (path.includes('/property-managers')) {
+      newTab = 'property-managers';
+    } else if (path.includes('/reminders')) {
+      newTab = 'reminders';
+    }
+    
+    setActiveTab(newTab);
+  }, [location.pathname]);
+
   // Modals
-  const [showAddUser, setShowAddUser] = useState(false);
   const [showAddPackage, setShowAddPackage] = useState(false);
+  const [showAddUser, setShowAddUser] = useState(false);
   const [showExtendModal, setShowExtendModal] = useState<string | null>(null);
   const [showUserDetail, setShowUserDetail] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
@@ -95,26 +112,33 @@ const SystemAdmin: React.FC = () => {
     id: string;
   } | null>(null);
   const [editingPackage, setEditingPackage] = useState<string | null>(null);
+  const [showAddPropertyManager, setShowAddPropertyManager] = useState(false);
 
   // Add User Form
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPhone, setNewUserPhone] = useState('');
-  const [newUserRole, setNewUserRole] = useState<SystemUserRole>('admin');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('admin');
   const [newUserCompany, setNewUserCompany] = useState('');
   const [newUserProperty, setNewUserProperty] = useState('');
   const [newUserPackage, setNewUserPackage] = useState('');
   const [newUserEndDate, setNewUserEndDate] = useState('');
 
+  // Property Manager Registration Form
+  const [pmName, setPmName] = useState('');
+  const [pmEmail, setPmEmail] = useState('');
+  const [pmPhone, setPmPhone] = useState('');
+  const [pmProperty, setPmProperty] = useState('');
+  const [pmCompany, setPmCompany] = useState('');
+  const [pmPassword, setPmPassword] = useState('');
+  const [pmConfirmPassword, setPmConfirmPassword] = useState('');
+
   // Add Package Form
   const [pkgName, setPkgName] = useState('');
   const [pkgBilling, setPkgBilling] = useState<PackageBilling>('monthly');
   const [pkgPrice, setPkgPrice] = useState('');
-  const [pkgMaxUsers, setPkgMaxUsers] = useState('');
-  const [pkgMaxVisitors, setPkgMaxVisitors] = useState('');
   const [pkgFeatures, setPkgFeatures] = useState('');
   const [pkgIsPopular, setPkgIsPopular] = useState(false);
-  const [pkgCoinCost, setPkgCoinCost] = useState('');
 
   // Extend
   const [extendDays, setExtendDays] = useState('30');
@@ -124,7 +148,7 @@ const SystemAdmin: React.FC = () => {
   const unreadReminders = getUnreadReminders();
 
   // Check if current user can assign specific roles
-  const canAssignRole = (role: SystemUserRole): boolean => {
+  const canAssignRole = (role: UserRole): boolean => {
     // Only admin can assign security and superadmin roles
     if (role === 'security' || role === 'superadmin') {
       return user?.role === 'property_manager';
@@ -155,11 +179,57 @@ const SystemAdmin: React.FC = () => {
     setPkgName('');
     setPkgBilling('monthly');
     setPkgPrice('');
-    setPkgMaxUsers('');
-    setPkgMaxVisitors('');
     setPkgFeatures('');
     setPkgIsPopular(false);
-    setPkgCoinCost('');
+  };
+
+  const handleAddPropertyManager = () => {
+    if (!pmName || !pmEmail || !pmPassword || !pmProperty) {
+      alert('Please fill in all required fields (Name, Email, Password, and Property).');
+      return;
+    }
+
+    if (pmPassword !== pmConfirmPassword) {
+      alert('Passwords do not match.');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(pmEmail)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      addSystemUser({
+        name: pmName,
+        email: pmEmail,
+        phone: pmPhone,
+        role: 'property_manager',
+        status: 'active',
+        company: pmCompany,
+        property: pmProperty,
+        isActive: true,
+        coinBalance: 0,
+        totalCoinsPurchased: 0,
+        totalCoinsRedeemed: 0,
+      });
+
+      // Reset form
+      setPmName('');
+      setPmEmail('');
+      setPmPhone('');
+      setPmProperty('');
+      setPmCompany('');
+      setPmPassword('');
+      setPmConfirmPassword('');
+      setShowAddPropertyManager(false);
+      alert('Property Manager registered successfully!');
+    } catch (error) {
+      console.error('Error registering property manager:', error);
+      alert('Error registering property manager. Please try again.');
+    }
   };
 
   const handleAddUser = () => {
@@ -188,6 +258,7 @@ const SystemAdmin: React.FC = () => {
         phone: newUserPhone,
         role: newUserRole,
         status: 'active',
+        isActive: true,
         company: newUserCompany,
         property: newUserProperty,
         totalVisitors: 0,
@@ -230,15 +301,15 @@ const SystemAdmin: React.FC = () => {
   };
 
   const handleAddPackage = () => {
-    if (!pkgName || !pkgPrice || !pkgCoinCost) return;
+    if (!pkgName || !pkgPrice) return;
     addPackage({
       name: pkgName,
       billing: pkgBilling,
       price: Number(pkgPrice),
       currency: 'KES',
-      coinCost: Number(pkgCoinCost) || 0,
-      maxUsers: Number(pkgMaxUsers) || 5,
-      maxVisitorsPerDay: Number(pkgMaxVisitors) || 100,
+      coinCost: 0,
+      maxUsers: 10,
+      maxVisitorsPerDay: 100,
       features: pkgFeatures
         .split('\n')
         .map((f) => f.trim())
@@ -272,14 +343,6 @@ const SystemAdmin: React.FC = () => {
       (u.company || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const tabs: { key: Tab; label: string; icon: React.ElementType; badge?: number }[] = [
-    { key: 'overview', label: 'Overview', icon: Activity },
-    { key: 'users', label: 'Users', icon: Users, badge: systemUsers.length },
-    { key: 'subscriptions', label: 'Subscriptions', icon: CreditCard, badge: expiringList.length || undefined },
-    { key: 'packages', label: 'Packages', icon: Package },
-    { key: 'reminders', label: 'Reminders', icon: Bell, badge: unreadReminders.length || undefined },
-  ];
-
   const getDaysLeft = (endDate: string) => {
     const d = differenceInDays(new Date(endDate), new Date());
     return d;
@@ -299,99 +362,47 @@ const SystemAdmin: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="animate-fade-in">
-        <div className="bg-linear-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
           <div className="relative z-10">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-400 to-purple-500 flex items-center justify-center shadow-lg">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
                     <Shield className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-indigo-300 text-xs uppercase tracking-widest font-bold">
+                    <p className="text-emerald-300 text-xs uppercase tracking-widest font-bold">
                       System Administration
                     </p>
                     <h1 className="text-2xl font-black">SECUREPASS Control Center</h1>
                   </div>
                 </div>
-                <p className="text-indigo-300 text-sm mt-1">
+                <p className="text-emerald-300 text-sm mt-1">
                   Manage users, subscriptions, packages, and system-wide settings
                 </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowAddUser(true)}
-                className="px-4 py-2.5 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all text-sm flex items-center gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Add User
-                </button>
-                <button
-                  onClick={() => setShowAddPackage(true)}
-                  className="px-4 py-2.5 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all text-sm flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  New Package
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm('Are you sure you want to reset all data to defaults? This will delete all custom data.')) {
-                      resetToDefaults();
-                    }
-                  }}
-                  className="px-4 py-2.5 bg-red-500/20 border border-red-500/30 text-red-300 font-semibold rounded-xl hover:bg-red-500/30 transition-all text-sm flex items-center gap-2"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Reset Data
-                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-white rounded-2xl border border-slate-100 p-1.5 shadow-sm overflow-x-auto animate-fade-in">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const active = activeTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${active
-                  ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                }`}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-              {tab.badge && (
-                <span
-                  className={`min-w-4.5 px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${active ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
-                    }`}
-                >
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
       {/* ============ OVERVIEW TAB ============ */}
       {activeTab === 'overview' && (
         <div className="space-y-6 animate-fade-in">
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {[
-              { label: 'Total Users', value: stats.totalUsers, icon: Users, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-500/15' },
+              { label: 'Active Managers', value: stats.totalUsers, icon: Users, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-500/15' },
               { label: 'Active Subscriptions', value: stats.activeSubscriptions, icon: CreditCard, gradient: 'from-emerald-500 to-teal-500', shadow: 'shadow-emerald-500/15' },
               { label: 'Expiring Soon', value: stats.expiringSubscriptions, icon: AlertTriangle, gradient: 'from-amber-500 to-orange-500', shadow: 'shadow-amber-500/15' },
-              { label: 'Total Coins in System', value: `${stats.totalCoinsInSystem.toLocaleString()} coins`, icon: Crown, gradient: 'from-violet-500 to-purple-500', shadow: 'shadow-violet-500/15', isText: true },
-              { label: 'Coins Redeemed', value: `${stats.totalCoinsRedeemed.toLocaleString()} coins`, icon: Activity, gradient: 'from-rose-500 to-pink-500', shadow: 'shadow-rose-500/15', isText: true },
-            ].map((card) => {
+            ].map((card: {
+              label: string;
+              value: number;
+              icon: React.ComponentType<any>;
+              gradient: string;
+              shadow: string;
+            }) => {
               const Icon = card.icon;
               return (
                 <div key={card.label} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all">
@@ -407,7 +418,7 @@ const SystemAdmin: React.FC = () => {
             })}
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-3 gap-6">
             {/* Expiring Soon */}
             <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-5">
@@ -494,6 +505,30 @@ const SystemAdmin: React.FC = () => {
                     );
                   })
                 )}
+              </div>
+            </div>
+
+            {/* Security Desk */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-emerald-500" />
+                  Security Desk
+                </h3>
+                <span className="text-xs text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg font-semibold border border-emerald-100">
+                  Active
+                </span>
+              </div>
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h4 className="text-2xl font-black text-slate-800 mb-2">{systemUsers.filter(u => u.isActive).length}</h4>
+                <p className="text-sm text-slate-600 font-medium">active managers currently using system</p>
+                <div className="mt-4 flex justify-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-emerald-600 font-semibold">Live</span>
+                </div>
               </div>
             </div>
           </div>
@@ -600,10 +635,6 @@ const SystemAdmin: React.FC = () => {
                 }
               }} placeholder="Search users..." className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
             </div>
-            <button onClick={() => setShowAddUser(true)} className="px-5 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
-              <UserPlus className="w-4 h-4" />
-              Add User
-            </button>
           </div>
 
           {/* Loading State */}
@@ -782,17 +813,9 @@ const SystemAdmin: React.FC = () => {
                         <td className="px-5 py-3">
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-slate-700">{pkg?.coinCost || 0} coins</span>
+                              <span className="text-sm font-semibold text-slate-700">KES {pkg?.price || 0}</span>
                               <span className="text-xs text-slate-400">({pkg?.billing})</span>
                             </div>
-                            {user && (
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs text-slate-400">Balance:</span>
-                                <span className={`text-xs font-bold ${user.coinBalance >= (pkg?.coinCost || 0) ? 'text-emerald-600' : 'text-red-600'}`}>
-                                  {user.coinBalance} coins
-                                </span>
-                              </div>
-                            )}
                           </div>
                         </td>
                         <td className="px-5 py-3">
@@ -894,7 +917,7 @@ const SystemAdmin: React.FC = () => {
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => { setEditingPackage(pkg.id); setPkgName(pkg.name); setPkgBilling(pkg.billing); setPkgPrice(String(pkg.price)); setPkgCoinCost(String(pkg.coinCost)); setPkgMaxUsers(String(pkg.maxUsers)); setPkgMaxVisitors(String(pkg.maxVisitorsPerDay)); setPkgFeatures(pkg.features.join('\n')); setPkgIsPopular(!!pkg.isPopular); setShowAddPackage(true); }} className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-all flex items-center justify-center gap-1">
+                      <button onClick={() => { setEditingPackage(pkg.id); setPkgName(pkg.name); setPkgBilling(pkg.billing); setPkgPrice(String(pkg.price)); setPkgFeatures(pkg.features.join('\n')); setPkgIsPopular(!!pkg.isPopular); setShowAddPackage(true); }} className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-all flex items-center justify-center gap-1">
                         <Edit3 className="w-3 h-3" />
                         Edit
                       </button>
@@ -983,6 +1006,65 @@ const SystemAdmin: React.FC = () => {
         </div>
       )}
 
+      {/* ============ PROPERTY MANAGERS TAB ============ */}
+      {activeTab === 'property-managers' && (
+        <div className="space-y-4 animate-fade-in">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-bold text-slate-800 text-lg">Property Manager Registration</h3>
+              <p className="text-sm text-slate-400">Register new property manager credentials</p>
+            </div>
+            <button onClick={() => setShowAddPropertyManager(true)} className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
+              <UserPlus className="w-4 h-4" />
+              Register Property Manager
+            </button>
+          </div>
+
+          {/* Property Managers List */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800">Registered Property Managers</h3>
+            </div>
+            {systemUsers.filter(u => u.role === 'property_manager').length === 0 ? (
+              <div className="p-12 text-center">
+                <Building2 className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                <h4 className="font-bold text-slate-700 mb-1">No Property Managers</h4>
+                <p className="text-sm text-slate-400">Register your first property manager to get started</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-50">
+                {systemUsers.filter(u => u.role === 'property_manager').map((pm) => (
+                  <div key={pm.id} className="p-4 hover:bg-slate-50/50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+                          <Building2 className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-800">{pm.name}</p>
+                          <p className="text-sm text-slate-500">{pm.email}</p>
+                          <p className="text-xs text-slate-400">{pm.property}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                          pm.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {pm.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                        <button onClick={() => setShowDeleteConfirm({ type: 'user', id: pm.id })} className="p-2 rounded-lg bg-red-50 hover:bg-red-100 transition-colors">
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ============ ADD USER MODAL ============ */}
       {showAddUser && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setShowAddUser(false); resetUserForm(); }}>
@@ -1019,7 +1101,7 @@ const SystemAdmin: React.FC = () => {
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Role *</label>
-                  <select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value as SystemUserRole)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 appearance-none">
+                  <select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value as UserRole)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 appearance-none">
                     <option value="admin">Admin</option>
                     {canAssignRole('security') && <option value="security">Security</option>}
                     {canAssignRole('superadmin') && <option value="superadmin">Super Admin</option>}
@@ -1108,18 +1190,6 @@ const SystemAdmin: React.FC = () => {
                   <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Price (KES) *</label>
                   <input type="number" value={pkgPrice} onChange={(e) => setPkgPrice(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="0" />
                 </div>
-                <div>
-                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Coin Cost *</label>
-                  <input type="number" value={pkgCoinCost} onChange={(e) => setPkgCoinCost(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="0" />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Max Users</label>
-                  <input type="number" value={pkgMaxUsers} onChange={(e) => setPkgMaxUsers(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="5" />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Max Visitors/Day</label>
-                  <input type="number" value={pkgMaxVisitors} onChange={(e) => setPkgMaxVisitors(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="100" />
-                </div>
               </div>
               <div>
                 <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Features (one per line)</label>
@@ -1137,14 +1207,14 @@ const SystemAdmin: React.FC = () => {
                     if (editingPackage) {
                       updatePackage(editingPackage, {
                         name: pkgName, billing: pkgBilling, price: Number(pkgPrice),
-                        coinCost: Number(pkgCoinCost) || 0,
-                        maxUsers: Number(pkgMaxUsers) || 5, maxVisitorsPerDay: Number(pkgMaxVisitors) || 100,
+                        coinCost: 0,
+                        maxUsers: 10, maxVisitorsPerDay: 100,
                         features: pkgFeatures.split('\n').map((f) => f.trim()).filter(Boolean), isPopular: pkgIsPopular,
                       });
                       setEditingPackage(null); setShowAddPackage(false); resetPackageForm();
                     } else { handleAddPackage(); }
                   }}
-                  disabled={!pkgName || !pkgPrice || !pkgCoinCost}
+                  disabled={!pkgName || !pkgPrice}
                   className="flex-2 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Save className="w-4 h-4" />
@@ -1271,6 +1341,74 @@ const SystemAdmin: React.FC = () => {
           </div>
         );
       })()}
+
+      {/* ============ PROPERTY MANAGER REGISTRATION MODAL ============ */}
+      {showAddPropertyManager && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setShowAddPropertyManager(false); }}>
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-slate-100 sticky top-0 bg-white rounded-t-2xl z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">Register Property Manager</h3>
+                    <p className="text-xs text-slate-400">Create new property manager credentials</p>
+                  </div>
+                </div>
+                <button onClick={() => { setShowAddPropertyManager(false); setPmName(''); setPmEmail(''); setPmPhone(''); setPmProperty(''); setPmCompany(''); setPmPassword(''); setPmConfirmPassword(''); }} className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+                  <X className="w-4 h-4 text-slate-500" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Full Name *</label>
+                  <input type="text" value={pmName} onChange={(e) => setPmName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="e.g., John Smith" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Email *</label>
+                  <input type="email" value={pmEmail} onChange={(e) => setPmEmail(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="manager@property.com" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Phone</label>
+                  <input type="tel" value={pmPhone} onChange={(e) => setPmPhone(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="+254 7XX XXX XXX" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Company</label>
+                  <input type="text" value={pmCompany} onChange={(e) => setPmCompany(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Company name" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Property Name *</label>
+                  <input type="text" value={pmProperty} onChange={(e) => setPmProperty(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Property or premises name" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Password *</label>
+                  <input type="password" value={pmPassword} onChange={(e) => setPmPassword(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Enter password" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-600 mb-1.5 block">Confirm Password *</label>
+                  <input type="password" value={pmConfirmPassword} onChange={(e) => setPmConfirmPassword(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400" placeholder="Confirm password" />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => { setShowAddPropertyManager(false); setPmName(''); setPmEmail(''); setPmPhone(''); setPmProperty(''); setPmCompany(''); setPmPassword(''); setPmConfirmPassword(''); }} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-semibold text-sm">Cancel</button>
+                <button
+                  onClick={handleAddPropertyManager}
+                  disabled={!pmName || !pmEmail || !pmPassword || !pmProperty}
+                  className="flex-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Register Property Manager
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============ DELETE CONFIRM ============ */}
       {showDeleteConfirm && (

@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { useSystemAdmin } from '../context/SystemAdminContext';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, TrendingUp, Calendar, RefreshCw, X } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { BILLING_LABELS } from '../types';
 
 const UsageCounter: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { 
     systemUsers, 
     getUserSubscription,
     getUserPackage,
-    extendSubscription,
   } = useSystemAdmin();
 
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [extendDays, setExtendDays] = useState(30);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   // Get current user's subscription and package
   const currentUser = systemUsers.find(u => u.id === user?.id);
@@ -49,19 +49,33 @@ const UsageCounter: React.FC = () => {
     return 'Active';
   };
 
-  const handleExtendSubscription = async () => {
-    if (!userSubscription) return;
+  const handleExtendSubscription = () => {
+    console.log('handleExtendSubscription called');
+    console.log('userSubscription:', userSubscription);
+    console.log('user:', user);
+    console.log('user role:', user?.role);
+    console.log('systemUsers:', systemUsers);
     
-    setIsProcessing(true);
-    try {
-      await extendSubscription(userSubscription.id, extendDays);
-      setShowExtendModal(false);
-      setExtendDays(30);
-    } catch (error) {
-      console.error('Extension failed:', error);
-    } finally {
-      setIsProcessing(false);
-    }
+    // For testing: always navigate even if no subscription
+    const checkoutData = {
+      packageId: userSubscription?.packageId || 'default-package',
+      extensionDays: extendDays,
+      billingCycle: 'monthly',
+      paymentMethod: 'mpesa',
+      amount: 1000,
+    };
+    
+    console.log('Navigating to checkout with data:', checkoutData);
+    console.log('Current URL before navigation:', window.location.href);
+    
+    // Try direct navigation
+    navigate('/checkout', { state: { checkoutData } });
+    
+    // Also try window.location as fallback
+    setTimeout(() => {
+      console.log('Fallback navigation attempt');
+      window.location.href = '/checkout';
+    }, 1000);
   };
 
   const getUsageColor = () => {
@@ -180,14 +194,17 @@ const UsageCounter: React.FC = () => {
       {showExtendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Extend Subscription</h3>
-              <button
-                onClick={() => setShowExtendModal(false)}
-                className="p-2 rounded-xl hover:bg-slate-100 transition"
-              >
-                <X className="w-5 h-5 text-slate-400" />
-              </button>
+            <div className="p-6 border-b border-slate-100">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-bold text-slate-800">Extend Subscription</h3>
+                <button
+                  onClick={() => setShowExtendModal(false)}
+                  className="p-2 rounded-xl hover:bg-slate-100 transition"
+                >
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+              <p className="text-sm text-slate-600">Choose extension period and proceed to payment</p>
             </div>
             
             <div className="p-6 space-y-4">
@@ -247,11 +264,13 @@ const UsageCounter: React.FC = () => {
                 Cancel
               </button>
               <button
-                onClick={handleExtendSubscription}
-                disabled={isProcessing || !userSubscription}
-                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-40"
+                onClick={() => {
+                  console.log('Navigate to checkout page with subscription data');
+                  handleExtendSubscription();
+                }}
+                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all"
               >
-                {isProcessing ? 'Processing...' : 'Extend Subscription'}
+                Proceed to Payment
               </button>
             </div>
           </div>

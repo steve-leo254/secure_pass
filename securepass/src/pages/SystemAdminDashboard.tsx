@@ -244,16 +244,9 @@ const SystemAdminDashboard: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/admin')}
-                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2"
-              >
-                <Settings className="w-4 h-4" />
-                Advanced Dashboard
-              </button>
               <div className="text-right">
                 <p className="text-sm font-medium text-slate-900">{user?.name}</p>
-                <p className="text-xs text-slate-500">Super Admin</p>
+                <p className="text-xs text-slate-500">System Admin</p>
               </div>
             </div>
           </div>

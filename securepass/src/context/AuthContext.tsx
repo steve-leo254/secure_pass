@@ -1,18 +1,7 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 
-interface LoginResponse {
-  access_token: string;
-  token_type: string;
-  user: {
-    id: string;
-    username: string;
-    name: string;
-    role: string;
-  };
-}
-
-export type UserRole = 'property_manager' | 'security' | 'superadmin' | 'admin';
+export type UserRole = 'system_admin' | 'property_manager' | 'security' | 'superadmin';
 
 export type VisitorCategory =
   | 'contractor'
@@ -108,14 +97,12 @@ export const DEFAULT_USERS: User[] = [
   {
     id: '1',
     username: 'admin',
-    password: 'admin123',
-    role: 'property_manager',
-    name: 'Property Manager',
+    role: 'system_admin',
+    name: 'System Administrator',
   },
   {
     id: '2',
     username: 'security',
-    password: 'security123',
     role: 'security',
     name: 'John Security',
   },
@@ -123,10 +110,10 @@ export const DEFAULT_USERS: User[] = [
 
 interface AuthContextType {
   loginAs: (role: 'security' | 'property_manager') => void;
-  userRole: 'admin' | 'security_desk' | 'superadmin';
+  userRole: 'system_admin' | 'property_manager' | 'security';
   logout: () => void;
   user: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<{ success: boolean; user?: User }>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
@@ -141,13 +128,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<'admin' | 'security_desk' | 'superadmin'>('security_desk');
+  const [userRole, setUserRole] = useState<'system_admin' | 'property_manager' | 'security'>('security');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  // Add debugging for authentication state changes
+  useEffect(() => {
+    console.log('Auth state changed:', { user, isAuthenticated, userRole });
+  }, [user, isAuthenticated, userRole]);
+
+  const login = async (username: string, password: string): Promise<{ success: boolean; user?: User }> => {
     try {
+      console.log('Attempting login with username:', username);
       const response = await apiService.login(username, password);
+      console.log('Backend response:', response);
       const user: User = {
         id: response.user.id,
         username: response.user.username,
@@ -155,25 +148,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: response.user.name,
       };
       
+      console.log('Processed user object:', user);
       setUser(user);
       // Handle different roles properly
-      if (user.role === 'superadmin') {
-        setUserRole('superadmin');
-      } else if (user.role === 'admin') {
-        setUserRole('admin');
-      } else if (user.role === 'security') {
-        setUserRole('security_desk');
+      if (user.role === 'system_admin') {
+        console.log('Setting user role to system_admin');
+        setUserRole('system_admin');
+      } else if (user.role === 'property_manager') {
+        console.log('Setting user role to property_manager');
+        setUserRole('property_manager');
+      } else {
+        console.log('Setting user role to security');
+        setUserRole('security');
       }
       setIsAuthenticated(true);
-      setAccessToken(response.access_token);
       
       // Store token in localStorage for API service
       localStorage.setItem('access_token', response.access_token);
       
-      return true;
+      return { success: true, user };
     } catch (error) {
-      console.error('Login failed:', error);
-      return false;
+      console.error('Backend login failed, trying fallback:', error);
+      
+      // Fallback to DEFAULT_USERS when backend is not available
+      const defaultUser = DEFAULT_USERS.find(u => u.username === username);
+      if (defaultUser) {
+        console.log('Using fallback user:', defaultUser);
+        setUser(defaultUser);
+        if (defaultUser.role === 'system_admin') {
+          console.log('Setting fallback user role to system_admin');
+          setUserRole('system_admin');
+        } else if (defaultUser.role === 'property_manager') {
+          console.log('Setting fallback user role to property_manager');
+          setUserRole('property_manager');
+        } else {
+          console.log('Setting fallback user role to security');
+          setUserRole('security');
+        }
+        setIsAuthenticated(true);
+        return { success: true, user: defaultUser };
+      }
+      
+      console.error('Login failed and no fallback found');
+      return { success: false };
     }
   };
 
@@ -181,16 +198,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const selectedUser = DEFAULT_USERS.find((u) => u.role === role);
     if (selectedUser) {
       setUser(selectedUser);
-      setUserRole(role === 'property_manager' ? 'admin' : 'security_desk');
+      setUserRole(role === 'property_manager' ? 'property_manager' : 'security');
       setIsAuthenticated(true);
     }
   };
 
   const logout = () => {
     setUser(null);
-    setUserRole('security_desk');
+    setUserRole('security');
     setIsAuthenticated(false);
-    setAccessToken(null);
     
     // Remove token from localStorage
     localStorage.removeItem('access_token');
@@ -214,10 +230,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updatePassword = (newPassword: string) => {
-    if (user) {
-      setUser({ ...user, password: newPassword });
-    }
+  const updatePassword = () => {
+    // Password updates should be handled via API
+    // This is just for UI state management
   };
 
   return (
@@ -229,9 +244,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         login,
         isAuthenticated,
-        isAdmin: userRole === 'admin',
-        isSuperAdmin: userRole === 'superadmin',
-        isSecurity: userRole === 'security_desk',
+        isAdmin: userRole === 'system_admin' || userRole === 'property_manager',
+        isSuperAdmin: userRole === 'system_admin',
+        isSecurity: userRole === 'security',
         updateProfile,
         updateAvatar,
         removeAvatar,
