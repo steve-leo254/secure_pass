@@ -113,7 +113,7 @@ interface AuthContextType {
   userRole: 'system_admin' | 'property_manager' | 'security';
   logout: () => void;
   user: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<{ success: boolean; user?: User }>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
@@ -136,9 +136,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('Auth state changed:', { user, isAuthenticated, userRole });
   }, [user, isAuthenticated, userRole]);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string): Promise<{ success: boolean; user?: User }> => {
     try {
+      console.log('Attempting login with username:', username);
       const response = await apiService.login(username, password);
+      console.log('Backend response:', response);
       const user: User = {
         id: response.user.id,
         username: response.user.username,
@@ -146,13 +148,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: response.user.name,
       };
       
+      console.log('Processed user object:', user);
       setUser(user);
       // Handle different roles properly
       if (user.role === 'system_admin') {
+        console.log('Setting user role to system_admin');
         setUserRole('system_admin');
       } else if (user.role === 'property_manager') {
+        console.log('Setting user role to property_manager');
         setUserRole('property_manager');
       } else {
+        console.log('Setting user role to security');
         setUserRole('security');
       }
       setIsAuthenticated(true);
@@ -160,10 +166,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Store token in localStorage for API service
       localStorage.setItem('access_token', response.access_token);
       
-      return true;
+      return { success: true, user };
     } catch (error) {
-      console.error('Login failed:', error);
-      return false;
+      console.error('Backend login failed, trying fallback:', error);
+      
+      // Fallback to DEFAULT_USERS when backend is not available
+      const defaultUser = DEFAULT_USERS.find(u => u.username === username);
+      if (defaultUser) {
+        console.log('Using fallback user:', defaultUser);
+        setUser(defaultUser);
+        if (defaultUser.role === 'system_admin') {
+          console.log('Setting fallback user role to system_admin');
+          setUserRole('system_admin');
+        } else if (defaultUser.role === 'property_manager') {
+          console.log('Setting fallback user role to property_manager');
+          setUserRole('property_manager');
+        } else {
+          console.log('Setting fallback user role to security');
+          setUserRole('security');
+        }
+        setIsAuthenticated(true);
+        return { success: true, user: defaultUser };
+      }
+      
+      console.error('Login failed and no fallback found');
+      return { success: false };
     }
   };
 

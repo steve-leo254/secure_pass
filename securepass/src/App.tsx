@@ -23,7 +23,6 @@ import Management from "./pages/Management";
 import CheckoutPage from "./pages/CheckoutPage_Test";
 import PublicCheckout from './pages/PublicCheckout';
 import SystemAdmin from './pages/SystemAdmin';
-import SystemAdminDashboard from './pages/SystemAdminDashboard';
 import SystemAdminLogin from './pages/SystemAdminLogin';
 import type { ReactNode } from "react";
 
@@ -52,9 +51,7 @@ const LoginGuard = () => {
   const { isAuthenticated, user } = useAuth();
   if (isAuthenticated) {
     // Redirect based on role
-    if (user?.role === 'superadmin') {
-      return <Navigate to="/admin" replace />;
-    } else if (user?.role === 'system_admin') {
+    if (user?.role === 'system_admin') {
       return <Navigate to="/system-admin" replace />;
     } else {
       return <Navigate to="/active" replace />;
@@ -87,8 +84,7 @@ export default function App() {
             <Route path="/system-admin/packages" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
             <Route path="/system-admin/property-managers" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
             <Route path="/system-admin/reminders" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
-            <Route path="/admin" element={<Protected roles={["system_admin"]}><SystemAdminDashboard /></Protected>} />
-            <Route path="/visitor-dashboard" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
+                        <Route path="/visitor-dashboard" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-registration" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-checkout" element={<PublicVisitorLayout><PublicCheckout /></PublicVisitorLayout>} />
             <Route path="/visitor-profile" element={<PublicVisitorLayout><ProfilePage /></PublicVisitorLayout>} />

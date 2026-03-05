@@ -28,7 +28,7 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -37,17 +37,26 @@ export default function Login() {
     setLoading(true);
     
     try {
-      const success = await login(username, password);
-      if (success) {
+      const result = await login(username, password);
+      console.log('Login result:', result);
+      
+      if (result.success && result.user) {
+        console.log('User object from result:', result.user);
+        console.log('User role from result:', result.user.role);
+        
         // Redirect based on user role
-        if (user?.role === 'superadmin') {
-          navigate("/admin");
-        } else if (user?.role === 'admin') {
-          navigate("/dashboard");
-        } else if (user?.role === 'security') {
-          navigate("/dashboard");
+        if (result.user.role === 'system_admin') {
+          console.log('Redirecting system admin to /system-admin');
+          navigate("/system-admin");
+        } else if (result.user.role === 'property_manager') {
+          console.log('Redirecting property manager to /active');
+          navigate("/active");
+        } else if (result.user.role === 'security') {
+          console.log('Redirecting security to /active');
+          navigate("/active");
         } else {
-          navigate("/dashboard");
+          console.log('Unknown role, redirecting to /active. Role:', result.user.role);
+          navigate("/active");
         }
       } else {
         setError("Invalid credentials. Please try again.");
@@ -442,6 +451,7 @@ export default function Login() {
                   )}
                 </button>
               </form>
+
             </div>
 
           </div>

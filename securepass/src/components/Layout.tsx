@@ -446,7 +446,7 @@ const propertyManagerNav = [
 
             active
 
-              ? 'bg-linear-to-r from-indigo-500/15 to-purple-500/10 text-indigo-700 dark:text-white shadow-sm border border-indigo-100/50'
+              ? 'bg-linear-to-r from-emerald-500/15 to-green-500/10 text-emerald-700 dark:text-white shadow-sm border border-emerald-100/50'
 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
 
@@ -464,7 +464,7 @@ const propertyManagerNav = [
 
               active
 
-                ? 'bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/25'
+                ? 'bg-linear-to-br from-emerald-500 to-green-600 text-white shadow-md shadow-emerald-500/25'
 
                 : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'
 
@@ -484,7 +484,7 @@ const propertyManagerNav = [
 
             {item.badge && (
 
-              <span className="min-w-[20px] h-5 px-1.5 bg-indigo-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center">
+              <span className="min-w-[20px] h-5 px-1.5 bg-emerald-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center">
 
                 {item.badge}
 
@@ -492,7 +492,7 @@ const propertyManagerNav = [
 
             )}
 
-            {active && <ChevronRight className="w-4 h-4 text-indigo-400" />}
+            {active && <ChevronRight className="w-4 h-4 text-emerald-400" />}
 
           </>
 
@@ -500,7 +500,7 @@ const propertyManagerNav = [
 
         {collapsed && item.badge && (
 
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-indigo-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
 
             {item.badge}
 
@@ -518,7 +518,7 @@ const propertyManagerNav = [
 
   return (
 
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50/20 flex">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-emerald-50/20 flex">
 
       {/* Mobile overlay */}
 
@@ -560,7 +560,7 @@ const propertyManagerNav = [
 
             <div className="flex items-center gap-2.5">
 
-              <div className="w-9 h-9 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/25 shrink-0">
 
                 <Shield className="w-4.5 text-white" />
 
@@ -828,7 +828,7 @@ const propertyManagerNav = [
 
                 onClick={handleLogout}
 
-                className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md"
+                className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white font-bold text-sm shadow-md"
 
                 title={user?.name}
 
@@ -842,7 +842,7 @@ const propertyManagerNav = [
 
               <div className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors">
 
-                <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">
 
                   {user?.name?.charAt(0) || 'U'}
 
@@ -1000,7 +1000,7 @@ const propertyManagerNav = [
 
                   placeholder="Search..."
 
-                  className="w-48 lg:w-56 pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/10 focus:w-72 transition-all duration-300"
+                  className="w-48 lg:w-56 pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-500/10 focus:w-72 transition-all duration-300"
 
                 />
 
@@ -1158,7 +1158,7 @@ const propertyManagerNav = [
 
                       <div className="p-3 border-t border-slate-100">
 
-                        <div className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center justify-center gap-1">
+                        <div className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold flex items-center justify-center gap-1">
 
                           View all activity{' '}
 
@@ -1204,7 +1204,7 @@ const propertyManagerNav = [
 
                     ) : (
 
-                      <div className="w-full h-full bg-linear-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-xs">
+                      <div className="w-full h-full bg-linear-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white font-bold text-xs">
 
                         {user?.name?.charAt(0) || 'U'}
 
@@ -1244,7 +1244,7 @@ const propertyManagerNav = [
 
                       <div className="flex items-center gap-3">
 
-                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
 
                           {user?.name?.charAt(0) || 'U'}
 
