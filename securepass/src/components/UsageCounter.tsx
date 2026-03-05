@@ -190,19 +190,6 @@ const UsageCounter: React.FC = () => {
         )}
       </div>
 
-      {/* Test Button - Remove this later */}
-      <div className="mb-4">
-        <button
-          onClick={() => {
-            console.log('Test navigation to checkout');
-            navigate('/checkout');
-          }}
-          className="w-full py-2 bg-red-500 text-white rounded-lg"
-        >
-          Test Navigate to Checkout
-        </button>
-      </div>
-
       {/* Extension Modal */}
       {showExtendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

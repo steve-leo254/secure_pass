@@ -109,7 +109,7 @@ export default function App() {
             <Route
               path="/active"
               element={
-                <Protected>
+                <Protected roles={["property_manager", "security"]}>
                   <ActiveVisitors />
                 </Protected>
               }

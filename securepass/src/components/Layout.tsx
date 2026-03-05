@@ -296,6 +296,8 @@ const systemAdminTabsNav = [
 
 const propertyManagerNav = [
 
+    { path: '/active', label: 'Active Visitors', icon: Users, badge: null },
+
     { path: '/records', label: 'All Records', icon: Users, badge: null },
 
     { path: '/management', label: 'Management', icon: Settings, badge: null },

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useVisitors } from "../context/VistorContext";
+import { useAuth } from "../context/AuthContext";
 import type { Visitor } from "../types";
 import {
   Search,
@@ -34,11 +35,15 @@ const CAT_BADGE: Record<string, string> = {
 
 export default function ActiveVisitors() {
   const { getActiveVisitors, checkoutVisitor } = useVisitors();
+  const { user } = useAuth();
   const activeVisitors = getActiveVisitors();
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("all");
   const [modal, setModal] = useState<Visitor | null>(null);
   const [toolsVerified, setToolsVerified] = useState(false);
+
+  const isPropertyManager = user?.role === 'property_manager';
+  const isSecurity = user?.role === 'security';
 
   const filtered = activeVisitors.filter((v) => {
     const matchSearch =
@@ -71,12 +76,16 @@ export default function ActiveVisitors() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            isPropertyManager 
+              ? 'bg-linear-to-br from-blue-500 to-indigo-600' 
+              : 'bg-linear-to-br from-emerald-500 to-teal-600'
+          }`}>
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">
-              Security Desk
+              {isPropertyManager ? 'Property Overview' : 'Security Desk'}
             </h1>
             <p className="text-sm text-slate-500">
               {activeVisitors.length} individual
@@ -85,9 +94,13 @@ export default function ActiveVisitors() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
-          <span className="text-sm font-semibold text-emerald-700">
-            Live Monitoring
+          <div className={`w-3 h-3 rounded-full animate-pulse ${
+            isPropertyManager ? 'bg-blue-500' : 'bg-emerald-500'
+          }`} />
+          <span className={`text-sm font-semibold ${
+            isPropertyManager ? 'text-blue-700' : 'text-emerald-700'
+          }`}>
+            {isPropertyManager ? 'Live Status' : 'Live Monitoring'}
           </span>
         </div>
       </div>

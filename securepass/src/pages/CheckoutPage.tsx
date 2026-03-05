@@ -65,13 +65,19 @@ const CheckoutPage: React.FC = () => {
         amount: parseFloat(params.get('amount') || '0'),
       });
     } else {
-      // Redirect to management if no checkout data
-      navigate('/management');
-      return;
+      // For testing: set default checkout data instead of redirecting
+      console.log('No checkout data found, setting default for testing');
+      setCheckoutData({
+        packageId: 'test-package',
+        extensionDays: 30,
+        billingCycle: 'monthly',
+        paymentMethod: 'mpesa',
+        amount: 1000,
+      });
     }
 
     setLoading(false);
-  }, [location, navigate]);
+  }, [location]);
 
   useEffect(() => {
     if (checkoutData && user) {
@@ -84,8 +90,17 @@ const CheckoutPage: React.FC = () => {
   }, [checkoutData, user, getUserSubscription, packages]);
 
   const handlePaymentMethodChange = (method: 'mpesa' | 'card' | 'bank') => {
-    setCheckoutData(prev => prev ? { ...prev, paymentMethod: method } : null);
-    setTimeout(() => setShowPaymentModal(true), 100);
+    console.log('Payment method clicked:', method);
+    console.log('Current checkoutData:', checkoutData);
+    setCheckoutData(prev => {
+      const updated = prev ? { ...prev, paymentMethod: method } : null;
+      console.log('Updated checkoutData:', updated);
+      return updated;
+    });
+    setTimeout(() => {
+      console.log('Setting showPaymentModal to true');
+      setShowPaymentModal(true);
+    }, 100);
   };
 
   const handlePaymentDetailChange = (method: string, field: string, value: string) => {
@@ -285,12 +300,23 @@ const CheckoutPage: React.FC = () => {
                 {/* Test button for debugging */}
                 <button
                   onClick={() => {
-                    console.log('Test button clicked');
-                    setShowPaymentModal(true);
+                    console.log('Test button clicked - setting up test checkout data');
+                    // Set up test checkout data
+                    setCheckoutData({
+                      packageId: 'test-package',
+                      extensionDays: 30,
+                      billingCycle: 'monthly',
+                      paymentMethod: 'mpesa',
+                      amount: 1000,
+                    });
+                    setTimeout(() => {
+                      console.log('Test: Setting showPaymentModal to true');
+                      setShowPaymentModal(true);
+                    }, 100);
                   }}
                   className="mb-4 px-4 py-2 bg-red-500 text-white rounded-lg"
                 >
-                  Test Modal
+                  Test Payment Modal
                 </button>
                 
                 <div className="space-y-3">
@@ -484,6 +510,7 @@ const CheckoutPage: React.FC = () => {
       </div>
 
       {/* Payment Modal */}
+      {console.log('Modal render check:', { showPaymentModal, checkoutData })}
       {showPaymentModal && checkoutData && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -498,7 +525,10 @@ const CheckoutPage: React.FC = () => {
                 </div>
               </div>
               <button
-                onClick={() => setShowPaymentModal(false)}
+                onClick={() => {
+                  console.log('Closing modal');
+                  setShowPaymentModal(false);
+                }}
                 className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <X className="w-5 h-5 text-slate-500" />
