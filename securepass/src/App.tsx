@@ -54,8 +54,10 @@ const LoginGuard = () => {
     // Redirect based on role
     if (user?.role === 'superadmin') {
       return <Navigate to="/admin" replace />;
+    } else if (user?.role === 'system_admin') {
+      return <Navigate to="/system-admin" replace />;
     } else {
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/active" replace />;
     }
   }
   return <Login />;
@@ -80,6 +82,11 @@ export default function App() {
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/system-admin" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
+            <Route path="/system-admin/users" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
+            <Route path="/system-admin/subscriptions" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
+            <Route path="/system-admin/packages" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
+            <Route path="/system-admin/property-managers" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
+            <Route path="/system-admin/reminders" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
             <Route path="/admin" element={<Protected roles={["system_admin"]}><SystemAdminDashboard /></Protected>} />
             <Route path="/visitor-dashboard" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-registration" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />

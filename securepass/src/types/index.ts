@@ -201,7 +201,7 @@ export const DEFAULT_USERS: User[] = [
 // Subscription & Package Management Types
 export type SubscriptionStatus = 'active' | 'expiring' | 'expired' | 'trial' | 'suspended' | 'cancelled';
 export type PackageBilling = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
-export type SystemUserRole = 'superadmin' | 'admin' | 'security';
+export type SystemUserRole = 'superadmin' | 'admin' | 'security' | 'property_manager';
 export type SystemUserStatus = 'active' | 'inactive' | 'suspended';
 
 // Coin System Types
@@ -264,6 +264,7 @@ export interface SystemUser {
   phone: string;
   role: SystemUserRole;
   status: SystemUserStatus;
+  isActive: boolean;
   avatar?: string;
   company?: string;
   property?: string;

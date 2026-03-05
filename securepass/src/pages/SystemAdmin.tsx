@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSystemAdmin } from '../context/SystemAdminContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -18,7 +19,6 @@ import {
   Package,
   Bell,
   UserPlus,
-  DollarSign,
   AlertTriangle,
   CheckCircle2,
   Clock,
@@ -48,14 +48,13 @@ import {
 type Tab = 'overview' | 'users' | 'subscriptions' | 'packages' | 'reminders' | 'property-managers';
 
 const SystemAdmin: React.FC = () => {
+  const location = useLocation();
   const { user } = useAuth();
   const {
     packages,
     subscriptions,
     systemUsers,
     reminders,
-    coinPackages,
-    coinTransactions,
     addPackage,
     updatePackage,
     deletePackage,
@@ -75,8 +74,6 @@ const SystemAdmin: React.FC = () => {
     getUnreadReminders,
     getSystemStats,
     resetToDefaults,
-    deleteCoinPackage,
-    getUserCoinTransactions,
     loadData,
     loading,
     error,
@@ -85,9 +82,29 @@ const SystemAdmin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Set active tab based on URL path
+  useEffect(() => {
+    const path = location.pathname;
+    let newTab: Tab = 'overview';
+    
+    if (path.includes('/users')) {
+      newTab = 'users';
+    } else if (path.includes('/subscriptions')) {
+      newTab = 'subscriptions';
+    } else if (path.includes('/packages')) {
+      newTab = 'packages';
+    } else if (path.includes('/property-managers')) {
+      newTab = 'property-managers';
+    } else if (path.includes('/reminders')) {
+      newTab = 'reminders';
+    }
+    
+    setActiveTab(newTab);
+  }, [location.pathname]);
+
   // Modals
-  const [showAddUser, setShowAddUser] = useState(false);
   const [showAddPackage, setShowAddPackage] = useState(false);
+  const [showAddUser, setShowAddUser] = useState(false);
   const [showExtendModal, setShowExtendModal] = useState<string | null>(null);
   const [showUserDetail, setShowUserDetail] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
@@ -190,10 +207,13 @@ const SystemAdmin: React.FC = () => {
         email: pmEmail,
         phone: pmPhone,
         role: 'property_manager',
+        status: 'active',
         company: pmCompany,
         property: pmProperty,
-        password: pmPassword, // In production, this should be hashed
         isActive: true,
+        coinBalance: 0,
+        totalCoinsPurchased: 0,
+        totalCoinsRedeemed: 0,
       });
 
       // Reset form
@@ -238,6 +258,7 @@ const SystemAdmin: React.FC = () => {
         phone: newUserPhone,
         role: newUserRole,
         status: 'active',
+        isActive: true,
         company: newUserCompany,
         property: newUserProperty,
         totalVisitors: 0,
@@ -322,15 +343,6 @@ const SystemAdmin: React.FC = () => {
       (u.company || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const tabs: { key: Tab; label: string; icon: React.ElementType; badge?: number }[] = [
-    { key: 'overview', label: 'Overview', icon: Activity },
-    { key: 'users', label: 'Users', icon: Users, badge: systemUsers.length },
-    { key: 'subscriptions', label: 'Subscriptions', icon: CreditCard, badge: expiringList.length || undefined },
-    { key: 'packages', label: 'Packages', icon: Package },
-    { key: 'property-managers', label: 'Property Managers', icon: Building2 },
-    { key: 'reminders', label: 'Reminders', icon: Bell, badge: unreadReminders.length || undefined },
-  ];
-
   const getDaysLeft = (endDate: string) => {
     const d = differenceInDays(new Date(endDate), new Date());
     return d;
@@ -350,99 +362,47 @@ const SystemAdmin: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="animate-fade-in">
-        <div className="bg-linear-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
           <div className="relative z-10">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-400 to-purple-500 flex items-center justify-center shadow-lg">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
                     <Shield className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-indigo-300 text-xs uppercase tracking-widest font-bold">
+                    <p className="text-emerald-300 text-xs uppercase tracking-widest font-bold">
                       System Administration
                     </p>
                     <h1 className="text-2xl font-black">SECUREPASS Control Center</h1>
                   </div>
                 </div>
-                <p className="text-indigo-300 text-sm mt-1">
+                <p className="text-emerald-300 text-sm mt-1">
                   Manage users, subscriptions, packages, and system-wide settings
                 </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowAddUser(true)}
-                className="px-4 py-2.5 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all text-sm flex items-center gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Add User
-                </button>
-                <button
-                  onClick={() => setShowAddPackage(true)}
-                  className="px-4 py-2.5 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all text-sm flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  New Package
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm('Are you sure you want to reset all data to defaults? This will delete all custom data.')) {
-                      resetToDefaults();
-                    }
-                  }}
-                  className="px-4 py-2.5 bg-red-500/20 border border-red-500/30 text-red-300 font-semibold rounded-xl hover:bg-red-500/30 transition-all text-sm flex items-center gap-2"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Reset Data
-                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-white rounded-2xl border border-slate-100 p-1.5 shadow-sm overflow-x-auto animate-fade-in">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const active = activeTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${active
-                  ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                }`}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-              {tab.badge && (
-                <span
-                  className={`min-w-4.5 px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${active ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
-                    }`}
-                >
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
       {/* ============ OVERVIEW TAB ============ */}
       {activeTab === 'overview' && (
         <div className="space-y-6 animate-fade-in">
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {[
-              { label: 'Total Users', value: stats.totalUsers, icon: Users, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-500/15' },
+              { label: 'Active Managers', value: stats.totalUsers, icon: Users, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-500/15' },
               { label: 'Active Subscriptions', value: stats.activeSubscriptions, icon: CreditCard, gradient: 'from-emerald-500 to-teal-500', shadow: 'shadow-emerald-500/15' },
               { label: 'Expiring Soon', value: stats.expiringSubscriptions, icon: AlertTriangle, gradient: 'from-amber-500 to-orange-500', shadow: 'shadow-amber-500/15' },
-              { label: 'Total Coins in System', value: `${stats.totalCoinsInSystem.toLocaleString()} coins`, icon: Crown, gradient: 'from-violet-500 to-purple-500', shadow: 'shadow-violet-500/15', isText: true },
-              { label: 'Coins Redeemed', value: `${stats.totalCoinsRedeemed.toLocaleString()} coins`, icon: Activity, gradient: 'from-rose-500 to-pink-500', shadow: 'shadow-rose-500/15', isText: true },
-            ].map((card) => {
+            ].map((card: {
+              label: string;
+              value: number;
+              icon: React.ComponentType<any>;
+              gradient: string;
+              shadow: string;
+            }) => {
               const Icon = card.icon;
               return (
                 <div key={card.label} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all">
@@ -458,7 +418,7 @@ const SystemAdmin: React.FC = () => {
             })}
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-3 gap-6">
             {/* Expiring Soon */}
             <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-5">
@@ -545,6 +505,30 @@ const SystemAdmin: React.FC = () => {
                     );
                   })
                 )}
+              </div>
+            </div>
+
+            {/* Security Desk */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-emerald-500" />
+                  Security Desk
+                </h3>
+                <span className="text-xs text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg font-semibold border border-emerald-100">
+                  Active
+                </span>
+              </div>
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h4 className="text-2xl font-black text-slate-800 mb-2">{systemUsers.filter(u => u.isActive).length}</h4>
+                <p className="text-sm text-slate-600 font-medium">active managers currently using system</p>
+                <div className="mt-4 flex justify-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-emerald-600 font-semibold">Live</span>
+                </div>
               </div>
             </div>
           </div>
@@ -651,10 +635,6 @@ const SystemAdmin: React.FC = () => {
                 }
               }} placeholder="Search users..." className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
             </div>
-            <button onClick={() => setShowAddUser(true)} className="px-5 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
-              <UserPlus className="w-4 h-4" />
-              Add User
-            </button>
           </div>
 
           {/* Loading State */}
@@ -833,17 +813,9 @@ const SystemAdmin: React.FC = () => {
                         <td className="px-5 py-3">
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-slate-700">{pkg?.coinCost || 0} coins</span>
+                              <span className="text-sm font-semibold text-slate-700">KES {pkg?.price || 0}</span>
                               <span className="text-xs text-slate-400">({pkg?.billing})</span>
                             </div>
-                            {user && (
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs text-slate-400">Balance:</span>
-                                <span className={`text-xs font-bold ${user.coinBalance >= (pkg?.coinCost || 0) ? 'text-emerald-600' : 'text-red-600'}`}>
-                                  {user.coinBalance} coins
-                                </span>
-                              </div>
-                            )}
                           </div>
                         </td>
                         <td className="px-5 py-3">
