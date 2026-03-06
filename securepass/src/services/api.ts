@@ -627,6 +627,44 @@ class ApiService {
     const response = await this.request('/system/stats');
     return response.json();
   }
+
+  // ===== SECURITY STAFF ENDPOINTS =====
+
+  async getSecurityStaff(): Promise<any[]> {
+    const response = await this.request('/security-staff');
+    return response.json();
+  }
+
+  async getSecurityStaffByProperty(propertyId: string): Promise<any[]> {
+    const response = await this.request(`/security-staff/property/${propertyId}`);
+    return response.json();
+  }
+
+  async createSecurityStaff(staffData: any): Promise<{ message: string; id: string }> {
+    const response = await this.request('/security-staff', {
+      method: 'POST',
+      body: JSON.stringify(staffData),
+    });
+
+    return response.json();
+  }
+
+  async updateSecurityStaff(staffId: string, staffData: any): Promise<{ message: string }> {
+    const response = await this.request(`/security-staff/${staffId}`, {
+      method: 'PUT',
+      body: JSON.stringify(staffData),
+    });
+
+    return response.json();
+  }
+
+  async deleteSecurityStaff(staffId: string): Promise<{ message: string }> {
+    const response = await this.request(`/security-staff/${staffId}`, {
+      method: 'DELETE',
+    });
+
+    return response.json();
+  }
 }
 
 // Export a singleton instance of the API service

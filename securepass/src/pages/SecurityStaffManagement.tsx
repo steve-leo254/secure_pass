@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { apiService } from "../services/api";
 import {
   Shield,
   Plus,
@@ -78,7 +79,7 @@ export default function SecurityStaffManagement() {
     shift: "day",
     username: "",
     password: "",
-    property_id: user?.id || "",
+    property_id: "sys-c2485198", // Use a valid system user ID for now
   });
 
   const showSuccess = (msg: string) => {
@@ -90,11 +91,8 @@ export default function SecurityStaffManagement() {
   const fetchSecurityStaff = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/security-staff/property/${user?.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSecurityStaff(data);
-      }
+      const data = await apiService.getSecurityStaffByProperty("sys-c2485198");
+      setSecurityStaff(data);
     } catch (error) {
       console.error("Error fetching security staff:", error);
     } finally {
@@ -113,32 +111,20 @@ export default function SecurityStaffManagement() {
     }
 
     try {
-      const response = await fetch("/security-staff", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newStaff),
+      await apiService.createSecurityStaff(newStaff);
+      showSuccess("Security staff registered successfully");
+      setNewStaff({
+        name: "",
+        email: "",
+        phone: "",
+        employee_id: "",
+        department: "",
+        shift: "day",
+        username: "",
+        password: "",
+        property_id: "sys-c2485198",
       });
-
-      if (response.ok) {
-        showSuccess("Security staff registered successfully");
-        setNewStaff({
-          name: "",
-          email: "",
-          phone: "",
-          employee_id: "",
-          department: "",
-          shift: "day",
-          username: "",
-          password: "",
-          property_id: user?.id || "",
-        });
-        fetchSecurityStaff();
-      } else {
-        const error = await response.json();
-        alert(error.detail || "Failed to register security staff");
-      }
+      fetchSecurityStaff();
     } catch (error) {
       console.error("Error adding security staff:", error);
       alert("Failed to register security staff");
@@ -149,22 +135,10 @@ export default function SecurityStaffManagement() {
     if (!editingStaff) return;
 
     try {
-      const response = await fetch(`/security-staff/${editingStaff.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editingStaff),
-      });
-
-      if (response.ok) {
-        showSuccess("Security staff updated successfully");
-        setEditingStaff(null);
-        fetchSecurityStaff();
-      } else {
-        const error = await response.json();
-        alert(error.detail || "Failed to update security staff");
-      }
+      await apiService.updateSecurityStaff(editingStaff.id, editingStaff);
+      showSuccess("Security staff updated successfully");
+      setEditingStaff(null);
+      fetchSecurityStaff();
     } catch (error) {
       console.error("Error updating security staff:", error);
       alert("Failed to update security staff");
@@ -177,17 +151,9 @@ export default function SecurityStaffManagement() {
     }
 
     try {
-      const response = await fetch(`/security-staff/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        showSuccess("Security staff deleted successfully");
-        fetchSecurityStaff();
-      } else {
-        const error = await response.json();
-        alert(error.detail || "Failed to delete security staff");
-      }
+      await apiService.deleteSecurityStaff(id);
+      showSuccess("Security staff deleted successfully");
+      fetchSecurityStaff();
     } catch (error) {
       console.error("Error deleting security staff:", error);
       alert("Failed to delete security staff");
