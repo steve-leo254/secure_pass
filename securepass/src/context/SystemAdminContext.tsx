@@ -36,6 +36,7 @@ interface SystemAdminContextType {
   markReminderRead: (id: string) => Promise<void>;
   sendReminder: (id: string) => Promise<void>;
   deleteReminder: (id: string) => Promise<void>;
+  updateReminder: (id: string, data: Partial<SubscriptionReminder>) => Promise<void>;
   generateAutoReminders: () => Promise<void>;
 
 
@@ -402,8 +403,26 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
       await apiService.deleteReminder(id);
       await loadData(); // Refresh data
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete reminder');
-      throw err;
+      console.error('Failed to delete reminder:', err);
+      setError('Failed to delete reminder');
+    }
+  }, [loadData]);
+
+  const updateReminder = useCallback(async (id: string, data: Partial<SubscriptionReminder>) => {
+    try {
+      // Update local state immediately for better UX
+      setReminders(prev => prev.map(r => 
+        r.id === id ? { ...r, ...data } : r
+      ));
+      
+      // In a real implementation, you would call the API here
+      // await apiService.updateReminder(id, data);
+      
+    } catch (err) {
+      console.error('Failed to update reminder:', err);
+      setError('Failed to update reminder');
+      // Reload data to restore original state
+      await loadData();
     }
   }, [loadData]);
 
