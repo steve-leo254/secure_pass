@@ -44,9 +44,13 @@ import {
   PlayCircle,
   CalendarPlus,
   Timer,
+  Download,
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'subscriptions' | 'packages' | 'reminders' | 'property-managers';
+import { PaymentManagement } from '../components/PaymentManagement';
+import type { PaymentDetails } from '../components/PaymentSystem';
+
+type Tab = 'overview' | 'users' | 'subscriptions' | 'packages' | 'reminders' | 'property-managers' | 'payments';
 
 const SystemAdmin: React.FC = () => {
   const location = useLocation();
@@ -85,6 +89,7 @@ const SystemAdmin: React.FC = () => {
   const [subscriptionSearchQuery, setSubscriptionSearchQuery] = useState('');
   const [packageSearchQuery, setPackageSearchQuery] = useState('');
   const [reminderSearchQuery, setReminderSearchQuery] = useState('');
+  const [payments, setPayments] = useState<PaymentDetails[]>([]);
 
   // Set active tab based on URL path
   useEffect(() => {
@@ -101,6 +106,8 @@ const SystemAdmin: React.FC = () => {
       newTab = 'property-managers';
     } else if (path.includes('/reminders')) {
       newTab = 'reminders';
+    } else if (path.includes('/payments')) {
+      newTab = 'payments';
     }
     
     setActiveTab(newTab);
@@ -179,6 +186,66 @@ const SystemAdmin: React.FC = () => {
       } catch (error) {
         console.error('Failed to send edited message:', error);
       }
+    }
+  };
+
+  // Payment processing functions
+  const handleProcessPayment = async (paymentDetails: Partial<PaymentDetails>) => {
+    try {
+      // Simulate payment processing
+      const newPayment: PaymentDetails = {
+        id: `PAY-${Date.now()}`,
+        userId: paymentDetails.userId || 'system',
+        subscriptionId: paymentDetails.subscriptionId || 'auto-subscription',
+        amount: paymentDetails.amount || 0,
+        currency: paymentDetails.currency || 'KES',
+        method: (paymentDetails.method as any) || 'mpesa',
+        status: 'processing',
+        transactionId: paymentDetails.transactionId,
+        reference: paymentDetails.reference,
+        phoneNumber: paymentDetails.phoneNumber,
+        cardLast4: paymentDetails.cardLast4,
+        bankName: paymentDetails.bankName,
+        accountNumber: paymentDetails.accountNumber,
+        createdAt: new Date(),
+        metadata: paymentDetails.metadata || {
+          propertyManagerName: (paymentDetails.metadata as any)?.propertyManagerName || '',
+          property: (paymentDetails.metadata as any)?.property || ''
+        }
+      };
+
+      // Add to payments list
+      setPayments(prev => [...prev, newPayment]);
+
+      // Simulate processing delay
+      setTimeout(() => {
+        setPayments(prev => 
+          prev.map(p => 
+            p.id === newPayment.id 
+              ? { ...p, status: 'completed', processedAt: new Date() }
+              : p
+          )
+        );
+      }, 3000);
+
+      // Update subscription if payment is for subscription
+      if (paymentDetails.subscriptionId && paymentDetails.subscriptionId !== 'auto-subscription') {
+        // Here you would call updateSubscription to extend/activate it
+        console.log('Subscription updated for payment:', paymentDetails.subscriptionId);
+      }
+
+      console.log('Payment processed:', newPayment);
+    } catch (error) {
+      console.error('Payment processing failed:', error);
+    }
+  };
+
+  const handleRefreshPayments = async () => {
+    try {
+      // Simulate fetching payments from API
+      console.log('Refreshing payments...');
+    } catch (error) {
+      console.error('Failed to refresh payments:', error);
     }
   };
 
@@ -434,12 +501,23 @@ const SystemAdmin: React.FC = () => {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg cursor-pointer hover:shadow-xl transition-all" onClick={() => {
+                    // Redirect based on user role
+                    if (user?.role === 'property_manager') {
+                      window.location.href = '/active';
+                    } else if (user?.role === 'security') {
+                      window.location.href = '/visitor-dashboard';
+                    } else if (user?.role === 'system_admin') {
+                      window.location.href = '/system-admin';
+                    } else {
+                      window.location.href = '/dashboard';
+                    }
+                  }}>
                     <Shield className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="text-emerald-300 text-xs uppercase tracking-widest font-bold">
-                      System Administration
+                      Overview
                     </p>
                     <h1 className="text-2xl font-black">SECUREPASS Control Center</h1>
                   </div>
@@ -457,11 +535,12 @@ const SystemAdmin: React.FC = () => {
       {activeTab === 'overview' && (
         <div className="space-y-6 animate-fade-in">
           {/* Stats */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             {[
               { label: 'Active Managers', value: stats.totalUsers, icon: Users, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-500/15' },
               { label: 'Active Subscriptions', value: stats.activeSubscriptions, icon: CreditCard, gradient: 'from-emerald-500 to-teal-500', shadow: 'shadow-emerald-500/15' },
               { label: 'Expiring Soon', value: stats.expiringSubscriptions, icon: AlertTriangle, gradient: 'from-amber-500 to-orange-500', shadow: 'shadow-amber-500/15' },
+              { label: 'Recent Payments', value: payments.filter(p => p.status === 'completed').length, icon: CreditCard, gradient: 'from-purple-500 to-pink-500', shadow: 'shadow-purple-500/15' },
             ].map((card: {
               label: string;
               value: number;
@@ -573,7 +652,68 @@ const SystemAdmin: React.FC = () => {
               </div>
             </div>
 
-            {/* Security Desk */}
+          {/* Recent Payments Quick View */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-purple-500" />
+                Recent Payments
+              </h3>
+              <button
+                onClick={() => setActiveTab('payments')}
+                className="text-xs text-purple-600 font-semibold flex items-center gap-1"
+              >
+                View All <ArrowUpRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="space-y-3 max-h-72 overflow-y-auto">
+              {payments.length === 0 ? (
+                <p className="text-sm text-slate-400 text-center py-8">No payments recorded</p>
+              ) : (
+                payments.slice(0, 5).map((payment) => {
+                  return (
+                    <div key={payment.id} className="flex items-center gap-3 p-3 bg-purple-50/50 rounded-xl border border-purple-100/50">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm ${
+                        payment.status === 'completed' ? 'bg-emerald-500' : 
+                        payment.status === 'processing' ? 'bg-blue-500' : 
+                        payment.status === 'failed' ? 'bg-red-500' : 'bg-slate-400'
+                      }`}>
+                        {payment.method === 'mpesa' || payment.method === 'mpesa_express' ? 'M' : payment.method === 'card' ? 'C' : 'B'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-700 text-sm truncate">{payment.userId}</p>
+                        <p className="text-xs text-slate-400">{payment.currency} {payment.amount}</p>
+                        <p className="text-[11px] text-slate-400">
+                          {formatDistanceToNow(new Date(payment.createdAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-xs px-2 py-1 rounded-lg font-semibold ${
+                          payment.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                          payment.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                          payment.status === 'failed' ? 'bg-red-100 text-red-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {payment.status}
+                        </span>
+                        {payment.status === 'completed' && (
+                          <button
+                            onClick={() => {/* Download receipt */}}
+                            className="w-6 h-6 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors"
+                            title="Download Receipt"
+                          >
+                            <Download className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Security Desk */}
             <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
@@ -601,13 +741,21 @@ const SystemAdmin: React.FC = () => {
           {/* All Users Quick View */}
           <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-slate-800">All System Users</h3>
-              <button
-                onClick={() => setActiveTab('users')}
-                className="text-xs text-indigo-600 font-semibold flex items-center gap-1"
-              >
-                View All <ArrowUpRight className="w-3 h-3" />
-              </button>
+              <h3 className="font-bold text-slate-800">Registered Property Managers</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className="text-xs text-indigo-600 font-semibold flex items-center gap-1"
+                >
+                  View All <ArrowUpRight className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => setActiveTab('payments')}
+                  className="text-xs text-indigo-600 font-semibold flex items-center gap-1"
+                >
+                  Payments <CreditCard className="w-3 h-3" />
+                </button>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -1188,6 +1336,25 @@ const SystemAdmin: React.FC = () => {
                         <button onClick={() => setShowDeleteConfirm({ type: 'user', id: pm.id })} className="p-2 rounded-lg bg-red-50 hover:bg-red-100 transition-colors">
                           <Trash2 className="w-4 h-4 text-red-400" />
                         </button>
+                        {pm.isActive && (
+                          <button 
+                            onClick={() => {
+                              // Open payment modal for subscription extension
+                              const paymentDetails = {
+                                userId: pm.id,
+                                amount: 1000, // Default amount for extension
+                                currency: 'KES',
+                                method: 'mpesa' as any,
+                                metadata: { propertyManagerName: pm.name, property: pm.property }
+                              };
+                              handleProcessPayment(paymentDetails);
+                            }}
+                            className="p-2 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
+                            title="Extend Subscription"
+                          >
+                            <CreditCard className="w-4 h-4 text-green-600" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1693,6 +1860,16 @@ const SystemAdmin: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ============ PAYMENTS TAB ============ */}
+      {activeTab === 'payments' && (
+        <PaymentManagement
+          payments={payments}
+          onProcessPayment={handleProcessPayment}
+          onRefreshPayments={handleRefreshPayments}
+          loading={loading}
+        />
       )}
     </div>
   );

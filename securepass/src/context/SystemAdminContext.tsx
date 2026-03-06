@@ -25,6 +25,13 @@ interface SystemAdminContextType {
   updateSystemUser: (id: string, data: Partial<SystemUser>) => Promise<void>;
   deleteSystemUser: (id: string) => Promise<void>;
 
+  // User activation
+  activateUser: (userId: string, paymentId?: string) => Promise<void>;
+  updateUserStatus: (userId: string, status: string) => Promise<void>;
+
+  // Payment processing for user activation
+  processUserActivationPayment: (paymentDetails: { userId: string; amount: number; method: string; organization?: string }) => Promise<void>;
+
   // Subscription
   createSubscription: (sub: Omit<Subscription, 'id'>) => Promise<void>;
   updateSubscription: (id: string, data: Partial<Subscription>) => Promise<void>;
@@ -561,70 +568,84 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
     loadData();
   }, [loadData]);
 
-  const value = useMemo(
-    () => ({
-      packages,
-      subscriptions,
-      systemUsers,
-      reminders,
-      addPackage,
-      updatePackage,
-      deletePackage,
-      addSystemUser,
-      updateSystemUser,
-      deleteSystemUser,
-      createSubscription,
-      updateSubscription,
-      cancelSubscription,
-      extendSubscription,
-      addReminder,
-      markReminderRead,
-      sendReminder,
-      deleteReminder,
-      generateAutoReminders,
-      getUserSubscription,
-      getUserPackage,
-      getExpiringSubscriptions,
-      getExpiredSubscriptions,
-      getUnreadReminders,
-      getSystemStats,
-      resetToDefaults,
-      loadData,
-      loading,
-      error,
-    }),
-    [
-      packages,
-      subscriptions,
-      systemUsers,
-      reminders,
-      addPackage,
-      updatePackage,
-      deletePackage,
-      addSystemUser,
-      updateSystemUser,
-      deleteSystemUser,
-      createSubscription,
-      updateSubscription,
-      cancelSubscription,
-      extendSubscription,
-      addReminder,
-      markReminderRead,
-      sendReminder,
-      deleteReminder,
-      generateAutoReminders,
-      getUserSubscription,
-      getUserPackage,
-      getExpiringSubscriptions,
-      getExpiredSubscriptions,
-      getUnreadReminders,
-      getSystemStats,
-      resetToDefaults,
-      loadData,
-      loading,
-      error,
-    ]
-  );
+  const activateUser = useCallback(async (userId: string, paymentId?: string) => {
+    try {
+      // Update user status to active
+      await apiService.updateSystemUser(userId, { status: 'active', isActive: true });
+      
+      // If payment ID provided, link payment to user activation
+      if (paymentId) {
+        await apiService.processUserActivationPayment({
+          userId,
+          amount: 1000, // Default activation amount
+          method: 'mpesa',
+          organization: 'SecurePass System'
+        });
+      }
+      
+      // Refresh data
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to activate user');
+    }
+  }, [loadData]);
+
+  const updateUserStatus = useCallback(async (userId: string, status: string) => {
+    try {
+      await apiService.updateSystemUser(userId, { status: status as any, isActive: status === 'active' });
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user status');
+    }
+  }, [loadData]);
+
+  const processUserActivationPayment = useCallback(async (paymentDetails: { userId: string; amount: number; method: string; organization?: string }) => {
+    try {
+      // Process payment for user activation
+      await apiService.processUserActivationPayment(paymentDetails);
+      
+      // Automatically activate user after successful payment
+      await activateUser(paymentDetails.userId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process activation payment');
+    }
+  }, [activateUser]);
+
+  const value: SystemAdminContextType = {
+    packages,
+    subscriptions,
+    systemUsers,
+    reminders,
+    addPackage,
+    updatePackage,
+    deletePackage,
+    addSystemUser,
+    updateSystemUser,
+    deleteSystemUser,
+    activateUser,
+    updateUserStatus,
+    processUserActivationPayment,
+    createSubscription,
+    updateSubscription,
+    cancelSubscription,
+    extendSubscription,
+    addReminder,
+    markReminderRead,
+    sendReminder,
+    deleteReminder,
+    updateReminder,
+    generateAutoReminders,
+    getUserSubscription,
+    getUserPackage,
+    getExpiringSubscriptions,
+    getExpiredSubscriptions,
+    getUnreadReminders,
+    getSystemStats,
+    resetToDefaults,
+    loadData,
+    loading,
+    error,
+  };
 
   return <SystemAdminContext.Provider value={value}>{children}</SystemAdminContext.Provider>;
 };
