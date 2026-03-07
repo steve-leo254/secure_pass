@@ -20,7 +20,6 @@ interface SecurityStaff {
   name: string;
   email: string;
   phone: string;
-  employee_id: string;
   department: string;
   shift: string;
   username: string;
@@ -33,7 +32,6 @@ interface SecurityStaffCreate {
   name: string;
   email: string;
   phone: string;
-  employee_id: string;
   department: string;
   shift: string;
   username: string;
@@ -74,13 +72,19 @@ export default function SecurityStaffManagement() {
     name: "",
     email: "",
     phone: "",
-    employee_id: "",
     department: "",
     shift: "day",
     username: "",
     password: "",
     property_id: "sys-c2485198", // Use a valid system user ID for now
   });
+
+  // Generate automatic employee ID
+  const generateEmployeeId = () => {
+    const prefix = "EMP";
+    const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `${prefix}${randomNum}`;
+  };
 
   const showSuccess = (msg: string) => {
     setSuccessMsg(msg);
@@ -111,13 +115,16 @@ export default function SecurityStaffManagement() {
     }
 
     try {
-      await apiService.createSecurityStaff(newStaff);
+      const staffWithAutoId = {
+        ...newStaff,
+        employee_id: generateEmployeeId()
+      };
+      await apiService.createSecurityStaff(staffWithAutoId);
       showSuccess("Security staff registered successfully");
       setNewStaff({
         name: "",
         email: "",
         phone: "",
-        employee_id: "",
         department: "",
         shift: "day",
         username: "",
@@ -126,7 +133,7 @@ export default function SecurityStaffManagement() {
       });
       fetchSecurityStaff();
     } catch (error) {
-      console.error("Error adding security staff:", error);
+      console.error("Error registering security staff:", error);
       alert("Failed to register security staff");
     }
   };
@@ -243,10 +250,6 @@ export default function SecurityStaffManagement() {
                         <h4 className="font-semibold text-slate-800">{staff.name}</h4>
                         <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
                           <span className="flex items-center gap-1">
-                            <IdCard className="w-3 h-3" />
-                            {staff.employee_id}
-                          </span>
-                          <span className="flex items-center gap-1">
                             <Mail className="w-3 h-3" />
                             {staff.email}
                           </span>
@@ -331,19 +334,6 @@ export default function SecurityStaffManagement() {
                 value={newStaff.phone}
                 onChange={(e) => setNewStaff({ ...newStaff, phone: e.target.value })}
                 placeholder="+254 712 345678"
-                className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">
-                Employee ID *
-              </label>
-              <input
-                type="text"
-                value={newStaff.employee_id}
-                onChange={(e) => setNewStaff({ ...newStaff, employee_id: e.target.value })}
-                placeholder="EMP001"
                 className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
               />
             </div>
@@ -475,18 +465,6 @@ export default function SecurityStaffManagement() {
                     type="tel"
                     value={editingStaff.phone}
                     onChange={(e) => setEditingStaff({ ...editingStaff, phone: e.target.value })}
-                    className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">
-                    Employee ID
-                  </label>
-                  <input
-                    type="text"
-                    value={editingStaff.employee_id}
-                    onChange={(e) => setEditingStaff({ ...editingStaff, employee_id: e.target.value })}
                     className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
                   />
                 </div>
