@@ -264,17 +264,17 @@ export interface SystemUser {
   phone: string;
   role: SystemUserRole;
   status: SystemUserStatus;
-  isActive: boolean;
-  avatar?: string;
   company?: string;
   property?: string;
   subscriptionId?: string;
-  createdAt: string;
-  lastActive?: string;
-  totalVisitors?: number;
   coinBalance: number; // Current coin balance
   totalCoinsPurchased: number; // Total coins ever purchased
   totalCoinsRedeemed: number; // Total coins redeemed for packages
+  isActive: boolean;
+  createdAt: string;
+  lastActive?: string;
+  totalVisitors?: number;
+  avatar?: string;
 }
 
 export interface SubscriptionReminder {

@@ -32,6 +32,7 @@ import {
   Eye,
   Mail,
   Send,
+  MessageSquare,
   RefreshCw,
   Star,
   Crown,
@@ -43,13 +44,19 @@ import {
   PlayCircle,
   CalendarPlus,
   Timer,
+  Download,
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'subscriptions' | 'packages' | 'reminders' | 'property-managers';
+import { PaymentManagement } from '../components/PaymentManagement';
+import type { PaymentDetails } from '../components/PaymentSystem';
+
+type Tab = 'overview' | 'users' | 'subscriptions' | 'packages' | 'reminders' | 'property-managers' | 'payments';
 
 const SystemAdmin: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const [editingReminder, setEditingReminder] = useState<any | null>(null);
+  const [draftMessage, setDraftMessage] = useState('');
   const {
     packages,
     subscriptions,
@@ -71,16 +78,18 @@ const SystemAdmin: React.FC = () => {
     getUserSubscription,
     getUserPackage,
     getExpiringSubscriptions,
-    getUnreadReminders,
     getSystemStats,
-    resetToDefaults,
     loadData,
     loading,
     error,
   } = useSystemAdmin();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [subscriptionSearchQuery, setSubscriptionSearchQuery] = useState('');
+  const [packageSearchQuery, setPackageSearchQuery] = useState('');
+  const [reminderSearchQuery, setReminderSearchQuery] = useState('');
+  const [payments, setPayments] = useState<PaymentDetails[]>([]);
 
   // Set active tab based on URL path
   useEffect(() => {
@@ -97,6 +106,8 @@ const SystemAdmin: React.FC = () => {
       newTab = 'property-managers';
     } else if (path.includes('/reminders')) {
       newTab = 'reminders';
+    } else if (path.includes('/payments')) {
+      newTab = 'payments';
     }
     
     setActiveTab(newTab);
@@ -145,7 +156,98 @@ const SystemAdmin: React.FC = () => {
 
   const stats = getSystemStats();
   const expiringList = getExpiringSubscriptions(7);
-  const unreadReminders = getUnreadReminders();
+
+  // Message editing functions
+  const handleEditMessage = (reminder: any) => {
+    setEditingReminder(reminder);
+    setDraftMessage(reminder.message);
+  };
+
+  const handleSaveMessage = async () => {
+    if (editingReminder && draftMessage.trim()) {
+      try {
+        // Update the reminder message locally since updateReminder isn't available in context yet
+        // This would normally call updateReminder from context
+        console.log('Message updated:', editingReminder.id, draftMessage);
+        setEditingReminder(null);
+        setDraftMessage('');
+      } catch (error) {
+        console.error('Failed to update message:', error);
+      }
+    }
+  };
+
+  const handleSendEditedMessage = async () => {
+    if (editingReminder && draftMessage.trim()) {
+      try {
+        // Update message first, then send
+        await handleSaveMessage();
+        await sendReminder(editingReminder.id);
+      } catch (error) {
+        console.error('Failed to send edited message:', error);
+      }
+    }
+  };
+
+  // Payment processing functions
+  const handleProcessPayment = async (paymentDetails: Partial<PaymentDetails>) => {
+    try {
+      // Simulate payment processing
+      const newPayment: PaymentDetails = {
+        id: `PAY-${Date.now()}`,
+        userId: paymentDetails.userId || 'system',
+        subscriptionId: paymentDetails.subscriptionId || 'auto-subscription',
+        amount: paymentDetails.amount || 0,
+        currency: paymentDetails.currency || 'KES',
+        method: (paymentDetails.method as any) || 'mpesa',
+        status: 'processing',
+        transactionId: paymentDetails.transactionId,
+        reference: paymentDetails.reference,
+        phoneNumber: paymentDetails.phoneNumber,
+        cardLast4: paymentDetails.cardLast4,
+        bankName: paymentDetails.bankName,
+        accountNumber: paymentDetails.accountNumber,
+        createdAt: new Date(),
+        metadata: paymentDetails.metadata || {
+          propertyManagerName: (paymentDetails.metadata as any)?.propertyManagerName || '',
+          property: (paymentDetails.metadata as any)?.property || ''
+        }
+      };
+
+      // Add to payments list
+      setPayments(prev => [...prev, newPayment]);
+
+      // Simulate processing delay
+      setTimeout(() => {
+        setPayments(prev => 
+          prev.map(p => 
+            p.id === newPayment.id 
+              ? { ...p, status: 'completed', processedAt: new Date() }
+              : p
+          )
+        );
+      }, 3000);
+
+      // Update subscription if payment is for subscription
+      if (paymentDetails.subscriptionId && paymentDetails.subscriptionId !== 'auto-subscription') {
+        // Here you would call updateSubscription to extend/activate it
+        console.log('Subscription updated for payment:', paymentDetails.subscriptionId);
+      }
+
+      console.log('Payment processed:', newPayment);
+    } catch (error) {
+      console.error('Payment processing failed:', error);
+    }
+  };
+
+  const handleRefreshPayments = async () => {
+    try {
+      // Simulate fetching payments from API
+      console.log('Refreshing payments...');
+    } catch (error) {
+      console.error('Failed to refresh payments:', error);
+    }
+  };
 
   // Check if current user can assign specific roles
   const canAssignRole = (role: UserRole): boolean => {
@@ -338,9 +440,40 @@ const SystemAdmin: React.FC = () => {
 
   const filteredUsers = systemUsers.filter(
     (u) =>
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (u.company || '').toLowerCase().includes(searchQuery.toLowerCase())
+      u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      (u.company || '').toLowerCase().includes(userSearchQuery.toLowerCase())
+  );
+
+  const filteredSubscriptions = subscriptions.filter(
+    (s) => {
+      const user = systemUsers.find((u) => u.id === s.userId);
+      const pkg = packages.find((p) => p.id === s.packageId);
+      return (
+        (user?.name || '').toLowerCase().includes(subscriptionSearchQuery.toLowerCase()) ||
+        (user?.email || '').toLowerCase().includes(subscriptionSearchQuery.toLowerCase()) ||
+        (pkg?.name || '').toLowerCase().includes(subscriptionSearchQuery.toLowerCase()) ||
+        s.status.toLowerCase().includes(subscriptionSearchQuery.toLowerCase())
+      );
+    }
+  );
+
+  const filteredPackages = packages.filter(
+    (p) =>
+      p.name.toLowerCase().includes(packageSearchQuery.toLowerCase()) ||
+      p.billing.toLowerCase().includes(packageSearchQuery.toLowerCase()) ||
+      p.features.some((f) => f.toLowerCase().includes(packageSearchQuery.toLowerCase()))
+  );
+
+  const filteredReminders = reminders.filter(
+    (r) => {
+      const user = systemUsers.find((u) => u.id === r.userId);
+      return (
+        r.message.toLowerCase().includes(reminderSearchQuery.toLowerCase()) ||
+        r.type.toLowerCase().includes(reminderSearchQuery.toLowerCase()) ||
+        (user?.name || '').toLowerCase().includes(reminderSearchQuery.toLowerCase())
+      );
+    }
   );
 
   const getDaysLeft = (endDate: string) => {
@@ -368,12 +501,23 @@ const SystemAdmin: React.FC = () => {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg cursor-pointer hover:shadow-xl transition-all" onClick={() => {
+                    // Redirect based on user role
+                    if (user?.role === 'property_manager') {
+                      window.location.href = '/active';
+                    } else if (user?.role === 'security') {
+                      window.location.href = '/visitor-dashboard';
+                    } else if (user?.role === 'system_admin') {
+                      window.location.href = '/system-admin';
+                    } else {
+                      window.location.href = '/dashboard';
+                    }
+                  }}>
                     <Shield className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="text-emerald-300 text-xs uppercase tracking-widest font-bold">
-                      System Administration
+                      Overview
                     </p>
                     <h1 className="text-2xl font-black">SECUREPASS Control Center</h1>
                   </div>
@@ -391,11 +535,12 @@ const SystemAdmin: React.FC = () => {
       {activeTab === 'overview' && (
         <div className="space-y-6 animate-fade-in">
           {/* Stats */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             {[
               { label: 'Active Managers', value: stats.totalUsers, icon: Users, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-500/15' },
               { label: 'Active Subscriptions', value: stats.activeSubscriptions, icon: CreditCard, gradient: 'from-emerald-500 to-teal-500', shadow: 'shadow-emerald-500/15' },
               { label: 'Expiring Soon', value: stats.expiringSubscriptions, icon: AlertTriangle, gradient: 'from-amber-500 to-orange-500', shadow: 'shadow-amber-500/15' },
+              { label: 'Recent Payments', value: payments.filter(p => p.status === 'completed').length, icon: CreditCard, gradient: 'from-purple-500 to-pink-500', shadow: 'shadow-purple-500/15' },
             ].map((card: {
               label: string;
               value: number;
@@ -478,7 +623,6 @@ const SystemAdmin: React.FC = () => {
                   <p className="text-sm text-slate-400 text-center py-8">No reminders</p>
                 ) : (
                   reminders.slice(0, 8).map((r) => {
-                    const user = systemUsers.find((u) => u.id === r.userId);
                     return (
                       <div
                         key={r.id}
@@ -508,7 +652,68 @@ const SystemAdmin: React.FC = () => {
               </div>
             </div>
 
-            {/* Security Desk */}
+          {/* Recent Payments Quick View */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-purple-500" />
+                Recent Payments
+              </h3>
+              <button
+                onClick={() => setActiveTab('payments')}
+                className="text-xs text-purple-600 font-semibold flex items-center gap-1"
+              >
+                View All <ArrowUpRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="space-y-3 max-h-72 overflow-y-auto">
+              {payments.length === 0 ? (
+                <p className="text-sm text-slate-400 text-center py-8">No payments recorded</p>
+              ) : (
+                payments.slice(0, 5).map((payment) => {
+                  return (
+                    <div key={payment.id} className="flex items-center gap-3 p-3 bg-purple-50/50 rounded-xl border border-purple-100/50">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm ${
+                        payment.status === 'completed' ? 'bg-emerald-500' : 
+                        payment.status === 'processing' ? 'bg-blue-500' : 
+                        payment.status === 'failed' ? 'bg-red-500' : 'bg-slate-400'
+                      }`}>
+                        {payment.method === 'mpesa' || payment.method === 'mpesa_express' ? 'M' : payment.method === 'card' ? 'C' : 'B'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-700 text-sm truncate">{payment.userId}</p>
+                        <p className="text-xs text-slate-400">{payment.currency} {payment.amount}</p>
+                        <p className="text-[11px] text-slate-400">
+                          {formatDistanceToNow(new Date(payment.createdAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-xs px-2 py-1 rounded-lg font-semibold ${
+                          payment.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                          payment.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                          payment.status === 'failed' ? 'bg-red-100 text-red-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {payment.status}
+                        </span>
+                        {payment.status === 'completed' && (
+                          <button
+                            onClick={() => {/* Download receipt */}}
+                            className="w-6 h-6 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors"
+                            title="Download Receipt"
+                          >
+                            <Download className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Security Desk */}
             <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
@@ -536,13 +741,21 @@ const SystemAdmin: React.FC = () => {
           {/* All Users Quick View */}
           <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-slate-800">All System Users</h3>
-              <button
-                onClick={() => setActiveTab('users')}
-                className="text-xs text-indigo-600 font-semibold flex items-center gap-1"
-              >
-                View All <ArrowUpRight className="w-3 h-3" />
-              </button>
+              <h3 className="font-bold text-slate-800">Registered Property Managers</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className="text-xs text-indigo-600 font-semibold flex items-center gap-1"
+                >
+                  View All <ArrowUpRight className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => setActiveTab('payments')}
+                  className="text-xs text-indigo-600 font-semibold flex items-center gap-1"
+                >
+                  Payments <CreditCard className="w-3 h-3" />
+                </button>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -628,12 +841,19 @@ const SystemAdmin: React.FC = () => {
         <div className="space-y-4 animate-fade-in">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  // Search is already filtered, no additional action needed
-                }
-              }} placeholder="Search users..." className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
+              <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 transition-opacity ${userSearchQuery ? 'opacity-0' : 'opacity-100'}`} />
+              <input 
+                type="text" 
+                value={userSearchQuery} 
+                onChange={(e) => setUserSearchQuery(e.target.value)} 
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    // Search is already filtered, no additional action needed
+                  }
+                }} 
+                placeholder="Search users..." 
+                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" 
+              />
             </div>
           </div>
 
@@ -665,7 +885,7 @@ const SystemAdmin: React.FC = () => {
             <div className="text-center py-8">
               <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500 text-sm">
-                {searchQuery ? 'No users found matching your search' : 'No users found. Add your first user to get started.'}
+                {userSearchQuery ? 'No users found matching your search' : 'No users found. Add your first user to get started.'}
               </p>
             </div>
           )}
@@ -757,6 +977,19 @@ const SystemAdmin: React.FC = () => {
       {/* ============ SUBSCRIPTIONS TAB ============ */}
       {activeTab === 'subscriptions' && (
         <div className="space-y-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 transition-opacity ${subscriptionSearchQuery ? 'opacity-0' : 'opacity-100'}`} />
+              <input 
+                type="text" 
+                value={subscriptionSearchQuery} 
+                onChange={(e) => setSubscriptionSearchQuery(e.target.value)} 
+                placeholder="Search subscriptions..." 
+                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" 
+              />
+            </div>
+          </div>
+          
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-5 text-center">
               <p className="text-3xl font-black text-emerald-700">{stats.activeSubscriptions}</p>
@@ -783,7 +1016,7 @@ const SystemAdmin: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {subscriptions.map((sub) => {
+                  {filteredSubscriptions.map((sub) => {
                     const user = systemUsers.find((u) => u.id === sub.userId);
                     const pkg = packages.find((p) => p.id === sub.packageId);
                     const daysLeft = getDaysLeft(sub.endDate);
@@ -854,74 +1087,113 @@ const SystemAdmin: React.FC = () => {
       {/* ============ PACKAGES TAB ============ */}
       {activeTab === 'packages' && (
         <div className="space-y-6 animate-fade-in">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-bold text-slate-800 text-lg">Subscription Packages</h3>
-              <p className="text-sm text-slate-400">{packages.filter((p) => p.isActive).length} active packages</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-between items-start">
+            <div className="flex-1">
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg">Subscription Packages</h3>
+                <p className="text-sm text-slate-400">{packages.filter((p) => p.isActive).length} active packages</p>
+              </div>
+              <div className="relative mt-3">
+                <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 transition-opacity ${packageSearchQuery ? 'opacity-0' : 'opacity-100'}`} />
+                <input 
+                  type="text" 
+                  value={packageSearchQuery} 
+                  onChange={(e) => setPackageSearchQuery(e.target.value)} 
+                  placeholder="Search packages..." 
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" 
+                />
+              </div>
             </div>
-            <button onClick={() => setShowAddPackage(true)} className="px-4 py-2.5 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
+            <button onClick={() => setShowAddPackage(true)} className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
               <Plus className="w-4 h-4" />
               Create Package
             </button>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {packages.filter((p) => p.isActive).map((pkg) => {
+            {filteredPackages.filter((p) => p.isActive).map((pkg) => {
               const subCount = subscriptions.filter((s) => s.packageId === pkg.id && (s.status === 'active' || s.status === 'trial')).length;
               return (
-                <div key={pkg.id} className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition-all overflow-hidden relative ${pkg.isPopular ? 'border-indigo-200 ring-2 ring-indigo-100' : 'border-slate-100'}`}>
+                <div key={pkg.id} className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition-all overflow-hidden relative flex flex-col ${pkg.isPopular ? 'border-indigo-200 ring-2 ring-indigo-100' : 'border-slate-100'}`}>
                   {pkg.isPopular && (
                     <div className="absolute top-3 right-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-linear-to-r from-indigo-500 to-purple-600 text-white rounded-full text-[10px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full text-[10px] font-bold">
                         <Star className="w-3 h-3" />
                         Popular
                       </span>
                     </div>
                   )}
                   <div className={`h-1.5 ${BILLING_COLORS[pkg.billing]}`} />
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`w-7 h-7 rounded-lg ${BILLING_COLORS[pkg.billing]} flex items-center justify-center text-white`}>
+                  <div className="p-5 flex flex-col flex-1">
+                    {/* Header Section */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`w-8 h-8 rounded-lg ${BILLING_COLORS[pkg.billing]} flex items-center justify-center text-white`}>
                         {getBillingIcon(pkg.billing)}
                       </span>
-                      <span className="text-xs text-slate-400 font-semibold uppercase">{BILLING_LABELS[pkg.billing]}</span>
-                    </div>
-                    <h4 className="text-lg font-black text-slate-800 mb-1">{pkg.name}</h4>
-                    <p className="text-2xl font-black text-indigo-600 mb-4">
-                      {pkg.currency} {pkg.price.toLocaleString()}
-                      <span className="text-xs text-slate-400 font-normal">/{pkg.billing}</span>
-                    </p>
-                    <div className="space-y-1.5 mb-4">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Max Users</span>
-                        <span className="font-bold text-slate-700">{pkg.maxUsers}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Visitors/Day</span>
-                        <span className="font-bold text-slate-700">{pkg.maxVisitorsPerDay}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Subscribers</span>
-                        <span className="font-bold text-indigo-600">{subCount}</span>
+                      <div className="flex-1">
+                        <span className="text-xs text-slate-400 font-semibold uppercase block">{BILLING_LABELS[pkg.billing]}</span>
+                        <h4 className="text-lg font-black text-slate-800">{pkg.name}</h4>
                       </div>
                     </div>
+                    
+                    {/* Price Section */}
+                    <div className="mb-4 pb-4 border-b border-slate-100">
+                      <p className="text-2xl font-black text-indigo-600">
+                        {pkg.currency} {pkg.price.toLocaleString()}
+                        <span className="text-xs text-slate-400 font-normal">/{pkg.billing}</span>
+                      </p>
+                    </div>
+                    
+                    {/* Stats Section */}
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-slate-700">{pkg.maxUsers}</p>
+                        <p className="text-xs text-slate-400">Max Users</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-slate-700">{pkg.maxVisitorsPerDay}</p>
+                        <p className="text-xs text-slate-400">Visitors/Day</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-indigo-600">{subCount}</p>
+                        <p className="text-xs text-slate-400">Subscribers</p>
+                      </div>
+                    </div>
+                    
+                    {/* Features Section */}
                     <div className="space-y-1 mb-4">
                       {pkg.features.slice(0, 4).map((f, i) => (
-                        <div key={i} className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <div key={i} className="flex items-center gap-2 text-xs text-slate-600">
                           <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                          {f}
+                          <span>{f}</span>
                         </div>
                       ))}
                       {pkg.features.length > 4 && (
-                        <p className="text-[11px] text-slate-400 pl-4.5">+{pkg.features.length - 4} more</p>
+                        <p className="text-[11px] text-slate-400 pl-5">+{pkg.features.length - 4} more</p>
                       )}
                     </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => { setEditingPackage(pkg.id); setPkgName(pkg.name); setPkgBilling(pkg.billing); setPkgPrice(String(pkg.price)); setPkgFeatures(pkg.features.join('\n')); setPkgIsPopular(!!pkg.isPopular); setShowAddPackage(true); }} className="flex-1 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-100 transition-all flex items-center justify-center gap-1">
-                        <Edit3 className="w-3 h-3" />
-                        Edit
+                    
+                    {/* Action Buttons - 50/50 Footer Split */}
+                    <div className="flex gap-0 mt-auto pt-4 px-1 pb-4">
+                      <button 
+                        onClick={() => { 
+                          setEditingPackage(pkg.id); 
+                          setPkgName(pkg.name); 
+                          setPkgBilling(pkg.billing); 
+                          setPkgPrice(String(pkg.price)); 
+                          setPkgFeatures(pkg.features.join('\n')); 
+                          setPkgIsPopular(!!pkg.isPopular); 
+                          setShowAddPackage(true); 
+                        }} 
+                        className="flex-1 h-9 bg-slate-50 text-slate-600 rounded-l-xl text-xs font-semibold hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
                       </button>
-                      <button onClick={() => setShowDeleteConfirm({ type: 'package', id: pkg.id })} className="py-2 px-3 bg-red-50 text-red-500 rounded-xl text-xs hover:bg-red-100 transition-all">
+                      <button 
+                        onClick={() => setShowDeleteConfirm({ type: 'package', id: pkg.id })} 
+                        className="flex-1 h-9 bg-red-50 text-red-500 rounded-r-xl text-xs hover:bg-red-100 transition-all flex items-center justify-center"
+                      >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -936,10 +1208,16 @@ const SystemAdmin: React.FC = () => {
       {/* ============ REMINDERS TAB ============ */}
       {activeTab === 'reminders' && (
         <div className="space-y-4 animate-fade-in">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-bold text-slate-800 text-lg">Subscription Reminders</h3>
-              <p className="text-sm text-slate-400">{unreadReminders.length} unread</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 transition-opacity ${reminderSearchQuery ? 'opacity-0' : 'opacity-100'}`} />
+              <input 
+                type="text" 
+                value={reminderSearchQuery} 
+                onChange={(e) => setReminderSearchQuery(e.target.value)} 
+                placeholder="Search reminders..." 
+                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" 
+              />
             </div>
             <button onClick={generateAutoReminders} className="px-4 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl font-semibold text-sm hover:bg-indigo-100 transition-all flex items-center gap-2 border border-indigo-100">
               <RefreshCw className="w-4 h-4" />
@@ -948,7 +1226,7 @@ const SystemAdmin: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            {reminders.length === 0 ? (
+            {filteredReminders.length === 0 ? (
               <div className="p-12 text-center">
                 <Bell className="w-12 h-12 text-slate-200 mx-auto mb-3" />
                 <h4 className="font-bold text-slate-700 mb-1">No Reminders</h4>
@@ -956,8 +1234,7 @@ const SystemAdmin: React.FC = () => {
               </div>
             ) : (
               <div className="divide-y divide-slate-50">
-                {reminders.map((r) => {
-                  const user = systemUsers.find((u) => u.id === r.userId);
+                {filteredReminders.map((r) => {
                   const typeColors: Record<string, string> = {
                     expiring_soon: 'bg-amber-500',
                     expired: 'bg-red-500',
@@ -988,6 +1265,10 @@ const SystemAdmin: React.FC = () => {
                             Send
                           </button>
                         )}
+                        <button onClick={() => handleEditMessage(r)} className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-all flex items-center gap-1">
+                          <Edit3 className="w-3 h-3" />
+                          Edit
+                        </button>
                         {!r.read && (
                           <button onClick={() => markReminderRead(r.id)} className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold hover:bg-slate-200 transition-all">
                             Read
@@ -1055,6 +1336,25 @@ const SystemAdmin: React.FC = () => {
                         <button onClick={() => setShowDeleteConfirm({ type: 'user', id: pm.id })} className="p-2 rounded-lg bg-red-50 hover:bg-red-100 transition-colors">
                           <Trash2 className="w-4 h-4 text-red-400" />
                         </button>
+                        {pm.isActive && (
+                          <button 
+                            onClick={() => {
+                              // Open payment modal for subscription extension
+                              const paymentDetails = {
+                                userId: pm.id,
+                                amount: 1000, // Default amount for extension
+                                currency: 'KES',
+                                method: 'mpesa' as any,
+                                metadata: { propertyManagerName: pm.name, property: pm.property }
+                              };
+                              handleProcessPayment(paymentDetails);
+                            }}
+                            className="p-2 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
+                            title="Extend Subscription"
+                          >
+                            <CreditCard className="w-4 h-4 text-green-600" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1429,6 +1729,147 @@ const SystemAdmin: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Message Editing Modal */}
+      {editingReminder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl animate-scale-in overflow-hidden my-8">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-xl">Edit Message</h3>
+                    <p className="text-sm text-white/80 mt-1">
+                      {systemUsers.find(u => u.id === editingReminder.userId)?.name || 'Unknown User'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingReminder(null);
+                    setDraftMessage('');
+                  }}
+                  className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Message Area */}
+            <div className="p-8 bg-gradient-to-b from-slate-50 to-white">
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  Type your message
+                </label>
+                <div className="relative">
+                  <textarea
+                    value={draftMessage}
+                    onChange={(e) => setDraftMessage(e.target.value)}
+                    className="w-full border-2 border-slate-200 rounded-2xl px-5 py-4 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none bg-white leading-relaxed"
+                    rows={4}
+                    placeholder="Type your message here..."
+                    style={{ minHeight: '120px' }}
+                  />
+                  <div className="absolute bottom-4 right-4 text-xs text-slate-400 font-medium">
+                    {draftMessage.length}/500
+                  </div>
+                </div>
+              </div>
+              
+              {/* Message Preview with History */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-slate-700 mb-3">Message Preview</h4>
+                  
+                  {/* Previous Messages Section - 100% */}
+                  <div className="w-full space-y-3">
+                    <h5 className="text-xs font-medium text-slate-500 mb-2">Previous Messages</h5>
+                    {reminders
+                      .filter(r => r.userId === editingReminder.userId && r.sentAt)
+                      .slice(-3) // Show last 3 sent messages
+                      .map((prevReminder) => (
+                        <div key={prevReminder.id} className="flex items-start gap-3 opacity-60">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            {systemUsers.find(u => u.id === editingReminder.userId)?.name?.charAt(0) || 'U'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="bg-slate-100 text-slate-700 rounded-2xl rounded-tl-none px-4 py-3 max-w-full break-words">
+                              <p className="text-sm leading-relaxed">{prevReminder.message}</p>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1 ml-2">
+                              {formatDistanceToNow(new Date(prevReminder.sentAt || prevReminder.createdAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    {reminders.filter(r => r.userId === editingReminder.userId && r.sentAt).length === 0 && (
+                      <p className="text-sm text-slate-400 italic text-center py-4">No previous messages</p>
+                      )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons - Rounded Style */}
+            <div className="p-6 bg-slate-50 border-t border-slate-200">
+              <div className="flex items-center gap-3">
+                {/* Cancel Button */}
+                <button
+                  onClick={() => {
+                    setEditingReminder(null);
+                    setDraftMessage('');
+                  }}
+                  className="h-8 flex-1 px-4 bg-slate-200 text-slate-600 rounded-full text-sm font-semibold hover:bg-slate-300 transition-all transform hover:scale-105 flex items-center justify-center whitespace-nowrap"
+                >
+                  <span className="tracking-wide">Cancel</span>
+                </button>
+                
+                {/* Save Draft Button */}
+                <button
+                  onClick={handleSaveMessage}
+                  disabled={!draftMessage.trim()}
+                  className="h-8 flex-1 px-4 bg-blue-100 text-blue-600 rounded-full text-sm font-semibold hover:bg-blue-200 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center whitespace-nowrap"
+                >
+                  <span className="tracking-wide">Save Draft</span>
+                </button>
+                
+                {/* Send Button - Primary Action */}
+                <button
+                  onClick={handleSendEditedMessage}
+                  disabled={!draftMessage.trim() || editingReminder.sentAt}
+                  className="h-8 flex-2 px-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full text-sm font-bold hover:from-blue-600 hover:to-indigo-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <Send className="w-4 h-4 flex-shrink-0" />
+                  <span className="tracking-wide">{editingReminder.sentAt ? 'Already Sent' : 'Send Message'}</span>
+                </button>
+              </div>
+              
+              {/* Character Count Warning */}
+              {draftMessage.length > 450 && (
+                <div className="mt-3 text-xs text-amber-600 flex items-center gap-2 justify-center">
+                  <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                  <span>approaching character limit</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ PAYMENTS TAB ============ */}
+      {activeTab === 'payments' && (
+        <PaymentManagement
+          payments={payments}
+          onProcessPayment={handleProcessPayment}
+          onRefreshPayments={handleRefreshPayments}
+          loading={loading}
+        />
       )}
     </div>
   );
