@@ -84,7 +84,6 @@ export default function App() {
             <Route path="/system-admin/packages" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
             <Route path="/system-admin/property-managers" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
             <Route path="/system-admin/reminders" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
-            <Route path="/system-admin/payments" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
                         <Route path="/visitor-dashboard" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-registration" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-checkout" element={<PublicVisitorLayout><PublicCheckout /></PublicVisitorLayout>} />
