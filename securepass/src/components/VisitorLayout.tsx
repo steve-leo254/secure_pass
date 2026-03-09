@@ -106,7 +106,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
       bg: 'bg-indigo-50',
     },
     {
-      path: '/visitor-checkout',
+      path: '/smart-checkout',
       label: 'Check Out',
       icon: DoorOpen,
       description: 'Complete your visit',
@@ -131,7 +131,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
 
   const quickLinks = [
     { label: 'Check In', path: '/visitor-register', icon: UserPlus },
-    { label: 'Check Out', path: '/visitor-checkout', icon: DoorOpen },
+    { label: 'Check Out', path: '/smart-checkout', icon: DoorOpen },
     { label: 'Terms & Conditions', path: '/terms-and-conditions', icon: FileText },
     // { label: 'Staff Login', path: '/', icon: ExternalLink },
   ];
@@ -264,17 +264,17 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
               {/* CTA Button - Desktop */}
               <Link
                 to={
-                  location.pathname === '/visitor-checkout'
+                  location.pathname === '/smart-checkout'
                     ? '/visitor-register'
-                    : '/visitor-checkout'
+                    : '/smart-checkout'
                 }
                 className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md hover:shadow-lg ${
-                  location.pathname === '/visitor-checkout'
+                  location.pathname === '/smart-checkout'
                     ? 'bg-linear-to-r from-indigo-600 to-purple-600 text-white shadow-indigo-500/20 hover:shadow-indigo-500/30'
                     : 'bg-linear-to-r from-rose-500 to-orange-500 text-white shadow-rose-500/20 hover:shadow-rose-500/30'
                 }`}
               >
-                {location.pathname === '/visitor-checkout' ? (
+                {location.pathname === '/smart-checkout' ? (
                   <>
                     <UserPlus className="w-4 h-4" />
                     Check In
@@ -512,7 +512,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
                   </Link>
 
                   <Link
-                    to="/visitor-checkout"
+                    to="/smart-checkout"
                     className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-linear-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all duration-200"
                   >
                     <Clock className="w-5 h-5" />
@@ -587,7 +587,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
               Register Your Visit
             </Link>
             <Link
-              to="/visitor-checkout"
+              to="/smart-checkout"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-all text-sm"
             >
               <DoorOpen className="w-4 h-4" />

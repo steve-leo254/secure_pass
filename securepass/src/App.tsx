@@ -24,6 +24,7 @@ import CheckoutPage from "./pages/CheckoutPage_Test";
 import PublicCheckout from './pages/PublicCheckout';
 import SystemAdmin from './pages/SystemAdmin';
 import SystemAdminLogin from './pages/SystemAdminLogin';
+import VisitorSmartCheckout from './pages/VisitorSmartCheckout';
 import type { ReactNode } from "react";
 
 const Protected = ({
@@ -87,6 +88,7 @@ export default function App() {
                         <Route path="/visitor-dashboard" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-registration" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-checkout" element={<PublicVisitorLayout><PublicCheckout /></PublicVisitorLayout>} />
+            <Route path="/smart-checkout" element={<VisitorSmartCheckout />} />
             <Route path="/visitor-profile" element={<PublicVisitorLayout><ProfilePage /></PublicVisitorLayout>} />
             <Route path="/visitor-pass" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
 
