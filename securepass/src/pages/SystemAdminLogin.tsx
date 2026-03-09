@@ -19,7 +19,7 @@ const SystemAdminLogin: React.FC = () => {
     company: '',
     property: ''
   });
-  const { login, isAuthenticated, user } = useAuth();
+  const { login, systemLogin, isAuthenticated, user } = useAuth();
 
   // Redirect to main dashboard if already authenticated as system admin
   if (isAuthenticated && user?.role === 'system_admin') {
@@ -54,12 +54,25 @@ const SystemAdminLogin: React.FC = () => {
     setIsLoading(true);
     
     try {
-      await login(credentials.username, credentials.password);
-      // Check if user is system admin and redirect accordingly
-      if (user?.role === 'system_admin') {
-        setLoginSuccess(true);
+      // Try system login first (for users created through system admin)
+      const result = await systemLogin(credentials.username, credentials.password);
+      
+      if (result.success) {
+        // Check if user is system admin or has appropriate role
+        if (result.user?.role === 'system_admin' || result.user?.role === 'superadmin' || 
+            result.user?.role === 'security' || result.user?.role === 'property_manager') {
+          setLoginSuccess(true);
+        } else {
+          throw new Error('Not authorized for system admin access');
+        }
       } else {
-        throw new Error('Not authorized as system admin');
+        // Fallback to regular login for default users
+        await login(credentials.username, credentials.password);
+        if (user?.role === 'system_admin') {
+          setLoginSuccess(true);
+        } else {
+          throw new Error('Not authorized as system admin');
+        }
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -99,16 +112,20 @@ const SystemAdminLogin: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-emerald-100 mb-2">
-                  Username
+                  Username or Email
                 </label>
                 <input
                   type="text"
                   value={credentials.username}
                   onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  placeholder="Enter your username"
+                  placeholder="Enter username (for default users) or email (for system users)"
                   required
                 />
+                <p className="text-xs text-emerald-200 mt-1">
+                  System users: use your registered email<br/>
+                  Default users: use your username (admin, security)
+                </p>
               </div>
 
               <div>
@@ -132,6 +149,10 @@ const SystemAdminLogin: React.FC = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                <p className="text-xs text-emerald-200 mt-1">
+                  System users: default password is "admin123"<br/>
+                  Default users: use your assigned password
+                </p>
               </div>
 
               <button

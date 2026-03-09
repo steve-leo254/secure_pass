@@ -58,6 +58,8 @@ import {
 
   Building2,
 
+  UserPlus,
+
 } from 'lucide-react';
 
 import { format } from 'date-fns';
@@ -300,6 +302,8 @@ const propertyManagerNav = [
 
     { path: '/records', label: 'All Records', icon: Users, badge: null },
 
+    { path: '/register', label: 'Register Visitor', icon: UserPlus, badge: null },
+
     { path: '/management', label: 'Management', icon: Settings, badge: null },
 
     {
@@ -318,6 +322,16 @@ const propertyManagerNav = [
 
 
 
+const securityNav = [
+
+    { path: '/active', label: 'Active Visitors', icon: Users, badge: null },
+
+    { path: '/register', label: 'Register Visitor', icon: UserPlus, badge: null },
+
+  ];
+
+
+
   const adminNav = userRole === 'system_admin'
 
     ? systemAdminTabsNav
@@ -325,6 +339,10 @@ const propertyManagerNav = [
     : userRole === 'property_manager'
 
     ? propertyManagerNav
+
+    : userRole === 'security'
+
+    ? securityNav
 
     : [];
 
@@ -716,7 +734,7 @@ const propertyManagerNav = [
 
                   <p className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-semibold px-3 mb-2">
 
-                    {userRole === 'system_admin' ? 'System Administration' : 'Property Management'}
+                    {userRole === 'system_admin' ? 'System Administration' : userRole === 'property_manager' ? 'Property Management' : 'Security Operations'}
 
                   </p>
 

@@ -88,7 +88,6 @@ export default function App() {
                         <Route path="/visitor-dashboard" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-registration" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
             <Route path="/visitor-checkout" element={<PublicVisitorLayout><PublicCheckout /></PublicVisitorLayout>} />
-            <Route path="/smart-checkout" element={<VisitorSmartCheckout />} />
             <Route path="/visitor-profile" element={<PublicVisitorLayout><ProfilePage /></PublicVisitorLayout>} />
             <Route path="/visitor-pass" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
 
@@ -103,7 +102,7 @@ export default function App() {
             <Route
               path="/register"
               element={
-                <Protected>
+                <Protected roles={["property_manager", "security"]}>
                   <RegisterVisitor />
                 </Protected>
               }
@@ -173,7 +172,15 @@ export default function App() {
                 </Protected>
               }
             />
-                        <Route
+            <Route
+              path="/smart-checkout"
+              element={
+                <Protected roles={["property_manager", "security"]}>
+                  <VisitorSmartCheckout />
+                </Protected>
+              }
+            />
+            <Route
               path="/member-register"
               element={
                 <Protected>

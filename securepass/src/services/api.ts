@@ -340,6 +340,24 @@ class ApiService {
     return response.json();
   }
 
+  async systemLogin(username: string, password: string): Promise<LoginResponse> {
+    const response = await this.request('/system/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+
+    return response.json();
+  }
+
+  async securityLogin(username: string, password: string): Promise<LoginResponse> {
+    const response = await this.request('/security/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+
+    return response.json();
+  }
+
   async createUser(userData: UserCreate): Promise<{ message: string; id: string }> {
     const response = await this.request('/users', {
       method: 'POST',

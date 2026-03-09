@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
 import { apiService } from "../services/api";
 import {
   Shield,
@@ -62,7 +61,6 @@ const STATUS_OPTIONS = [
 ];
 
 export default function SecurityStaffManagement() {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("staff");
   const [securityStaff, setSecurityStaff] = useState<SecurityStaff[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +77,7 @@ export default function SecurityStaffManagement() {
     shift: "day",
     username: "",
     password: "",
-    property_id: "sys-c2485198", // Use a valid system user ID for now
+    property_id: "sys-98f9b0cb", // Use a valid system user ID
   });
 
   const showSuccess = (msg: string) => {
@@ -91,7 +89,7 @@ export default function SecurityStaffManagement() {
   const fetchSecurityStaff = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getSecurityStaffByProperty("sys-c2485198");
+      const data = await apiService.getSecurityStaffByProperty("sys-98f9b0cb");
       setSecurityStaff(data);
     } catch (error) {
       console.error("Error fetching security staff:", error);
@@ -122,7 +120,7 @@ export default function SecurityStaffManagement() {
         shift: "day",
         username: "",
         password: "",
-        property_id: "sys-c2485198",
+        property_id: "sys-98f9b0cb",
       });
       fetchSecurityStaff();
     } catch (error) {

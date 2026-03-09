@@ -118,6 +118,101 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         message=f"Login successful for {user.name} ({user.role})"
     )
 
+@app.post("/security/login", response_model=LoginResponse)
+async def security_login(request: LoginRequest, db: Session = Depends(get_db)):
+    """Login for security staff"""
+    # Check if security staff exists
+    security_staff = get_security_staff_by_username(db, request.username)
+    
+    if not security_staff:
+        raise HTTPException(
+            status_code=401, 
+            detail=f"Security staff '{request.username}' not found"
+        )
+    
+    # Check if security staff is active
+    if security_staff.status != "active":
+        raise HTTPException(
+            status_code=401, 
+            detail=f"Security staff account is {security_staff.status}"
+        )
+    
+    # Verify password
+    if security_staff.hashed_password != hash_password(request.password):
+        raise HTTPException(
+            status_code=401, 
+            detail=f"Invalid password for security staff '{request.username}'"
+        )
+    
+    # Successful login
+    return LoginResponse(
+        access_token="simple_token",
+        token_type="bearer",
+        user=UserResponse(
+            id=security_staff.id,
+            username=security_staff.username,
+            name=security_staff.name,
+            role="security"
+        ),
+        message=f"Login successful for security staff {security_staff.name}"
+    )
+
+@app.post("/system/login", response_model=LoginResponse)
+async def system_login(request: LoginRequest, db: Session = Depends(get_db)):
+    """Login for system users (admin, security, property_manager) created through system admin"""
+    # First check SystemUser table for users created through system admin
+    system_user = get_system_user_by_email(db, request.username)
+    
+    if system_user:
+        # For system users, we'll use email as username and check against a default password
+        # In production, you should implement proper password hashing
+        if request.password == "admin123":  # Default password for system users
+            return LoginResponse(
+                access_token="simple_token",
+                token_type="bearer",
+                user=UserResponse(
+                    id=system_user.id,
+                    username=system_user.email,  # Use email as username
+                    name=system_user.name,
+                    role=system_user.role
+                ),
+                message=f"Login successful for {system_user.name} ({system_user.role})"
+            )
+        else:
+            raise HTTPException(
+                status_code=401, 
+                detail=f"Invalid password for system user '{request.username}'. Default password is 'admin123'"
+            )
+    
+    # If not found in SystemUser, check regular User table
+    user = get_user_by_username(db, request.username)
+    
+    if not user:
+        raise HTTPException(
+            status_code=401, 
+            detail=f"User '{request.username}' not found in system users or regular users"
+        )
+    
+    # Verify password for regular users
+    if user.hashed_password != hash_password(request.password):
+        raise HTTPException(
+            status_code=401, 
+            detail=f"Invalid password for user '{request.username}'."
+        )
+    
+    # Successful login
+    return LoginResponse(
+        access_token="simple_token",
+        token_type="bearer",
+        user=UserResponse(
+            id=user.id,
+            username=user.username,
+            name=user.name,
+            role=user.role
+        ),
+        message=f"Login successful for {user.name} ({user.role})"
+    )
+
 @app.post("/superadmin/register", response_model=dict)
 async def register_superadmin(userData: dict, db: Session = Depends(get_db)):
     """Register a super admin account"""
@@ -605,6 +700,13 @@ async def create_security_staff_endpoint(staff_data: SecurityStaffCreate, db: Se
     existing_employee_id = get_security_staff_by_employee_id(db, staff_data.employee_id)
     if existing_employee_id:
         raise HTTPException(status_code=400, detail="Employee ID already exists")
+    
+    # Validate property_id if provided
+    if staff_data.property_id:
+        from crud import get_system_user
+        property_user = get_system_user(db, staff_data.property_id)
+        if not property_user:
+            raise HTTPException(status_code=400, detail=f"Property ID '{staff_data.property_id}' not found")
     
     # Create security staff
     new_staff = create_security_staff(db, staff_data)
