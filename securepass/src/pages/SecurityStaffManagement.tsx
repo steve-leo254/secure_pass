@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
 import { apiService } from "../services/api";
 import {
   Shield,
@@ -11,7 +10,6 @@ import {
   Users,
   Mail,
   Phone,
-  IdCard,
   Clock,
 } from "lucide-react";
 
@@ -35,7 +33,6 @@ interface SecurityStaffCreate {
   department: string;
   shift: string;
   username: string;
-  password: string;
   property_id: string;
 }
 
@@ -60,7 +57,6 @@ const STATUS_OPTIONS = [
 ];
 
 export default function SecurityStaffManagement() {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("staff");
   const [securityStaff, setSecurityStaff] = useState<SecurityStaff[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +71,6 @@ export default function SecurityStaffManagement() {
     department: "",
     shift: "day",
     username: "",
-    password: "",
     property_id: "sys-c2485198", // Use a valid system user ID for now
   });
 
@@ -109,7 +104,7 @@ export default function SecurityStaffManagement() {
   }, []);
 
   const handleAddStaff = async () => {
-    if (!newStaff.name || !newStaff.email || !newStaff.username || !newStaff.password) {
+    if (!newStaff.name || !newStaff.email || !newStaff.username) {
       alert("Please fill in all required fields");
       return;
     }
@@ -119,8 +114,15 @@ export default function SecurityStaffManagement() {
         ...newStaff,
         employee_id: generateEmployeeId()
       };
-      await apiService.createSecurityStaff(staffWithAutoId);
-      showSuccess("Security staff registered successfully");
+      const response = await apiService.createSecurityStaff(staffWithAutoId);
+      
+      // Show success message based on email status
+      if (response.email_sent) {
+        showSuccess(`Security staff registered successfully! Welcome email sent to ${newStaff.email}`);
+      } else {
+        showSuccess(`Security staff registered successfully! Temporary password: ${response.temp_password}`);
+      }
+      
       setNewStaff({
         name: "",
         email: "",
@@ -128,7 +130,6 @@ export default function SecurityStaffManagement() {
         department: "",
         shift: "day",
         username: "",
-        password: "",
         property_id: "sys-c2485198",
       });
       fetchSecurityStaff();
@@ -353,19 +354,6 @@ export default function SecurityStaffManagement() {
             
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">
-                Password *
-              </label>
-              <input
-                type="password"
-                value={newStaff.password}
-                onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
-                placeholder="Enter password"
-                className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">
                 Department *
               </label>
               <select
@@ -403,7 +391,7 @@ export default function SecurityStaffManagement() {
           <div className="mt-6">
             <button
               onClick={handleAddStaff}
-              disabled={!newStaff.name || !newStaff.email || !newStaff.username || !newStaff.password || !newStaff.department}
+              disabled={!newStaff.name || !newStaff.email || !newStaff.username || !newStaff.department}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
