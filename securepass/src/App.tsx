@@ -20,11 +20,12 @@ import Members from "./pages/Members";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import ProfilePage from "./pages/ProfilePage";
 import Management from "./pages/Management";
-import CheckoutPage from "./pages/CheckoutPage_Test";
+import CheckoutPage from "./pages/CheckoutPage";
 import PublicCheckout from './pages/PublicCheckout';
 import SystemAdmin from './pages/SystemAdmin';
 import SystemAdminLogin from './pages/SystemAdminLogin';
 import VisitorSmartCheckout from './pages/VisitorSmartCheckout';
+import ResetPassword from './pages/ResetPassword';
 import type { ReactNode } from "react";
 
 const Protected = ({
@@ -90,6 +91,7 @@ export default function App() {
             <Route path="/visitor-checkout" element={<PublicVisitorLayout><PublicCheckout /></PublicVisitorLayout>} />
             <Route path="/visitor-profile" element={<PublicVisitorLayout><ProfilePage /></PublicVisitorLayout>} />
             <Route path="/visitor-pass" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             <Route
               path="/dashboard"

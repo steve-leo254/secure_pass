@@ -19,10 +19,17 @@ from schemas import (
 from datetime import datetime, timedelta
 import json
 import hashlib
+import secrets
+import string
 
 def hash_password(password: str) -> str:
     """Hash password using SHA256"""
     return hashlib.sha256(password.encode()).hexdigest()
+
+def generate_temp_password(length: int = 8) -> str:
+    """Generate a random temporary password"""
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 # User CRUD
 def get_user(db: Session, user_id: str):
@@ -587,7 +594,10 @@ def get_security_staff_by_employee_id(db: Session, employee_id: str):
     return db.query(SecurityStaff).filter(SecurityStaff.employee_id == employee_id).first()
 
 def create_security_staff(db: Session, staff: SecurityStaffCreate):
-    hashed_password = hash_password(staff.password)
+    # Generate temporary password
+    temp_password = generate_temp_password()
+    hashed_password = hash_password(temp_password)
+    
     db_staff = SecurityStaff(
         name=staff.name,
         email=staff.email,
@@ -603,7 +613,12 @@ def create_security_staff(db: Session, staff: SecurityStaffCreate):
     db.add(db_staff)
     db.commit()
     db.refresh(db_staff)
-    return db_staff
+    
+    # Return staff with temporary password for email sending
+    return {
+        "staff": db_staff,
+        "temp_password": temp_password
+    }
 
 def update_security_staff(db: Session, staff_id: str, staff: SecurityStaffUpdate):
     db_staff = get_security_staff_by_id(db, staff_id)

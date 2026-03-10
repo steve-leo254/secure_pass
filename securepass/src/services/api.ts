@@ -658,7 +658,7 @@ class ApiService {
     return response.json();
   }
 
-  async createSecurityStaff(staffData: any): Promise<{ message: string; id: string }> {
+  async createSecurityStaff(staffData: any): Promise<{ message: string; id: string; temp_password?: string; reset_link?: string; email_sent?: boolean }> {
     const response = await this.request('/security-staff', {
       method: 'POST',
       body: JSON.stringify(staffData),
