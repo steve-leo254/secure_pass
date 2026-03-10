@@ -806,6 +806,26 @@ async def update_security_staff_endpoint(staff_id: str, staff_data: SecurityStaf
     
     return {"message": "Security staff updated successfully"}
 
+@app.post("/reset-password", response_model=dict)
+async def reset_password(request: dict, db: Session = Depends(get_db)):
+    """Reset password for security staff"""
+    token = request.get("token")
+    new_password = request.get("new_password")
+    
+    if not token or not new_password:
+        raise HTTPException(status_code=400, detail="Token and new password are required")
+    
+    # Find security staff by ID (token)
+    security_staff = get_security_staff_by_id(db, token)
+    if not security_staff:
+        raise HTTPException(status_code=404, detail="Invalid or expired reset token")
+    
+    # Update password
+    security_staff.hashed_password = hash_password(new_password)
+    db.commit()
+    
+    return {"message": "Password reset successfully"}
+
 @app.delete("/security-staff/{staff_id}", response_model=dict)
 async def delete_security_staff_endpoint(staff_id: str, db: Session = Depends(get_db)):
     """Delete security staff"""

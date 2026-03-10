@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Shield, Eye, EyeOff, Lock, CheckCircle } from "lucide-react";
+import { apiService } from "../services/api";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -39,8 +40,7 @@ export default function ResetPassword() {
     setError("");
 
     try {
-      // TODO: Implement password reset API call
-      // For now, just show success
+      await apiService.resetPassword(token!, newPassword!);
       setSuccess(true);
       setTimeout(() => {
         navigate("/login");

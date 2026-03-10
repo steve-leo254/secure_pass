@@ -658,6 +658,15 @@ class ApiService {
     return response.json();
   }
 
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const response = await this.request('/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
+
+    return response.json();
+  }
+
   async createSecurityStaff(staffData: any): Promise<{ message: string; id: string; temp_password?: string; reset_link?: string; email_sent?: boolean }> {
     const response = await this.request('/security-staff', {
       method: 'POST',
