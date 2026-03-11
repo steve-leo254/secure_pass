@@ -175,13 +175,6 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
               </span>
             </div>
             <div className="flex items-center gap-3 text-[11px] text-indigo-200">
-              <Link
-                to="/login"
-                className="hover:text-white transition-colors flex items-center gap-1"
-              >
-                Staff Portal <ExternalLink className="w-3 h-3" />
-              </Link>
-              <span className="w-px h-3 bg-indigo-400/30" />
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 System Online
@@ -357,20 +350,16 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
                   </div>
                 </button>
 
-                <Link
-                  to="/login"
-                  className="flex items-center gap-3 p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all"
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 rounded-xl text-slate-500 hover:bg-slate-50 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                    <ExternalLink className="w-5 h-5 text-slate-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">Staff Portal</p>
-                    <p className="text-[11px] text-slate-400">
-                      Login for staff
-                    </p>
-                  </div>
-                </Link>
+                  {mobileMenuOpen ? (
+                    <X className="w-5 h-5" />
+                  ) : (
+                    <Menu className="w-5 h-5" />
+                  )}
+                </button>
               </div>
 
               {/* Mobile clock */}
@@ -423,53 +412,15 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-slate-800 mb-4">
-                Choose Your Access Type
+                Welcome to SecurePass Visitor Portal
               </h2>
               <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                Staff can log in to manage visitors, while visitors can check in/out and manage their access.
+                Check in/out, download your visitor pass, and manage your visit information.
               </p>
             </div>
 
             {/* Access Options */}
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Staff/Admin Access */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                    <Shield className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-slate-800">Staff Access</h3>
-                    <p className="text-sm text-slate-500">For administrators and security</p>
-                  </div>
-                </div>
-
-                <p className="text-slate-600 mb-6">
-                  Manage visitors, view records, generate reports, and control access to the premises.
-                </p>
-
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-sm text-slate-600">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>Visitor registration & management</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>Real-time visitor tracking</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>Analytics & reporting</span>
-                  </div>
-                </div>
-
-                
-
-                <div className="mt-4 p-3 bg-slate-50 rounded-lg">
-                  <p className="text-xs text-slate-500 font-medium mb-2">Demo Credentials:</p>
-                </div>
-              </div>
-
+            <div className="max-w-4xl mx-auto">
               {/* Visitor Access */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
                 <div className="flex items-center gap-4 mb-6">

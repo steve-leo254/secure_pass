@@ -35,10 +35,10 @@ const CTABanner: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => navigate('/register')}
+                onClick={() => navigate('/pricing')}
                 className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-base font-bold shadow-xl shadow-emerald-600/25 flex items-center space-x-2 transition-colors group"
               >
-                <span>Register as Visitor</span>
+                <span>View Packages</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
               </motion.button>
               <motion.button
