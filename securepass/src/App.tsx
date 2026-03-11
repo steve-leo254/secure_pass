@@ -78,7 +78,7 @@ export default function App() {
               <DataProvider>
               <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/visitors" element={<PublicVisitorLayout><VisitorsLandingPage /></PublicVisitorLayout>} />
+            <Route path="/visitors" element={<VisitorsLandingPage />} />
             <Route path="/login" element={<LoginGuard />} />
 <Route path="/system-admin-login" element={<SystemAdminLogin />} />
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
