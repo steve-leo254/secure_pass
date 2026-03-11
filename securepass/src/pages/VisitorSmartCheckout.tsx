@@ -13,14 +13,10 @@ import {
   Clock,
   Wrench,
   AlertTriangle,
-  User,
   MapPin,
   Timer,
-  Star,
-  Zap,
   DoorOpen,
   FileText,
-  Users,
   ShieldCheck,
   Camera,
   ScanLine,
@@ -28,24 +24,18 @@ import {
   ChevronRight,
   PartyPopper,
   Send,
-  Info,
   Key,
   Fingerprint,
-  Eye,
   Lock,
-  Unlock,
-  Hash,
-  Mail,
 } from 'lucide-react';
 
 const VisitorSmartCheckout: React.FC = () => {
   console.log('VisitorSmartCheckout component mounted');
 
-  const { getActiveVisitors, checkoutVisitor, visitors } = useVisitors();
+  const { getActiveVisitors, checkoutVisitor } = useVisitors();
   
   // State management
   const [activeStep, setActiveStep] = useState<'scan' | 'verify-identity' | 'verify-tools' | 'confirm-checkout' | 'success'>('scan');
-  const [scannedData, setScannedData] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [verificationMethod, setVerificationMethod] = useState<'phone' | 'id' | 'security-question'>('phone');
@@ -105,7 +95,6 @@ const VisitorSmartCheckout: React.FC = () => {
         return;
       }
       
-      setScannedData(data);
       setSelectedVisitor(visitor);
       generateSecurityQuestion(visitor);
       setActiveStep('verify-identity');
@@ -226,7 +215,6 @@ const VisitorSmartCheckout: React.FC = () => {
   // Reset flow
   const resetFlow = () => {
     setActiveStep('scan');
-    setScannedData(null);
     setSearchQuery('');
     setSelectedVisitor(null);
     setVerificationInput('');

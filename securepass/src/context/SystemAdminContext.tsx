@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { apiService, type SystemUser as ApiSystemUser, type Package as ApiPackage, type Subscription as ApiSubscription, type SubscriptionReminder as ApiSubscriptionReminder } from '../services/api';
 import { useAuth } from './AuthContext';
 import type {
@@ -117,6 +117,7 @@ const convertApiSystemUserToSystemUser = (apiUser: ApiSystemUser): SystemUser =>
   coinBalance: apiUser.coin_balance,
   totalCoinsPurchased: apiUser.total_coins_purchased,
   totalCoinsRedeemed: apiUser.total_coins_redeemed,
+  isActive: apiUser.status === 'active',
   createdAt: new Date(apiUser.created_at).toISOString(),
 });
 
@@ -571,17 +572,7 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const activateUser = useCallback(async (userId: string, paymentId?: string) => {
     try {
       // Update user status to active
-      await apiService.updateSystemUser(userId, { status: 'active', isActive: true });
-      
-      // If payment ID provided, link payment to user activation
-      if (paymentId) {
-        await apiService.processUserActivationPayment({
-          userId,
-          amount: 1000, // Default activation amount
-          method: 'mpesa',
-          organization: 'SecurePass System'
-        });
-      }
+      await apiService.updateSystemUser(userId, { status: 'active' });
       
       // Refresh data
       await loadData();
@@ -592,7 +583,7 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const updateUserStatus = useCallback(async (userId: string, status: string) => {
     try {
-      await apiService.updateSystemUser(userId, { status: status as any, isActive: status === 'active' });
+      await apiService.updateSystemUser(userId, { status: status as any });
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update user status');
@@ -601,10 +592,8 @@ export const SystemAdminProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const processUserActivationPayment = useCallback(async (paymentDetails: { userId: string; amount: number; method: string; organization?: string }) => {
     try {
-      // Process payment for user activation
-      await apiService.processUserActivationPayment(paymentDetails);
-      
-      // Automatically activate user after successful payment
+      // For now, just activate the user after "payment"
+      // In a real implementation, this would process the payment first
       await activateUser(paymentDetails.userId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process activation payment');

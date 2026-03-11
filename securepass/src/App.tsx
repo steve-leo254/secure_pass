@@ -7,6 +7,7 @@ import { SystemAdminProvider } from "./context/SystemAdminContext";
 import Layout from "./components/Layout";
 import VisitorLayout from "./components/VisitorLayout";
 import LandingPage from "./pages/LandingPage";
+import VisitorsLandingPage from "./pages/VisitorsLandingPage";
 import Login from "./pages/Login";
 import PublicRegister from './pages/PublicRegister';
 import Dashboard from "./pages/Dashboard";
@@ -25,6 +26,7 @@ import PublicCheckout from './pages/PublicCheckout';
 import SystemAdmin from './pages/SystemAdmin';
 import SystemAdminLogin from './pages/SystemAdminLogin';
 import VisitorSmartCheckout from './pages/VisitorSmartCheckout';
+import VisitorRegistrationPage from './pages/VisitorRegistrationPage';
 import ResetPassword from './pages/ResetPassword';
 import type { ReactNode } from "react";
 
@@ -76,6 +78,7 @@ export default function App() {
               <DataProvider>
               <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/visitors" element={<PublicVisitorLayout><VisitorsLandingPage /></PublicVisitorLayout>} />
             <Route path="/login" element={<LoginGuard />} />
 <Route path="/system-admin-login" element={<SystemAdminLogin />} />
             <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
@@ -87,7 +90,7 @@ export default function App() {
             <Route path="/system-admin/property-managers" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
             <Route path="/system-admin/reminders" element={<Protected roles={["system_admin"]}><SystemAdmin /></Protected>} />
                         <Route path="/visitor-dashboard" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
-            <Route path="/visitor-registration" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
+            <Route path="/visitor-registration" element={<VisitorRegistrationPage />} />
             <Route path="/visitor-checkout" element={<PublicVisitorLayout><PublicCheckout /></PublicVisitorLayout>} />
             <Route path="/visitor-profile" element={<PublicVisitorLayout><ProfilePage /></PublicVisitorLayout>} />
             <Route path="/visitor-pass" element={<PublicVisitorLayout><PublicRegister /></PublicVisitorLayout>} />
