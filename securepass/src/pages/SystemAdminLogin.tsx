@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Building2, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { Shield, Building2, Eye, EyeOff, LogIn, UserPlus, Camera, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 
@@ -12,6 +12,8 @@ const SystemAdminLogin: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const [showImageCapture, setShowImageCapture] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [registerData, setRegisterData] = useState({
     name: '',
     email: '',
@@ -47,6 +49,36 @@ const SystemAdminLogin: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleImageCapture = () => {
+    // Access camera and capture image
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        
+        setTimeout(() => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(video, 0, 0);
+          
+          const imageData = canvas.toDataURL('image/jpeg');
+          setCapturedImage(imageData);
+          stream.getTracks().forEach(track => track.stop());
+        }, 1000);
+      })
+      .catch(err => {
+        console.error('Camera access denied:', err);
+        alert('Camera access denied. Please allow camera access to use this feature.');
+      });
+  };
+
+  const removeImage = () => {
+    setCapturedImage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,6 +185,55 @@ const SystemAdminLogin: React.FC = () => {
                   System users: default password is "admin123"<br/>
                   Default users: use your assigned password
                 </p>
+              </div>
+
+              {/* Optional Image Capture Section */}
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-emerald-100">
+                    Optional: Face Recognition
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowImageCapture(!showImageCapture)}
+                    className="text-xs text-emerald-300 hover:text-white transition-colors"
+                  >
+                    {showImageCapture ? 'Hide' : 'Show'} Camera
+                  </button>
+                </div>
+                
+                {showImageCapture && (
+                  <div className="space-y-3">
+                    {capturedImage ? (
+                      <div className="relative">
+                        <img 
+                          src={capturedImage} 
+                          alt="Captured" 
+                          className="w-full h-32 object-cover rounded-lg border border-white/20"
+                        />
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleImageCapture}
+                        className="w-full py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Camera className="w-5 h-5" />
+                        <span>Capture Photo</span>
+                      </button>
+                    )}
+                    <p className="text-xs text-emerald-200">
+                      Optional: Add face recognition for enhanced security
+                    </p>
+                  </div>
+                )}
               </div>
 
               <button

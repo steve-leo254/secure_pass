@@ -38,6 +38,36 @@ const StepPersonalInfo: React.FC<StepPersonalInfoProps> = ({
   direction,
 }) => {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [showIdTypeDropdown, setShowIdTypeDropdown] = useState(false);
+
+  const countries = [
+    { code: '+254', name: 'Kenya', flag: '🇰🇪' },
+    { code: '+255', name: 'Tanzania', flag: '🇹🇿' },
+    { code: '+256', name: 'Uganda', flag: '🇺🇬' },
+    { code: '+250', name: 'Rwanda', flag: '🇷🇼' },
+    { code: '+257', name: 'Burundi', flag: '🇧🇮' },
+    { code: '+260', name: 'Zambia', flag: '🇿🇲' },
+    { code: '+263', name: 'Zimbabwe', flag: '🇿🇼' },
+    { code: '+27', name: 'South Africa', flag: '🇿🇦' },
+    { code: '+234', name: 'Nigeria', flag: '🇳🇬' },
+    { code: '+233', name: 'Ghana', flag: '🇬🇭' },
+    { code: '+44', name: 'United Kingdom', flag: '🇬🇧' },
+    { code: '+1', name: 'United States', flag: '🇺🇸' },
+    { code: '+91', name: 'India', flag: '🇮🇳' },
+    { code: '+86', name: 'China', flag: '🇨🇳' },
+  ];
+
+  const idTypes: Array<{ value: VisitorFormData['idType']; name: string; icon: string }> = [
+    { value: 'national-id', name: 'National ID', icon: '🆔' },
+    { value: 'passport', name: 'Passport', icon: '🛂' },
+    { value: 'drivers-license', name: 'Driving License', icon: '🚗' },
+    { value: 'military-id', name: 'Military ID', icon: '🪖' },
+    { value: 'student-id', name: 'Student ID', icon: '🎓' },
+  ];
+
+  const selectedCountry = countries.find(c => formData.phone.startsWith(c.code)) || countries[0];
+  const selectedIdType = idTypes.find(c => c.value === formData.idType) || idTypes[0];
 
   const handleBlur = useCallback((field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -54,8 +84,8 @@ const StepPersonalInfo: React.FC<StepPersonalInfoProps> = ({
     }
     if (!formData.phone.trim()) {
       e.phone = 'Phone number is required';
-    } else if (!/^(0|\+254|254)\d{9}$/.test(formData.phone.replace(/\s/g, ''))) {
-      e.phone = 'Invalid Kenyan phone number';
+    } else if (!/^\+?\d{1,4}\d{6,15}$/.test(formData.phone.replace(/\s/g, ''))) {
+      e.phone = 'Invalid phone number format';
     }
     return e;
   }, [formData]);
@@ -222,9 +252,40 @@ const StepPersonalInfo: React.FC<StepPersonalInfoProps> = ({
                 placeholder="0712 345 678"
                 className={inputClasses('phone')}
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1 bg-gray-100 rounded-lg px-2 py-1">
-                <span className="text-xs">🇰🇪</span>
-                <span className="text-xs text-gray-500 font-medium">+254</span>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCountryDropdown(!showCountryDropdown);
+                    setShowIdTypeDropdown(false);
+                  }}
+                  className="flex items-center space-x-1 bg-gray-100 rounded-lg px-2 py-1 hover:bg-gray-200 transition-colors"
+                >
+                  <span className="text-xs">{selectedCountry?.flag}</span>
+                  <span className="text-xs text-gray-500 font-medium">{selectedCountry?.code}</span>
+                  <ArrowRight className="w-3 h-3 text-gray-400" />
+                </button>
+                
+                {showCountryDropdown && (
+                  <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                    {countries.map((country) => (
+                      <button
+                        key={country.code}
+                        type="button"
+                        onClick={() => {
+                          const currentPhone = formData.phone.replace(selectedCountry?.code || '', '');
+                          updateFormData({ phone: country.code + currentPhone });
+                          setShowCountryDropdown(false);
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 transition-colors"
+                      >
+                        <span className="text-sm">{country.flag}</span>
+                        <span className="text-sm text-gray-700">{country.name}</span>
+                        <span className="text-xs text-gray-500">{country.code}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             {touched.phone && errors.phone && (
@@ -239,35 +300,61 @@ const StepPersonalInfo: React.FC<StepPersonalInfoProps> = ({
             )}
           </div>
 
-          {/* Company */}
+          {/* ID Type */}
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
-              Company / Organization
+              ID Type *
             </label>
             <div className="relative">
               <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={formData.company}
-                onChange={(e) => updateFormData({ company: e.target.value })}
-                placeholder="Optional"
-                className="w-full pl-11 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-emerald-400 hover:border-gray-300 transition-all text-sm focus:ring-0 outline-none"
-              />
+              <button
+                type="button"
+                onClick={() => {
+                  setShowIdTypeDropdown(!showIdTypeDropdown);
+                  setShowCountryDropdown(false);
+                }}
+                className="w-full pl-11 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-emerald-400 hover:border-gray-300 transition-all text-sm focus:ring-0 outline-none bg-white text-left flex items-center justify-between"
+              >
+                <span className="flex items-center space-x-2">
+                  <span>{selectedIdType?.icon}</span>
+                  <span>{selectedIdType?.name}</span>
+                </span>
+                <ArrowRight className="w-4 h-4 text-gray-400" />
+              </button>
+              
+              {showIdTypeDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                  {idTypes.map((idType) => (
+                    <button
+                      key={idType.value}
+                      type="button"
+                      onClick={() => {
+                        updateFormData({ idType: idType.value });
+                        setShowIdTypeDropdown(false);
+                      }}
+                      className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 transition-colors"
+                    >
+                      <span className="text-sm">{idType.icon}</span>
+                      <span className="text-sm text-gray-700">{idType.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Next Button */}
-        <div className="px-8 pb-8">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleNext}
-            className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2 group"
-          >
-            <span>Continue</span>
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </motion.button>
+          {/* Next Button */}
+          <div className="px-8 pb-8">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleNext}
+              className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2 group"
+            >
+              <span>Continue</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </motion.button>
+          </div>
         </div>
       </div>
     </motion.div>

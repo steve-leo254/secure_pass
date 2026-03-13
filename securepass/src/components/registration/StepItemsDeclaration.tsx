@@ -47,6 +47,69 @@ const StepItemsDeclaration: React.FC<StepItemsDeclarationProps> = ({
   const [newItemDesc, setNewItemDesc] = useState('');
   const [newItemSerial, setNewItemSerial] = useState('');
 
+  // Purpose-based item templates
+  const getPurposeBasedItems = () => {
+    switch (formData.purpose) {
+      case 'maintenance':
+        return [
+          'Toolbox',
+          'Spare Parts',
+          'Safety Equipment',
+          'Repair Manual',
+          'Measuring Tools',
+          'Cleaning Supplies'
+        ];
+      case 'meeting':
+        return [
+          'Laptop',
+          'Presentation Materials',
+          'Documents',
+          'Business Cards',
+          'Notebook',
+          'Pen'
+        ];
+      case 'delivery':
+        return [
+          'Package/Envelope',
+          'Delivery Documents',
+          'Scanning Device',
+          'Hand Truck',
+          'Dolly'
+        ];
+      case 'interview':
+        return [
+          'Resume/CV',
+          'Portfolio',
+          'References',
+          'Certificates',
+          'Work Samples',
+          'Notepad'
+        ];
+      case 'consultation':
+        return [
+          'Laptop',
+          'Reports',
+          'Documents',
+          'Calculator',
+          'Measuring Tape',
+          'Blueprints'
+        ];
+      case 'event':
+        return [
+          'Event Ticket',
+          'Invitation',
+          'Name Badge',
+          'Program',
+          'Gift Items',
+          'Decoration Supplies'
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const suggestedItems = getPurposeBasedItems();
+
   const addItem = useCallback(() => {
     if (!newItemName.trim()) return;
 
@@ -294,6 +357,38 @@ const StepItemsDeclaration: React.FC<StepItemsDeclarationProps> = ({
                 </motion.div>
               ))}
             </AnimatePresence>
+
+            {/* Quick Add Section */}
+            {suggestedItems.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                <h4 className="font-semibold text-amber-800 mb-3">
+                  Suggested Items for <span className="capitalize">{formData.purpose}</span>
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {suggestedItems.map((item, index) => (
+                    <motion.button
+                      key={index}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      type="button"
+                      onClick={() => {
+                        const newItem: DeclaredItem = {
+                          id: `item-${Date.now()}`,
+                          name: item,
+                          description: `Quick add: ${item}`,
+                        };
+                        updateFormData({
+                          items: [...formData.items, newItem],
+                        });
+                      }}
+                      className="p-3 bg-white border border-amber-300 rounded-xl hover:bg-amber-100 transition-colors text-left"
+                    >
+                      <span className="text-sm font-medium text-amber-800">{item}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Add item form */}
             <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 space-y-3">

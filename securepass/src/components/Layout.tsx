@@ -364,25 +364,25 @@ const securityNav = [
 
   const currentPage =
 
-    allNav.find((n) => isActive(n.path))?.label || 'Active Visitors';
+  allNav.find((n) => isActive(n.path))?.label || 'Active Visitors';
 
 
 
-  const breadcrumbs = [
+const breadcrumbs = [
 
-    { label: 'Home', path: '/active' },
+  { label: 'Home', path: user?.role === 'system_admin' ? '/system-admin' : '/active' },
 
-    ...(location.pathname !== '/active'
+  ...(location.pathname !== (user?.role === 'system_admin' ? '/system-admin' : '/active')
 
-      ? [{ label: currentPage, path: location.pathname }]
+    ? [{ label: currentPage, path: location.pathname }]
 
-      : []),
+    : []),
 
-  ];
+];
 
 
 
-  const getActionColor = (action: string) => {
+const getActionColor = (action: string) => {
 
     switch (action) {
 
