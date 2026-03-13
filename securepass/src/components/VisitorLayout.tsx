@@ -97,7 +97,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
 
   const navItems = [
     {
-      path: '/visitor-register',
+      path: '/visitor-registration',
       label: 'Check In',
       icon: UserPlus,
       description: 'Register your visit',
@@ -106,7 +106,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
       bg: 'bg-indigo-50',
     },
     {
-      path: '/visitor-checkout',
+      path: '/smart-checkout',
       label: 'Check Out',
       icon: DoorOpen,
       description: 'Complete your visit',
@@ -130,8 +130,8 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
   const currentPage = navItems.find((n) => isActive(n.path));
 
   const quickLinks = [
-    { label: 'Check In', path: '/visitor-register', icon: UserPlus },
-    { label: 'Check Out', path: '/visitor-checkout', icon: DoorOpen },
+    { label: 'Check In', path: '/visitor-registration', icon: UserPlus },
+    { label: 'Check Out', path: '/smart-checkout', icon: DoorOpen },
     { label: 'Terms & Conditions', path: '/terms-and-conditions', icon: FileText },
     // { label: 'Staff Login', path: '/', icon: ExternalLink },
   ];
@@ -175,13 +175,6 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
               </span>
             </div>
             <div className="flex items-center gap-3 text-[11px] text-indigo-200">
-              <Link
-                to="/login"
-                className="hover:text-white transition-colors flex items-center gap-1"
-              >
-                Staff Portal <ExternalLink className="w-3 h-3" />
-              </Link>
-              <span className="w-px h-3 bg-indigo-400/30" />
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 System Online
@@ -195,7 +188,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link
-              to="/visitor-register"
+              to="/visitor-registration"
               className="flex items-center gap-2.5 group"
             >
               <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/30 transition-all group-hover:scale-105">
@@ -264,17 +257,17 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
               {/* CTA Button - Desktop */}
               <Link
                 to={
-                  location.pathname === '/visitor-checkout'
+                  location.pathname === '/smart-checkout'
                     ? '/visitor-register'
-                    : '/visitor-checkout'
+                    : '/smart-checkout'
                 }
                 className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md hover:shadow-lg ${
-                  location.pathname === '/visitor-checkout'
+                  location.pathname === '/smart-checkout'
                     ? 'bg-linear-to-r from-indigo-600 to-purple-600 text-white shadow-indigo-500/20 hover:shadow-indigo-500/30'
                     : 'bg-linear-to-r from-rose-500 to-orange-500 text-white shadow-rose-500/20 hover:shadow-rose-500/30'
                 }`}
               >
-                {location.pathname === '/visitor-checkout' ? (
+                {location.pathname === '/smart-checkout' ? (
                   <>
                     <UserPlus className="w-4 h-4" />
                     Check In
@@ -357,20 +350,16 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
                   </div>
                 </button>
 
-                <Link
-                  to="/login"
-                  className="flex items-center gap-3 p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all"
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 rounded-xl text-slate-500 hover:bg-slate-50 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                    <ExternalLink className="w-5 h-5 text-slate-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">Staff Portal</p>
-                    <p className="text-[11px] text-slate-400">
-                      Login for staff
-                    </p>
-                  </div>
-                </Link>
+                  {mobileMenuOpen ? (
+                    <X className="w-5 h-5" />
+                  ) : (
+                    <Menu className="w-5 h-5" />
+                  )}
+                </button>
               </div>
 
               {/* Mobile clock */}
@@ -397,12 +386,12 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
       </header>
 
       {/* ============ BREADCRUMB ============ */}
-      {currentPage && location.pathname !== '/visitor-register' && (
+      {currentPage && location.pathname !== '/visitor-registration' && (
         <div className="bg-white/50 border-b border-slate-100/50">
           <div className="max-w-6xl mx-auto px-4 lg:px-6 py-2">
             <nav className="flex items-center gap-1.5 text-xs">
               <Link
-                to="/visitor-register"
+                to="/visitor-registration"
                 className="text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1"
               >
                 <Home className="w-3 h-3" />
@@ -423,53 +412,15 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-slate-800 mb-4">
-                Choose Your Access Type
+                Welcome to SecurePass Visitor Portal
               </h2>
               <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                Staff can log in to manage visitors, while visitors can check in/out and manage their access.
+                Check in/out, download your visitor pass, and manage your visit information.
               </p>
             </div>
 
             {/* Access Options */}
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Staff/Admin Access */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                    <Shield className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-slate-800">Staff Access</h3>
-                    <p className="text-sm text-slate-500">For administrators and security</p>
-                  </div>
-                </div>
-
-                <p className="text-slate-600 mb-6">
-                  Manage visitors, view records, generate reports, and control access to the premises.
-                </p>
-
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-sm text-slate-600">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>Visitor registration & management</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>Real-time visitor tracking</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>Analytics & reporting</span>
-                  </div>
-                </div>
-
-                
-
-                <div className="mt-4 p-3 bg-slate-50 rounded-lg">
-                  <p className="text-xs text-slate-500 font-medium mb-2">Demo Credentials:</p>
-                </div>
-              </div>
-
+            <div className="max-w-4xl mx-auto">
               {/* Visitor Access */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
                 <div className="flex items-center gap-4 mb-6">
@@ -512,7 +463,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
                   </Link>
 
                   <Link
-                    to="/visitor-checkout"
+                    to="/smart-checkout"
                     className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-linear-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all duration-200"
                   >
                     <Clock className="w-5 h-5" />
@@ -587,7 +538,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
               Register Your Visit
             </Link>
             <Link
-              to="/visitor-checkout"
+              to="/smart-checkout"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-all text-sm"
             >
               <DoorOpen className="w-4 h-4" />

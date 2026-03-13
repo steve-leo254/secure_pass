@@ -4,8 +4,20 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import json
 from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
 
-# Import models, schemas, CRUD operations, and database
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    print("Warning: python-dotenv not installed. Using default email configuration.")
+    def load_dotenv():
+        pass
+
+# Load environment variables
+load_dotenv()
 from models import User, Visitor, AuditLog, Tool, Category, SystemUser, Package, Subscription, CoinPackage, CoinTransaction, SubscriptionReminder, SecurityStaff
 from schemas import (
     User as UserSchema, UserCreate, UserResponse, LoginRequest, LoginResponse,
@@ -42,6 +54,66 @@ from crud import (
     create_security_staff, update_security_staff, delete_security_staff
 )
 from database import get_db, create_tables
+
+# Email configuration
+SMTP_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("MAIL_PORT", "587"))
+SMTP_USERNAME = os.getenv("MAIL_USERNAME")
+SMTP_PASSWORD = os.getenv("MAIL_PASSWORD")
+FROM_EMAIL = os.getenv("MAIL_FROM")
+MAIL_STARTTLS = os.getenv("MAIL_STARTTLS", "True").lower() == "true"
+MAIL_SSL_TLS = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
+
+def send_welcome_email(to_email: str, staff_name: str, temp_password: str, reset_link: str):
+    """Send welcome email with temporary password and reset link"""
+    # Check if email configuration is properly set
+    if not all([SMTP_USERNAME, SMTP_PASSWORD, FROM_EMAIL]):
+        print("Email configuration incomplete. Missing credentials.")
+        print(f"SMTP_USERNAME: {SMTP_USERNAME}")
+        print(f"SMTP_PASSWORD: {'SET' if SMTP_PASSWORD else 'NOT SET'}")
+        print(f"FROM_EMAIL: {FROM_EMAIL}")
+        return False
+        
+    try:
+        # Create email message
+        msg = MIMEMultipart()
+        msg['From'] = FROM_EMAIL
+        msg['To'] = to_email
+        msg['Subject'] = "Welcome to SecurePass - Your Account Details"
+        
+        body = f"""
+        Dear {staff_name},
+        
+        Welcome to SecurePass! Your security staff account has been created.
+        
+        Your temporary password is: {temp_password}
+        
+        Please click the link below to set your permanent password:
+        {reset_link}
+        
+        This link will expire in 24 hours.
+        
+        Best regards,
+        SecurePass Team
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        if MAIL_STARTTLS:
+            server.starttls()
+        elif MAIL_SSL_TLS:
+            server.starttls()
+        server.login(SMTP_USERNAME, SMTP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        
+        print(f"Welcome email sent to {to_email}")
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
 
 app = FastAPI(title="SecurePass API", version="2.0.0")
 
@@ -103,6 +175,101 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=401, 
             detail=f"Invalid password for user '{request.username}'. Please check your credentials."
+        )
+    
+    # Successful login
+    return LoginResponse(
+        access_token="simple_token",
+        token_type="bearer",
+        user=UserResponse(
+            id=user.id,
+            username=user.username,
+            name=user.name,
+            role=user.role
+        ),
+        message=f"Login successful for {user.name} ({user.role})"
+    )
+
+@app.post("/security/login", response_model=LoginResponse)
+async def security_login(request: LoginRequest, db: Session = Depends(get_db)):
+    """Login for security staff"""
+    # Check if security staff exists
+    security_staff = get_security_staff_by_username(db, request.username)
+    
+    if not security_staff:
+        raise HTTPException(
+            status_code=401, 
+            detail=f"Security staff '{request.username}' not found"
+        )
+    
+    # Check if security staff is active
+    if security_staff.status != "active":
+        raise HTTPException(
+            status_code=401, 
+            detail=f"Security staff account is {security_staff.status}"
+        )
+    
+    # Verify password
+    if security_staff.hashed_password != hash_password(request.password):
+        raise HTTPException(
+            status_code=401, 
+            detail=f"Invalid password for security staff '{request.username}'"
+        )
+    
+    # Successful login
+    return LoginResponse(
+        access_token="simple_token",
+        token_type="bearer",
+        user=UserResponse(
+            id=security_staff.id,
+            username=security_staff.username,
+            name=security_staff.name,
+            role="security"
+        ),
+        message=f"Login successful for security staff {security_staff.name}"
+    )
+
+@app.post("/system/login", response_model=LoginResponse)
+async def system_login(request: LoginRequest, db: Session = Depends(get_db)):
+    """Login for system users (admin, security, property_manager) created through system admin"""
+    # First check SystemUser table for users created through system admin
+    system_user = get_system_user_by_email(db, request.username)
+    
+    if system_user:
+        # For system users, we'll use email as username and check against a default password
+        # In production, you should implement proper password hashing
+        if request.password == "admin123":  # Default password for system users
+            return LoginResponse(
+                access_token="simple_token",
+                token_type="bearer",
+                user=UserResponse(
+                    id=system_user.id,
+                    username=system_user.email,  # Use email as username
+                    name=system_user.name,
+                    role=system_user.role
+                ),
+                message=f"Login successful for {system_user.name} ({system_user.role})"
+            )
+        else:
+            raise HTTPException(
+                status_code=401, 
+                detail=f"Invalid password for system user '{request.username}'. Default password is 'admin123'"
+            )
+    
+    # If not found in SystemUser, check regular User table
+    user = get_user_by_username(db, request.username)
+    
+    if not user:
+        raise HTTPException(
+            status_code=401, 
+            detail=f"User '{request.username}' not found in system users or regular users"
+        )
+    
+    # Verify password for regular users
+    if user.hashed_password != hash_password(request.password):
+        raise HTTPException(
+            status_code=401, 
+            detail=f"Invalid password for user '{request.username}'."
         )
     
     # Successful login
@@ -606,9 +773,29 @@ async def create_security_staff_endpoint(staff_data: SecurityStaffCreate, db: Se
     if existing_employee_id:
         raise HTTPException(status_code=400, detail="Employee ID already exists")
     
+    # Validate property_id if provided
+    if staff_data.property_id:
+        from crud import get_system_user
+        property_user = get_system_user(db, staff_data.property_id)
+        if not property_user:
+            raise HTTPException(status_code=400, detail=f"Property ID '{staff_data.property_id}' not found")
+    
     # Create security staff
-    new_staff = create_security_staff(db, staff_data)
-    return {"message": "Security staff registered successfully", "id": new_staff.id}
+    result = create_security_staff(db, staff_data)
+    new_staff = result["staff"]
+    temp_password = result["temp_password"]
+    
+    # Send welcome email with temporary password and reset link
+    reset_link = f"http://localhost:5173/reset-password?token={new_staff.id}&email={new_staff.email}"
+    email_sent = send_welcome_email(new_staff.email, new_staff.name, temp_password, reset_link)
+    
+    return {
+        "message": "Security staff registered successfully", 
+        "id": new_staff.id,
+        "temp_password": temp_password if not email_sent else "Email sent",
+        "reset_link": reset_link,
+        "email_sent": email_sent
+    }
 
 @app.put("/security-staff/{staff_id}", response_model=dict)
 async def update_security_staff_endpoint(staff_id: str, staff_data: SecurityStaffUpdate, db: Session = Depends(get_db)):
@@ -618,6 +805,26 @@ async def update_security_staff_endpoint(staff_id: str, staff_data: SecurityStaf
         raise HTTPException(status_code=404, detail="Security staff not found")
     
     return {"message": "Security staff updated successfully"}
+
+@app.post("/reset-password", response_model=dict)
+async def reset_password(request: dict, db: Session = Depends(get_db)):
+    """Reset password for security staff"""
+    token = request.get("token")
+    new_password = request.get("new_password")
+    
+    if not token or not new_password:
+        raise HTTPException(status_code=400, detail="Token and new password are required")
+    
+    # Find security staff by ID (token)
+    security_staff = get_security_staff_by_id(db, token)
+    if not security_staff:
+        raise HTTPException(status_code=404, detail="Invalid or expired reset token")
+    
+    # Update password
+    security_staff.hashed_password = hash_password(new_password)
+    db.commit()
+    
+    return {"message": "Password reset successfully"}
 
 @app.delete("/security-staff/{staff_id}", response_model=dict)
 async def delete_security_staff_endpoint(staff_id: str, db: Session = Depends(get_db)):

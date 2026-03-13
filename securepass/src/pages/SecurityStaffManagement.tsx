@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
 import { apiService } from "../services/api";
 import {
   Shield,
@@ -11,7 +10,6 @@ import {
   Users,
   Mail,
   Phone,
-  IdCard,
   Clock,
 } from "lucide-react";
 
@@ -20,7 +18,6 @@ interface SecurityStaff {
   name: string;
   email: string;
   phone: string;
-  employee_id: string;
   department: string;
   shift: string;
   username: string;
@@ -33,11 +30,9 @@ interface SecurityStaffCreate {
   name: string;
   email: string;
   phone: string;
-  employee_id: string;
   department: string;
   shift: string;
   username: string;
-  password: string;
   property_id: string;
 }
 
@@ -62,7 +57,6 @@ const STATUS_OPTIONS = [
 ];
 
 export default function SecurityStaffManagement() {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("staff");
   const [securityStaff, setSecurityStaff] = useState<SecurityStaff[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,13 +68,18 @@ export default function SecurityStaffManagement() {
     name: "",
     email: "",
     phone: "",
-    employee_id: "",
     department: "",
     shift: "day",
     username: "",
-    password: "",
-    property_id: "sys-c2485198", // Use a valid system user ID for now
+    property_id: "sys-98f9b0cb", // Use a valid system user ID
   });
+
+  // Generate automatic employee ID
+  const generateEmployeeId = () => {
+    const prefix = "EMP";
+    const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `${prefix}${randomNum}`;
+  };
 
   const showSuccess = (msg: string) => {
     setSuccessMsg(msg);
@@ -91,7 +90,7 @@ export default function SecurityStaffManagement() {
   const fetchSecurityStaff = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getSecurityStaffByProperty("sys-c2485198");
+      const data = await apiService.getSecurityStaffByProperty("sys-98f9b0cb");
       setSecurityStaff(data);
     } catch (error) {
       console.error("Error fetching security staff:", error);
@@ -105,28 +104,37 @@ export default function SecurityStaffManagement() {
   }, []);
 
   const handleAddStaff = async () => {
-    if (!newStaff.name || !newStaff.email || !newStaff.username || !newStaff.password) {
+    if (!newStaff.name || !newStaff.email || !newStaff.username) {
       alert("Please fill in all required fields");
       return;
     }
 
     try {
-      await apiService.createSecurityStaff(newStaff);
-      showSuccess("Security staff registered successfully");
+      const staffWithAutoId = {
+        ...newStaff,
+        employee_id: generateEmployeeId()
+      };
+      const response = await apiService.createSecurityStaff(staffWithAutoId);
+      
+      // Show success message based on email status
+      if (response.email_sent) {
+        showSuccess(`Security staff registered successfully! Welcome email sent to ${newStaff.email}`);
+      } else {
+        showSuccess(`Security staff registered successfully! Temporary password: ${response.temp_password}`);
+      }
+      
       setNewStaff({
         name: "",
         email: "",
         phone: "",
-        employee_id: "",
         department: "",
         shift: "day",
         username: "",
-        password: "",
-        property_id: "sys-c2485198",
+        property_id: "sys-98f9b0cb",
       });
       fetchSecurityStaff();
     } catch (error) {
-      console.error("Error adding security staff:", error);
+      console.error("Error registering security staff:", error);
       alert("Failed to register security staff");
     }
   };
@@ -243,10 +251,6 @@ export default function SecurityStaffManagement() {
                         <h4 className="font-semibold text-slate-800">{staff.name}</h4>
                         <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
                           <span className="flex items-center gap-1">
-                            <IdCard className="w-3 h-3" />
-                            {staff.employee_id}
-                          </span>
-                          <span className="flex items-center gap-1">
                             <Mail className="w-3 h-3" />
                             {staff.email}
                           </span>
@@ -337,19 +341,6 @@ export default function SecurityStaffManagement() {
             
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">
-                Employee ID *
-              </label>
-              <input
-                type="text"
-                value={newStaff.employee_id}
-                onChange={(e) => setNewStaff({ ...newStaff, employee_id: e.target.value })}
-                placeholder="EMP001"
-                className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">
                 Username *
               </label>
               <input
@@ -357,19 +348,6 @@ export default function SecurityStaffManagement() {
                 value={newStaff.username}
                 onChange={(e) => setNewStaff({ ...newStaff, username: e.target.value })}
                 placeholder="johndoe"
-                className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">
-                Password *
-              </label>
-              <input
-                type="password"
-                value={newStaff.password}
-                onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
-                placeholder="Enter password"
                 className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
               />
             </div>
@@ -413,7 +391,7 @@ export default function SecurityStaffManagement() {
           <div className="mt-6">
             <button
               onClick={handleAddStaff}
-              disabled={!newStaff.name || !newStaff.email || !newStaff.username || !newStaff.password || !newStaff.department}
+              disabled={!newStaff.name || !newStaff.email || !newStaff.username || !newStaff.department}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
@@ -475,18 +453,6 @@ export default function SecurityStaffManagement() {
                     type="tel"
                     value={editingStaff.phone}
                     onChange={(e) => setEditingStaff({ ...editingStaff, phone: e.target.value })}
-                    className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">
-                    Employee ID
-                  </label>
-                  <input
-                    type="text"
-                    value={editingStaff.employee_id}
-                    onChange={(e) => setEditingStaff({ ...editingStaff, employee_id: e.target.value })}
                     className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-medium text-gray-800"
                   />
                 </div>

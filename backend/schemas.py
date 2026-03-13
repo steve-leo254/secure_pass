@@ -320,7 +320,6 @@ class SecurityStaffBase(BaseModel):
     status: str = "active"
 
 class SecurityStaffCreate(SecurityStaffBase):
-    password: str
     property_id: str
 
 class SecurityStaffUpdate(BaseModel):

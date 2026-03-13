@@ -114,6 +114,7 @@ interface AuthContextType {
   logout: () => void;
   user: User | null;
   login: (username: string, password: string) => Promise<{ success: boolean; user?: User }>;
+  systemLogin: (username: string, password: string) => Promise<{ success: boolean; user?: User }>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
@@ -139,36 +140,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (username: string, password: string): Promise<{ success: boolean; user?: User }> => {
     try {
       console.log('Attempting login with username:', username);
-      const response = await apiService.login(username, password);
-      console.log('Backend response:', response);
-      const user: User = {
-        id: response.user.id,
-        username: response.user.username,
-        role: response.user.role as UserRole,
-        name: response.user.name,
-      };
       
-      console.log('Processed user object:', user);
-      setUser(user);
-      // Handle different roles properly
-      if (user.role === 'system_admin') {
-        console.log('Setting user role to system_admin');
-        setUserRole('system_admin');
-      } else if (user.role === 'property_manager') {
-        console.log('Setting user role to property_manager');
-        setUserRole('property_manager');
-      } else {
-        console.log('Setting user role to security');
-        setUserRole('security');
+      // First try regular login
+      try {
+        const response = await apiService.login(username, password);
+        console.log('Backend response:', response);
+        const user: User = {
+          id: response.user.id,
+          username: response.user.username,
+          role: response.user.role as UserRole,
+          name: response.user.name,
+        };
+        
+        console.log('Processed user object:', user);
+        setUser(user);
+        // Handle different roles properly
+        if (user.role === 'system_admin') {
+          console.log('Setting user role to system_admin');
+          setUserRole('system_admin');
+        } else if (user.role === 'property_manager') {
+          console.log('Setting user role to property_manager');
+          setUserRole('property_manager');
+        } else {
+          console.log('Setting user role to security');
+          setUserRole('security');
+        }
+        setIsAuthenticated(true);
+        
+        // Store token in localStorage for API service
+        localStorage.setItem('access_token', response.access_token);
+        
+        return { success: true, user };
+      } catch (regularLoginError) {
+        console.log('Regular login failed, trying security login:', regularLoginError);
+        
+        // Try security staff login
+        try {
+          const response = await apiService.securityLogin(username, password);
+          console.log('Security login response:', response);
+          const user: User = {
+            id: response.user.id,
+            username: response.user.username,
+            role: response.user.role as UserRole,
+            name: response.user.name,
+          };
+          
+          console.log('Processed security user object:', user);
+          setUser(user);
+          setUserRole('security');
+          setIsAuthenticated(true);
+          
+          // Store token in localStorage for API service
+          localStorage.setItem('access_token', response.access_token);
+          
+          return { success: true, user };
+        } catch (securityLoginError) {
+          console.log('Security login also failed:', securityLoginError);
+          throw securityLoginError;
+        }
       }
-      setIsAuthenticated(true);
-      
-      // Store token in localStorage for API service
-      localStorage.setItem('access_token', response.access_token);
-      
-      return { success: true, user };
     } catch (error) {
-      console.error('Backend login failed, trying fallback:', error);
+      console.error('All login attempts failed, trying fallback:', error);
       
       // Fallback to DEFAULT_USERS when backend is not available
       const defaultUser = DEFAULT_USERS.find(u => u.username === username);
@@ -235,6 +267,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // This is just for UI state management
   };
 
+  const systemLogin = async (username: string, password: string): Promise<{ success: boolean; user?: User }> => {
+    try {
+      console.log('Attempting system login with username:', username);
+      const response = await apiService.systemLogin(username, password);
+      console.log('System login response:', response);
+      const user: User = {
+        id: response.user.id,
+        username: response.user.username,
+        role: response.user.role as UserRole,
+        name: response.user.name,
+      };
+      
+      console.log('Processed system user object:', user);
+      setUser(user);
+      
+      // Handle different roles properly
+      if (user.role === 'system_admin') {
+        console.log('Setting user role to system_admin');
+        setUserRole('system_admin');
+      } else if (user.role === 'property_manager') {
+        console.log('Setting user role to property_manager');
+        setUserRole('property_manager');
+      } else if (user.role === 'security') {
+        console.log('Setting user role to security');
+        setUserRole('security');
+      } else if (user.role === 'superadmin') {
+        console.log('Setting user role to system_admin for superadmin');
+        setUserRole('system_admin');
+      } else {
+        console.log('Setting default user role to security');
+        setUserRole('security');
+      }
+      setIsAuthenticated(true);
+      
+      // Store token in localStorage for API service
+      localStorage.setItem('access_token', response.access_token);
+      
+      return { success: true, user };
+    } catch (error) {
+      console.error('System login failed:', error);
+      return { success: false };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -243,6 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         user,
         login,
+        systemLogin,
         isAuthenticated,
         isAdmin: userRole === 'system_admin' || userRole === 'property_manager',
         isSuperAdmin: userRole === 'system_admin',
