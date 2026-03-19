@@ -20,6 +20,7 @@ import Members from "./pages/Members";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import ProfilePage from "./pages/ProfilePage";
 import Management from "./pages/Management";
+import SecurityStaffManagement from "./pages/SecurityStaffManagement";
 import CheckoutPage from "./pages/CheckoutPage";
 import PublicCheckout from './pages/PublicCheckout';
 import SystemAdmin from './pages/SystemAdmin';
@@ -161,8 +162,8 @@ export default function App() {
             <Route
               path="/security-staff"
               element={
-                <Protected roles={["property_manager"]}>
-                  <Management />
+                <Protected roles={["property_manager", "security"]}>
+                  <SecurityStaffManagement />
                 </Protected>
               }
             />

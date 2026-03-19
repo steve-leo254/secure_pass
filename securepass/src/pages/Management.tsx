@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useVisitors } from "../context/VistorContext";
 import {
@@ -125,6 +126,22 @@ export default function Management() {
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Management</h1>
           <p className="text-sm text-slate-500">Manage categories, tools, and security staff</p>
+        </div>
+      </div>
+
+      {/* Checkout Test Button */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-blue-800">Test Checkout</h3>
+            <p className="text-sm text-blue-600">Test the subscription checkout flow</p>
+          </div>
+          <Link
+            to="/checkout?packageId=test-package&days=30&billing=monthly&amount=1000"
+            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Test Checkout
+          </Link>
         </div>
       </div>
 

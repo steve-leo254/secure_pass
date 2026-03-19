@@ -201,7 +201,7 @@ export const VisitorProvider: React.FC<{ children: ReactNode }> = ({
   // Update billing usage whenever visitors change
   useEffect(() => {
     updateSystemUsage(visitors.length);
-  }, [visitors.length, updateSystemUsage]);
+  }, [visitors.length]);
 
   const saveVisitors = (v: Visitor[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(v));

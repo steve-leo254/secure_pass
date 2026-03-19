@@ -208,18 +208,18 @@ const CheckoutPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/20 flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-center gap-4">
             <button
               onClick={() => navigate('/management')}
-              className="p-2 rounded-xl hover:bg-slate-100 transition-colors"
+              className="absolute left-4 p-2 rounded-xl hover:bg-slate-100 transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-slate-600" />
             </button>
-            <div>
+            <div className="text-center">
               <h1 className="text-xl font-bold text-slate-800">Checkout</h1>
               <p className="text-sm text-slate-500">Complete your subscription extension</p>
             </div>
@@ -227,17 +227,18 @@ const CheckoutPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="max-w-4xl w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Order Summary */}
           <div className="lg:col-span-2 space-y-6">
             {/* Package Details */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center justify-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
                   <Package className="w-6 h-6 text-white" />
                 </div>
-                <div>
+                <div className="text-center">
                   <h2 className="text-lg font-bold text-slate-800">{selectedPackage.name}</h2>
                   <p className="text-sm text-slate-500">Subscription Extension</p>
                 </div>
@@ -508,6 +509,7 @@ const CheckoutPage: React.FC = () => {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Payment Modal */}
       {console.log('Modal render check:', { showPaymentModal, checkoutData })}
@@ -697,6 +699,6 @@ const CheckoutPage: React.FC = () => {
       )}
     </div>
   );
-};
+}
 
 export default CheckoutPage;

@@ -151,9 +151,7 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updateSystemUsage = useCallback((totalRecords: number) => {
     if (!billingAccount) return;
 
-    // Calculate balance based on registered records
-    const calculatedBalance = totalRecords * COST_PER_UNIT;
-
+    const calculatedBalance = billingAccount.payments.reduce((sum, payment) => sum + payment.amount, 0);
     const updatedAccount: BillingAccount = {
       ...billingAccount,
       recordsUsed: totalRecords,
@@ -167,7 +165,7 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     saveBillingAccount(updatedAccount);
-  }, [saveBillingAccount, billingAccount]);
+  }, [billingAccount?.id, billingAccount?.status]);
 
   const getBillingStatus = useCallback((): BillingStatus => {
     return billingAccount?.status || 'trial';

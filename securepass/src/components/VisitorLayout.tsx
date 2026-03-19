@@ -192,7 +192,7 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
 
         {/* Main Header */}
         <div className="max-w-6xl mx-auto px-4 lg:px-6">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-12">
             {/* Logo */}
             <Link
               to="/visitor-register"
@@ -241,8 +241,8 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
             {/* Right Side */}
             <div className="flex items-center gap-2">
               {/* Live Clock */}
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-500">
-                <Clock className="w-3 h-3" />
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100 text-sm text-slate-500">
+                <Clock className="w-4 h-4" />
                 <span className="font-mono font-semibold tabular-nums">
                   {currentTime.toLocaleTimeString('en-US', {
                     hour: '2-digit',
@@ -290,12 +290,12 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors border border-slate-100"
+                className="md:hidden w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors border border-slate-100"
               >
                 {mobileMenuOpen ? (
-                  <X className="w-5 h-5 text-slate-600" />
+                  <X className="w-4 h-4 text-slate-600" />
                 ) : (
-                  <Menu className="w-5 h-5 text-slate-600" />
+                  <Menu className="w-4 h-4 text-slate-600" />
                 )}
               </button>
             </div>
@@ -508,15 +508,6 @@ const VisitorLayout: React.FC<VisitorLayoutProps> = ({ children }) => {
                   >
                     <DoorOpen className="w-5 h-5" />
                     Check In
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-
-                  <Link
-                    to="/smart-checkout"
-                    className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-linear-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all duration-200"
-                  >
-                    <Clock className="w-5 h-5" />
-                    Check Out
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
